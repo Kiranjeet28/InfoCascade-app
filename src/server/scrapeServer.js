@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { scrapeGndecTimetable } = require('../utils/scrapeTimetable');
 
 const app = express();
@@ -6,22 +8,56 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
+const STORED_PATH = path.join(__dirname, '..', '..', 'web', 'timetable.json');
+
+async function loadStoredTimetable(refresh = false) {
+  if (refresh) {
+    const result = await scrapeGndecTimetable();
+    try {
+      fs.mkdirSync(path.dirname(STORED_PATH), { recursive: true });
+      fs.writeFileSync(STORED_PATH, JSON.stringify(result, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('Failed to write stored timetable:', e);
+    }
+    return result;
+  }
+
+  try {
+    const raw = fs.readFileSync(STORED_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    // fallback to live scrape if stored file missing or invalid
+    return await scrapeGndecTimetable();
+  }
+}
+
 app.get('/scrape', async (req, res) => {
   const group = (req.query.group || '').trim();
+  const refresh = String(req.query.refresh || '').trim() === '1';
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (!group) return res.status(400).json({ error: 'Missing `group` query parameter' });
 
   try {
-    const result = await scrapeGndecTimetable();
+    const result = await loadStoredTimetable(refresh);
     const groupLower = group.toLowerCase();
     const matches = [];
 
-    (result.tables || []).forEach((table, ti) => {
-      const rows = table.rows || [];
-      rows.forEach((row, ri) => {
-        const combined = Object.values(row).join(' ').toLowerCase();
+    const timetable = (result && result.timetable) || {};
+    Object.entries(timetable).forEach(([year, table]) => {
+      (table.classes || []).forEach((cls, idx) => {
+        const parts = [year, cls.dayOfClass || '', cls.timeOfClass || ''];
+        if (cls.data) {
+          if (cls.data.freeClass) {
+            // nothing
+          } else if (cls.data.elective) {
+            (cls.data.entries || []).forEach(e => parts.push(e.subject || '', e.teacher || '', e.classRoom || ''));
+          } else {
+            parts.push(cls.data.subject || '', cls.data.teacher || '', cls.data.classRoom || '');
+          }
+        }
+        const combined = parts.join(' ').toLowerCase();
         if (combined.includes(groupLower)) {
-          matches.push({ table: ti, rowIndex: ri, row });
+          matches.push({ year, classIndex: idx, class: cls });
         }
       });
     });
@@ -33,17 +69,24 @@ app.get('/scrape', async (req, res) => {
   }
 });
 
-// Return Year and Group options by scraping the source page
+// Return Year and Group options by reading stored timetable
 app.get('/options', async (req, res) => {
+  const refresh = String(req.query.refresh || '').trim() === '1';
   res.setHeader('Access-Control-Allow-Origin', '*');
   try {
-    const result = await scrapeGndecTimetable();
+    const result = await loadStoredTimetable(refresh);
     const texts = [];
-    (result.tables || []).forEach(table => {
-      (table.rows || []).forEach(row => {
-        Object.values(row).forEach(v => {
-          if (v && typeof v === 'string') texts.push(v);
-        });
+    const timetable = (result && result.timetable) || {};
+    Object.entries(timetable).forEach(([year, table]) => {
+      texts.push(year);
+      (table.classes || []).forEach(cls => {
+        if (cls.data) {
+          if (cls.data.elective) {
+            (cls.data.entries || []).forEach(e => texts.push(e.subject || '', e.teacher || '', e.classRoom || ''));
+          } else if (!cls.data.freeClass) {
+            texts.push(cls.data.subject || '', cls.data.teacher || '', cls.data.classRoom || '');
+          }
+        }
       });
     });
 

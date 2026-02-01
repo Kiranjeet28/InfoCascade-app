@@ -89,3 +89,42 @@ export function getCurrentAndNextClass(events, group, now = new Date()) {
   }
   return { current, next };
 }
+
+// Convert our stored web/timetable.json format into the events shape used above.
+export function convertWebTimetableToEvents(webTimetable) {
+  const events = [];
+  if (!webTimetable || !webTimetable.timetable) return events;
+  const table = webTimetable.timetable;
+  Object.entries(table).forEach(([group, groupObj]) => {
+    const classes = (groupObj && groupObj.classes) || [];
+    classes.forEach(cls => {
+      const day = cls.dayOfClass || '';
+      const time = cls.timeOfClass || (cls.data && cls.data.time) || '';
+      const startMin = timeToMinutes(time);
+      if (startMin == null) return;
+      const data = cls.data || {};
+
+      let text = '';
+      if (data.freeClass) {
+        text = 'Free';
+      } else if (data.elective && Array.isArray(data.entries)) {
+        text = data.entries.map(e => `${e.subject || ''}${e.teacher ? ' - ' + e.teacher : ''}${e.classRoom ? ' @ ' + e.classRoom : ''}`).join(' | ');
+      } else {
+        text = `${data.subject || ''}${data.teacher ? ' - ' + data.teacher : ''}${data.classRoom ? ' @ ' + data.classRoom : ''}`.trim();
+      }
+
+      const endMin = startMin + 60;
+      events.push({ group, dayName: day, startMin, endMin, text });
+    });
+  });
+  return events;
+}
+
+// Return the raw timetable object for a matching group name (case/space-insensitive).
+export function getTimetableForGroup(webTimetable, groupName) {
+  if (!webTimetable || !webTimetable.timetable || !groupName) return null;
+  const keys = Object.keys(webTimetable.timetable);
+  const target = keys.find(k => k.toLowerCase() === groupName.toLowerCase() || k.replace(/\s+/g, '').toLowerCase() === groupName.replace(/\s+/g, '').toLowerCase());
+  if (!target) return null;
+  return webTimetable.timetable[target];
+}
