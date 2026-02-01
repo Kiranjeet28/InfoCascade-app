@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Header from '../components/Header';
 import PrimaryButton from '../components/PrimaryButton';
-import { normalizeTableToEvents, getCurrentAndNextClass } from '../utils/schedule';
+import { normalizeTableToEvents, getCurrentAndNextClass, convertWebTimetableToEvents } from '../utils/schedule';
 
 const WEEK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
@@ -20,7 +20,7 @@ export default function ResultsScreen({ route, navigate }) {
         const resp = await fetch('/timetable.json');
         if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
         const json = await resp.json();
-        const events = normalizeTableToEvents(json || { tables: [] });
+        const events = (json && json.timetable) ? convertWebTimetableToEvents(json) : normalizeTableToEvents(json || { tables: [] });
         const grouped = {};
         WEEK_DAYS.forEach(d => grouped[d] = []);
         events.forEach(ev => {
