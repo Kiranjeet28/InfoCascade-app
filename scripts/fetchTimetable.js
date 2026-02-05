@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { scrapeGndecTimetable, scrapeAllDepartments, DEPARTMENT_URLS } = require('../src/utils/scrapeTimetable');
+const { scrapeGndecTimetable, scrapeAllDepartments, DEPARTMENT_URLS } = require('../src/utils/cse/scrapeTimetable');
 
 const outDir = path.join(__dirname, '..', 'web');
 
@@ -28,7 +28,6 @@ function saveDepartmentTimetable(dept, data) {
       }
       
       console.log(`Fetching ${deptLower.toUpperCase()} timetable...`);
-      const { scrapeGndecTimetable } = require('../src/utils/scrapeTimetable');
       const result = await scrapeGndecTimetable(DEPARTMENT_URLS[deptLower]);
       saveDepartmentTimetable(deptLower, result);
     } else {
