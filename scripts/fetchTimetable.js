@@ -3,17 +3,24 @@ const fs = require('fs');
 const { scrapeGndecTimetable, scrapeAllDepartments, DEPARTMENT_URLS } = require('../src/utils/cse/scrapeTimetable');
 
 const outDir = path.join(__dirname, '..', 'web');
+const publicDir = path.join(__dirname, '..', 'public');
 
 // Save individual department timetable
 function saveDepartmentTimetable(dept, data) {
-  const outPath = path.join(outDir, `timetable_${dept}.json`);
-  fs.writeFileSync(outPath, JSON.stringify(data, null, 2), 'utf8');
+  const fileName = `timetable_${dept}.json`;
+  const outPath = path.join(outDir, fileName);
+  const publicPath = path.join(publicDir, fileName);
+  
+  const jsonContent = JSON.stringify(data, null, 2);
+  fs.writeFileSync(outPath, jsonContent, 'utf8');
+  fs.writeFileSync(publicPath, jsonContent, 'utf8');
   console.log(`Timetable written to ${outPath}`);
 }
 
 (async () => {
   try {
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+    if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
 
     // Check if specific department was requested via command line
     const requestedDept = process.argv[2];
@@ -43,8 +50,11 @@ function saveDepartmentTimetable(dept, data) {
       }
       
       // Also save combined timetable.json for backward compatibility
+      const combinedContent = JSON.stringify(results, null, 2);
       const combinedPath = path.join(outDir, 'timetable.json');
-      fs.writeFileSync(combinedPath, JSON.stringify(results, null, 2), 'utf8');
+      const combinedPublicPath = path.join(publicDir, 'timetable.json');
+      fs.writeFileSync(combinedPath, combinedContent, 'utf8');
+      fs.writeFileSync(combinedPublicPath, combinedContent, 'utf8');
       console.log(`\nCombined timetable written to ${combinedPath}`);
     }
     

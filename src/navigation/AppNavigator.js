@@ -4,6 +4,7 @@ import HomeScreen from '../screens/HomeScreen';
 import AboutScreen from '../screens/AboutScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 import StudentForm from '../screens/StudentForm';
+import { ProfileProvider } from '../context/ProfileContext';
 
 // Very small navigator - holds a route name and params and passes a `navigate` function.
 export default function AppNavigator() {
@@ -19,8 +20,10 @@ export default function AppNavigator() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      {render()}
-    </View>
+    <ProfileProvider>
+      <View style={{ flex: 1 }}>
+        {render()}
+      </View>
+    </ProfileProvider>
   );
 }
