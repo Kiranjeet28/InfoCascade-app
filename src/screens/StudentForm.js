@@ -11,9 +11,9 @@ import {
   Platform,
   ActivityIndicator
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import PrimaryButton from '../components/PrimaryButton';
 import colors from '../constants/colors';
+import { useProfile } from '../context/ProfileContext';
 
 // Year options based on timetable data (D2, D3, D4 = 2nd, 3rd, 4th year)
 const YEAR_OPTIONS = [
@@ -38,19 +38,34 @@ const SUBGROUP_OPTIONS = [
   { label: 'Group 2', value: '2' },
 ];
 
+// Department options
+const DEPARTMENT_OPTIONS = [
+  { label: 'CSE', value: 'cse', file: 'timetable_cse.json' },
+  { label: 'IT', value: 'it', file: 'timetable_it.json' },
+  { label: 'ECE', value: 'ece', file: 'timetable_ece.json' },
+  { label: 'Electrical', value: 'electrical', file: 'timetable_electrical.json' },
+  { label: 'Mechanical', value: 'mechanical', file: 'timetable_mechanical.json' },
+  { label: 'Civil', value: 'civil', file: 'timetable_civil.json' },
+  { label: 'CA', value: 'ca', file: 'timetable_ca.json' },
+];
+
 export default function StudentForm({ navigate }) {
+  const { profile, saveProfile } = useProfile();
   const [name, setName] = useState('');
+  const [department, setDepartment] = useState('cse');
   const [year, setYear] = useState('D2');
   const [section, setSection] = useState('A');
   const [subgroup, setSubgroup] = useState('1');
   const [availableGroups, setAvailableGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Load timetable data to get available groups
+  // Load timetable data to get available groups based on department
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        const resp = await fetch('/timetable_cse.json');
+        const deptConfig = DEPARTMENT_OPTIONS.find(d => d.value === department);
+        const resp = await fetch(`/${deptConfig.file}`);
         if (resp.ok) {
           const json = await resp.json();
           if (json.timetable) {
@@ -60,34 +75,31 @@ export default function StudentForm({ navigate }) {
         }
       } catch (e) {
         console.warn('Failed to load timetable:', e);
+        setAvailableGroups([]);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [department]);
 
-  // Load saved profile
+  // Load saved profile from context
   useEffect(() => {
-    (async () => {
-      try {
-        const raw = await AsyncStorage.getItem('@tt/profile');
-        if (!raw) return;
-        const p = JSON.parse(raw);
-        setName(p.name || '');
-        // Parse the group format (e.g., "D2A1" -> year: D2, section: A, subgroup: 1)
-        if (p.group) {
-          const match = p.group.match(/^(D\d)([A-F])(\d)$/);
-          if (match) {
-            setYear(match[1]);
-            setSection(match[2]);
-            setSubgroup(match[3]);
-          }
-        }
-      } catch (e) {
-        console.warn(e);
+    if (profile) {
+      setName(profile.name || '');
+      if (profile.department) {
+        setDepartment(profile.department);
       }
-    })();
-  }, []);
+      // Parse the group format (e.g., "D2A1" -> year: D2, section: A, subgroup: 1)
+      if (profile.group) {
+        const match = profile.group.match(/^(D\d)([A-F])(\d)$/);
+        if (match) {
+          setYear(match[1]);
+          setSection(match[2]);
+          setSubgroup(match[3]);
+        }
+      }
+    }
+  }, [profile]);
 
   // Compute the full group code
   const groupCode = `${year}${section}${subgroup}`;
@@ -102,18 +114,22 @@ export default function StudentForm({ navigate }) {
       Alert.alert('Error', `Group ${groupCode} is not available in the timetable. Please select a valid combination.`);
       return;
     }
-    try {
-      await AsyncStorage.setItem('@tt/profile', JSON.stringify({ 
-        name, 
-        year, 
-        section,
-        subgroup,
-        group: groupCode 
-      }));
+    
+    const newProfile = { 
+      name,
+      department,
+      year, 
+      section,
+      subgroup,
+      group: groupCode 
+    };
+    
+    const success = await saveProfile(newProfile);
+    if (success) {
       Alert.alert('Saved', 'Profile saved successfully!');
       navigate('home');
-    } catch (e) {
-      Alert.alert('Error', String(e));
+    } else {
+      Alert.alert('Error', 'Failed to save profile');
     }
   }
 
@@ -141,7 +157,7 @@ export default function StudentForm({ navigate }) {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Student Profile</Text>
-            <Text style={styles.subtitle}>Enter your details to get personalized CSE timetable</Text>
+            <Text style={styles.subtitle}>Enter your details to get personalized timetable</Text>
           </View>
 
           {loading ? (
@@ -160,6 +176,30 @@ export default function StudentForm({ navigate }) {
                     placeholder="Enter your name"
                     placeholderTextColor={colors.muted}
                   />
+                </View>
+
+                {/* Department Selection */}
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.label}>Select Department</Text>
+                  <View style={styles.departmentGrid}>
+                    {DEPARTMENT_OPTIONS.map((option) => (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[
+                          styles.departmentCard,
+                          department === option.value && styles.departmentCardSelected
+                        ]}
+                        onPress={() => setDepartment(option.value)}
+                      >
+                        <Text style={[
+                          styles.departmentText,
+                          department === option.value && styles.departmentTextSelected
+                        ]}>
+                          {option.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
 
                 {/* Year Selection */}
@@ -386,6 +426,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   optionTextSelected: {
+    color: '#fff',
+  },
+  departmentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 10,
+  },
+  departmentCard: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fafafa',
+  },
+  departmentCardSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  departmentText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  departmentTextSelected: {
     color: '#fff',
   },
   sectionGrid: {

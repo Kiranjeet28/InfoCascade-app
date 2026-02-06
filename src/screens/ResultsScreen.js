@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Header from '../components/Header';
 import PrimaryButton from '../components/PrimaryButton';
 import colors from '../constants/colors';
+import { useProfile } from '../context/ProfileContext';
 
 const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const TIME_SLOTS = ['08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30'];
 
-export default function ResultsScreen({ route, navigate }) {
-  const { params = {} } = route || {};
-  const { group } = params;
+export default function ResultsScreen({ navigate }) {
+  const { profile, loading: profileLoading, getTimetableFile, getDepartmentLabel, hasProfile } = useProfile();
   const [timetableData, setTimetableData] = useState(null);
   const [currentNext, setCurrentNext] = useState({ current: null, next: null });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(getCurrentDay());
 
   function getCurrentDay() {
@@ -22,32 +23,45 @@ export default function ResultsScreen({ route, navigate }) {
   }
 
   useEffect(() => {
+    if (profileLoading) return;
+    
+    if (!hasProfile) {
+      setError('Please set up your profile first');
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
     (async () => {
       try {
-        const resp = await fetch('/timetable_cse.json');
+        setLoading(true);
+        const timetableFile = getTimetableFile();
+        const resp = await fetch(`/${timetableFile}`);
         if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
         const json = await resp.json();
         
         if (!mounted) return;
         
-        if (json.timetable && json.timetable[group]) {
-          setTimetableData(json.timetable[group]);
+        if (json.timetable && json.timetable[profile.group]) {
+          setTimetableData(json.timetable[profile.group]);
           // Calculate current and next class
-          const classes = json.timetable[group].classes || [];
+          const classes = json.timetable[profile.group].classes || [];
           const { current, next } = findCurrentAndNextClass(classes);
           setCurrentNext({ current, next });
+          setError(null);
         } else {
-          setError(`No timetable found for group: ${group}`);
+          setError(`No timetable found for group: ${profile.group}`);
         }
       } catch (e) {
         console.error(e);
         if (!mounted) return;
         setError(String(e));
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => { mounted = false; };
-  }, [group]);
+  }, [profile, profileLoading, hasProfile]);
 
   function findCurrentAndNextClass(classes) {
     const now = new Date();
@@ -120,12 +134,25 @@ export default function ResultsScreen({ route, navigate }) {
       );
     }
 
+    // Single subject class (including Tut with 1 entry - flattened structure)
+    // If OtherDepartment is true, show "Mandatory Course" as subject
+    if (data.OtherDepartment === true) {
+      return (
+        <View style={[styles.classCard, styles.freeClassCard]}>
+          <Text style={styles.subjectText}>Mandatory Course</Text>
+        </View>
+      );
+    }
+    
+    
     return (
-      <View style={[styles.classCard, data.Lab && styles.labCard]}>
+      <View style={[styles.classCard, data.Lab && styles.labCard, data.Tut && styles.tutCard, data.MinorProject && styles.mnpCard]}>
         {data.Lab && <Text style={styles.labBadge}>LAB</Text>}
-        <Text style={styles.subjectText}>{data.subject}</Text>
-        <Text style={styles.teacherText}>{data.teacher}</Text>
-        <Text style={styles.roomText}>📍 {data.classRoom}</Text>
+        {data.Tut && <Text style={styles.tutBadge}>TUT</Text>}
+        {data.MinorProject && <Text style={styles.mnpBadge}>MNP</Text>}
+        <Text style={styles.subjectText}>{data.MinorProject ? 'Minor Project' : data.subject}</Text>
+        {data.teacher ? <Text style={styles.teacherText}>{data.teacher}</Text> : null}
+        {data.classRoom ? <Text style={styles.roomText}>📍 {data.classRoom}</Text> : null}
       </View>
     );
   }
@@ -142,23 +169,41 @@ export default function ResultsScreen({ route, navigate }) {
 
   return (
     <View style={styles.container}>
-      <Header title="CSE Timetable" />
+      <Header title={`${getDepartmentLabel()} Timetable`} />
       
-      {/* Group Info */}
-      <View style={styles.groupInfoBar}>
-        <Text style={styles.groupLabel}>Group:</Text>
-        <View style={styles.groupBadge}>
-          <Text style={styles.groupText}>{group}</Text>
+      {/* Profile Info Bar */}
+      {hasProfile && (
+        <View style={styles.groupInfoBar}>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile.name}</Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.deptBadge}>
+                <Text style={styles.deptText}>{getDepartmentLabel()}</Text>
+              </View>
+              <View style={styles.groupBadge}>
+                <Text style={styles.groupText}>{profile.group}</Text>
+              </View>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.editBtn} onPress={() => navigate('student')}>
+            <Text style={styles.editBtnText}>Edit</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigate('home')}>
-          <Text style={styles.backBtnText}>← Back</Text>
-        </TouchableOpacity>
-      </View>
+      )}
 
-      {error ? (
+      {loading || profileLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading timetable...</Text>
+        </View>
+      ) : error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <PrimaryButton title="Go Back" onPress={() => navigate('home')} />
+          {!hasProfile ? (
+            <PrimaryButton title="Set Up Profile" onPress={() => navigate('student')} />
+          ) : (
+            <PrimaryButton title="Go to Home" onPress={() => navigate('home')} />
+          )}
         </View>
       ) : (
         <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -259,36 +304,67 @@ const styles = StyleSheet.create({
   groupInfoBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  groupLabel: {
-    fontSize: 14,
-    color: colors.muted,
-    marginRight: 8,
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  deptBadge: {
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  deptText: {
+    color: '#1565c0',
+    fontWeight: '600',
+    fontSize: 12,
   },
   groupBadge: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   groupText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12,
   },
-  backBtn: {
-    marginLeft: 'auto',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  editBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
   },
-  backBtnText: {
+  editBtnText: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.muted,
   },
   scroll: { flex: 1 },
   errorContainer: {
@@ -423,6 +499,10 @@ const styles = StyleSheet.create({
     borderLeftColor: '#ff9800',
     backgroundColor: '#fff3e0',
   },
+  tutCard: {
+    borderLeftColor: '#2196f3',
+    backgroundColor: '#e3f2fd',
+  },
   labBadge: {
     position: 'absolute',
     top: 4,
@@ -441,6 +521,53 @@ const styles = StyleSheet.create({
     top: 4,
     right: 4,
     backgroundColor: '#ff9800',
+    color: '#fff',
+    fontSize: 9,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontWeight: 'bold',
+    overflow: 'hidden',
+  },
+  tutBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#2196f3',
+    color: '#fff',
+    fontSize: 9,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontWeight: 'bold',
+    overflow: 'hidden',
+  },
+  mnpCard: {
+    borderLeftColor: '#4caf50',
+    backgroundColor: '#e8f5e9',
+  },
+  mnpBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#4caf50',
+    color: '#fff',
+    fontSize: 9,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontWeight: 'bold',
+    overflow: 'hidden',
+  },
+  otherDeptCard: {
+    borderLeftColor: '#607d8b',
+    backgroundColor: '#eceff1',
+  },
+  otherDeptBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#607d8b',
     color: '#fff',
     fontSize: 9,
     paddingHorizontal: 6,

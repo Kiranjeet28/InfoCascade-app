@@ -1,92 +1,88 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Header from '../components/Header';
 import PrimaryButton from '../components/PrimaryButton';
+import colors from '../constants/colors';
+import { useProfile } from '../context/ProfileContext';
 
 export default function HomeScreen({ navigate }) {
-  // Manual options (static) — derived from the provided table of contents
-  const options = {
-    D2CSE: ['D2 CS A','D2 CS B','D2 CS C','D2 CS D','D2 CS E','D2 CS F'],
-    D3CSE: ['D3 CS A','D3 CS B','D3 CS C','D3 CS D','D3 CS E'],
-    D4CSE: ['D4 CS A','D4 CS B','D4 CS C'],
-    M1: ['M1 Automatic Group'],
-    M3: ['M3 Automatic Group'],
-    'Ph.D': ['Ph.D Automatic Group'],
-    'D1 CS A': ['D1 CS A1','D1 CS A2'],
-    'D1 CS B': ['D1 CS B1','D1 CS B2'],
-    'D1 CS C': ['D1 CS C1','D1 CS C2'],
-    'D1 CS D': ['D1 CS D1','D1 CS D2'],
-    'D1 CS E': ['D1 CS E1','D1 CS E2'],
-    'D1 CS F': ['D1 CS F1','D1 CS F2'],
-    'D1 ME A': ['D1 ME A1','D1 ME A2'],
-    'D1 ME B': ['D1 ME B1','D1 ME B2'],
-    'D1 EC A': ['D1 EC A1','D1 EC A2'],
-    'D1 ECB ITD': ['D1 ECB','D1 ITD'],
-    'D1 MX': ['D1 MX1','D1 MX2'],
-    'MBA DEPT': ['MBA DEPT Automatic Group']
-  };
-
-  const years = Object.keys(options);
-  const [year, setYear] = useState(years[0]);
-  const [group, setGroup] = useState(options[years[0]][0]);
-
-  async function handleGetTimetable() {
-    try {
-      // Read the pre-fetched timetable file placed at /web/timetable.json
-      const resp = await fetch('/timetable.json');
-      if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(`Failed to load timetable: ${resp.status} ${resp.statusText}\n${text.slice(0,200)}`);
-      }
-      const ct = resp.headers.get('content-type') || '';
-      if (!ct.includes('application/json')) {
-        const text = await resp.text();
-        throw new Error(`Expected JSON but received ${ct}: ${text.slice(0,200)}`);
-      }
-      const json = await resp.json();
-
-      // filter matches locally for the selected group
-      const groupLower = (group || '').toLowerCase();
-      const matches = [];
-      (json.tables || []).forEach((table, ti) => {
-        (table.rows || []).forEach((row, ri) => {
-          const combined = Object.values(row).join(' ').toLowerCase();
-          if (combined.includes(groupLower)) matches.push({ table: ti, rowIndex: ri, row });
-        });
-      });
-
-      navigate('results', { group, data: { group, matches, sourceUrl: json.url } });
-    } catch (err) {
-      Alert.alert('Error', String(err));
-      console.error(err);
-    }
-  }
+  const { profile, hasProfile, getDepartmentLabel } = useProfile();
 
   return (
     <View style={styles.container}>
       <Header title="Home" />
-      <View style={{ alignItems: 'flex-end' }}>
-        <PrimaryButton title="Edit Profile" onPress={() => navigate('student')} />
-      </View>
-      <Text style={styles.text}>Select Year and Group to fetch timetable:</Text>
-
-      <Text style={styles.label}>Year</Text>
-      <View style={styles.pickerWrap}>
-        <Picker selectedValue={year} onValueChange={v => { setYear(v); setGroup(options[v][0]); }}>
-          {years.map(y => <Picker.Item key={y} label={y} value={y} />)}
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Group</Text>
-      <View style={styles.pickerWrap}>
-        <Picker selectedValue={group} onValueChange={v => setGroup(v)}>
-          {(options[year] || []).map(g => <Picker.Item key={g} label={g} value={g} />)}
-        </Picker>
+      
+      {/* Welcome Section */}
+      <View style={styles.welcomeSection}>
+        <Text style={styles.welcomeText}>
+          {hasProfile ? `Welcome, ${profile.name}!` : 'Welcome!'}
+        </Text>
+        <Text style={styles.subtitleText}>
+          {hasProfile 
+            ? 'Your timetable is ready to view'
+            : 'Set up your profile to view your personalized timetable'
+          }
+        </Text>
       </View>
 
-      <View style={styles.buttonWrap}>
-        <PrimaryButton title="Get Timetable" onPress={handleGetTimetable} />
+      {/* Profile Card */}
+      {hasProfile ? (
+        <View style={styles.profileCard}>
+          <View style={styles.profileHeader}>
+            <Text style={styles.profileTitle}>Your Profile</Text>
+            <TouchableOpacity onPress={() => navigate('student')}>
+              <Text style={styles.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.profileDetails}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Name:</Text>
+              <Text style={styles.detailValue}>{profile.name}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Department:</Text>
+              <View style={styles.deptBadge}>
+                <Text style={styles.deptText}>{getDepartmentLabel()}</Text>
+              </View>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Group:</Text>
+              <View style={styles.groupBadge}>
+                <Text style={styles.groupText}>{profile.group}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.setupCard}>
+          <Text style={styles.setupIcon}>📋</Text>
+          <Text style={styles.setupTitle}>Profile Not Set</Text>
+          <Text style={styles.setupText}>
+            Please set up your profile with your department, year, section, and subgroup to access your personalized timetable.
+          </Text>
+          <PrimaryButton title="Set Up Profile" onPress={() => navigate('student')} />
+        </View>
+      )}
+
+      {/* Action Buttons */}
+      <View style={styles.actionSection}>
+        {hasProfile && (
+          <View style={styles.mainButton}>
+            <PrimaryButton 
+              title="View My Timetable" 
+              onPress={() => navigate('results')} 
+            />
+          </View>
+        )}
+        
+        <View style={styles.secondaryButtons}>
+          <TouchableOpacity 
+            style={styles.secondaryButton} 
+            onPress={() => navigate('about')}
+          >
+            <Text style={styles.secondaryButtonText}>About</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -96,15 +92,141 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff'
+    backgroundColor: '#f5f7fa'
   },
-  text: {
-    fontSize: 16,
-    color: '#333',
-    marginVertical: 12,
+  welcomeSection: {
+    marginTop: 20,
+    marginBottom: 24,
   },
-  buttonWrap: {
-    marginTop: 16,
-    width: '60%'
-  }
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: colors.muted,
+  },
+  profileCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 24,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  profileTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  editLink: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  profileDetails: {
+    gap: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: colors.muted,
+    width: 100,
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  deptBadge: {
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  deptText: {
+    color: '#1565c0',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  groupBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  groupText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  setupCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 24,
+  },
+  setupIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  setupTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  setupText: {
+    fontSize: 14,
+    color: colors.muted,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  actionSection: {
+    marginTop: 'auto',
+    paddingBottom: 20,
+  },
+  mainButton: {
+    marginBottom: 16,
+  },
+  secondaryButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  secondaryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
 });
