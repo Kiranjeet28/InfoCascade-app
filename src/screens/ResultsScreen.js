@@ -135,8 +135,11 @@ export default function ResultsScreen({ navigate }) {
     }
 
     // Single subject class (including Tut with 1 entry - flattened structure)
-    // If OtherDepartment is true, show "Mandatory Course" as subject
-    if (data.OtherDepartment === true) {
+    // Helper to check if subject is a project
+    const isProject = data.subject === 'Minor Project' || data.subject === 'Major Project';
+    
+    // If OtherDepartment is true and NOT a Project, show "Mandatory Course" as subject
+    if (data.OtherDepartment === true && !isProject) {
       return (
         <View style={[styles.classCard, styles.freeClassCard]}>
           <Text style={styles.subjectText}>Mandatory Course</Text>
@@ -146,11 +149,11 @@ export default function ResultsScreen({ navigate }) {
     
     
     return (
-      <View style={[styles.classCard, data.Lab && styles.labCard, data.Tut && styles.tutCard, data.MinorProject && styles.mnpCard]}>
+      <View style={[styles.classCard, data.Lab && styles.labCard, data.Tut && styles.tutCard, isProject && styles.projectCard]}>
         {data.Lab && <Text style={styles.labBadge}>LAB</Text>}
         {data.Tut && <Text style={styles.tutBadge}>TUT</Text>}
-        {data.MinorProject && <Text style={styles.mnpBadge}>MNP</Text>}
-        <Text style={styles.subjectText}>{data.MinorProject ? 'Minor Project' : data.subject}</Text>
+        {isProject && <Text style={styles.projectBadge}>{data.subject === 'Minor Project' ? 'MNP' : 'MJP'}</Text>}
+        <Text style={styles.subjectText}>{data.subject}</Text>
         {data.teacher ? <Text style={styles.teacherText}>{data.teacher}</Text> : null}
         {data.classRoom ? <Text style={styles.roomText}>📍 {data.classRoom}</Text> : null}
       </View>
@@ -542,11 +545,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     overflow: 'hidden',
   },
-  mnpCard: {
+  projectCard: {
     borderLeftColor: '#4caf50',
     backgroundColor: '#e8f5e9',
   },
-  mnpBadge: {
+  projectBadge: {
     position: 'absolute',
     top: 4,
     right: 4,

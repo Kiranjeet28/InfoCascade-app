@@ -49,10 +49,10 @@ export function ProfileProvider({ children }) {
 
   // Helper to get the timetable file name based on department
   function getTimetableFile() {
-    if (!profile || !profile.department) return 'timetable.json';
+    if (!profile || !profile.department) return 'timetable_cse.json';
     
     const deptFiles = {
-      cse: 'timetable.json',
+      cse: 'timetable_cse.json',
       it: 'timetable_it.json',
       ece: 'timetable_ece.json',
       electrical: 'timetable_electrical.json',
@@ -61,7 +61,7 @@ export function ProfileProvider({ children }) {
       ca: 'timetable_ca.json',
     };
     
-    return deptFiles[profile.department] || 'timetable.json';
+    return deptFiles[profile.department] || 'timetable_cse.json';
   }
 
   // Helper to get department label

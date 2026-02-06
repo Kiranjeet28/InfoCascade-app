@@ -40,7 +40,7 @@ const SUBGROUP_OPTIONS = [
 
 // Department options
 const DEPARTMENT_OPTIONS = [
-  { label: 'CSE', value: 'cse', file: 'timetable_cse.json' },
+  { label: 'CSE', value: 'cse', file: 'timetable.json' },
   { label: 'IT', value: 'it', file: 'timetable_it.json' },
   { label: 'ECE', value: 'ece', file: 'timetable_ece.json' },
   { label: 'Electrical', value: 'electrical', file: 'timetable_electrical.json' },

@@ -28,21 +28,31 @@ function isTutSubject(subject) {
   return trimmed.endsWith(' T');
 }
 
-// Helper to check if subject is Minor Project (MNP MNP)
-function isMinorProject(subject) {
-  if (!subject) return false;
-  const trimmed = subject.trim().toUpperCase();
-  return trimmed === 'MNP MNP';
+// Helper to check if subject is Minor Project (MNP) or Major Project (MJP) and normalize it
+function normalizeProjectSubject(data) {
+  if (!data.subject) return;
+  const trimmed = data.subject.trim().toUpperCase();
+  // Check for MNP MNP (Minor Project) or MJP MJP (Major Project)
+  if (trimmed === 'MNP MNP' || trimmed === 'MJP MJP' || trimmed === 'MNP' || trimmed === 'MJP') {
+    data.teacher = null;
+    if (trimmed.includes('MNP')) {
+      data.subject = 'Minor Project';
+    } else if (trimmed.includes('MJP')) {
+      data.subject = 'Major Project';
+    }
+  }
 }
 
-// Helper to add Lab, Tut, and MinorProject fields to data object
+// Helper to add Lab and Tut fields to data object
 function addLabAndTutFields(data) {
   // For single subject classes
   if (data.subject) {
     data.Lab = isLabSubject(data.subject);
     data.Tut = isTutSubject(data.subject);
-    data.MinorProject = isMinorProject(data.subject);
     data.OtherDepartment = false;
+    
+    // If it's a project (MNP or MJP), normalize subject name and set teacher to null
+    normalizeProjectSubject(data);
   }
   
   // For classes with entries (elective/lab groups)
@@ -79,11 +89,10 @@ function addLabAndTutFields(data) {
     // Don't add Lab/Tut fields inside individual entries
   }
   
-  // Mark as OtherDepartment when: elective=false, freeClass=false, entries=null, and no Lab/Tut/MinorProject
-  if (data.elective === false && data.freeClass === false && data.entries === null && !data.Lab && !data.Tut && !data.MinorProject) {
+  // Mark as OtherDepartment when: elective=false, freeClass=false, entries=null, and no Lab/Tut
+  if (data.elective === false && data.freeClass === false && data.entries === null && !data.Lab && !data.Tut) {
     data.Lab = false;
     data.Tut = false;
-    data.MinorProject = false;
     data.OtherDepartment = true;
   }
   
@@ -273,6 +282,25 @@ function parseCell($, cell) {
     .split(/<br\s*\/?\>/i)
     .map((v) => cheerio.load(v).text().trim())
     .filter(Boolean);
+
+  // Check if any part contains MJP MJP or MNP MNP (Project)
+  const projectIndex = parts.findIndex(p => {
+    const upper = p.toUpperCase();
+    return upper === 'MJP MJP' || upper === 'MNP MNP' || upper === 'MJP' || upper === 'MNP';
+  });
+  
+  if (projectIndex !== -1) {
+    // Found a project - handle different structures
+    // Structure could be: [groups, MJP/MNP, teachers, room] or [MJP/MNP, teachers, room]
+    const projectPart = parts[projectIndex];
+    const isMinor = projectPart.toUpperCase().includes('MNP');
+    const subject = isMinor ? 'Minor Project' : 'Major Project';
+    
+    // Room is typically the last part
+    const classRoom = parts[parts.length - 1] || null;
+    
+    return { subject, teacher: null, classRoom, elective: false, freeClass: false };
+  }
 
   if (parts.length === 3) {
     return { subject: parts[0], teacher: parts[1], classRoom: parts[2], elective: false, freeClass: false };
