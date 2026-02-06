@@ -17,22 +17,31 @@ const SOURCE_URL = DEPARTMENT_URLS.cse;
 function isLabSubject(subject) {
   if (!subject) return false;
   const trimmed = subject.trim();
-  return trimmed.endsWith('P') || trimmed.startsWith('(P)');
+  return trimmed.endsWith(' P') || trimmed.startsWith('(P)');
 }
 
 // Helper to check if subject ends with T (Tutorial)
 function isTutSubject(subject) {
   if (!subject) return false;
   const trimmed = subject.trim();
-  return trimmed.endsWith(' T') || trimmed.endsWith('T');
+  // Check if subject name ends with 'T' (indicating Tutorial)
+  return trimmed.endsWith(' T');
 }
 
-// Helper to add Lab and Tut fields to data object
+// Helper to check if subject is Minor Project (MNP MNP)
+function isMinorProject(subject) {
+  if (!subject) return false;
+  const trimmed = subject.trim().toUpperCase();
+  return trimmed === 'MNP MNP';
+}
+
+// Helper to add Lab, Tut, and MinorProject fields to data object
 function addLabAndTutFields(data) {
   // For single subject classes
   if (data.subject) {
     data.Lab = isLabSubject(data.subject);
     data.Tut = isTutSubject(data.subject);
+    data.MinorProject = isMinorProject(data.subject);
     data.OtherDepartment = false;
   }
   
@@ -53,6 +62,15 @@ function addLabAndTutFields(data) {
       data.elective = false;
       data.Lab = false;
       data.Tut = true;
+      
+      // If only 1 entry in Tut, flatten the structure (no need for array)
+      if (data.entries.length === 1) {
+        const entry = data.entries[0];
+        data.subject = entry.subject;
+        data.teacher = entry.teacher;
+        data.classRoom = entry.classRoom;
+        data.entries = null;
+      }
     } else {
       data.Lab = false;
       data.Tut = false;
@@ -61,10 +79,11 @@ function addLabAndTutFields(data) {
     // Don't add Lab/Tut fields inside individual entries
   }
   
-  // Mark as OtherDepartment when: elective=false, freeClass=false, entries=null, and no Lab/Tut
-  if (data.elective === false && data.freeClass === false && data.entries === null && !data.Lab && !data.Tut) {
+  // Mark as OtherDepartment when: elective=false, freeClass=false, entries=null, and no Lab/Tut/MinorProject
+  if (data.elective === false && data.freeClass === false && data.entries === null && !data.Lab && !data.Tut && !data.MinorProject) {
     data.Lab = false;
     data.Tut = false;
+    data.MinorProject = false;
     data.OtherDepartment = true;
   }
   
