@@ -1,18 +1,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-// Department URLs
-const DEPARTMENT_URLS = {
-  cse: 'https://cse.gndec.ac.in/sites/default/files/TT%20Jan-June%202026_groups_days_horizontal%20%281%29.html',
-  civil: 'http://ce.gndec.ac.in/sites/default/files/TT_29.01.2026_groups_days_horizontal.html',
-  mechanical: 'https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html',
-  electrical: 'https://ee.gndec.ac.in/sites/default/files/R2.1%20TT%20jan-june%202026%20%282%29_years_days_horizontal.html',
-  ece: 'https://ece.gndec.ac.in/sites/default/files/classes%20individual%20%283%29.html',
-  it: 'https://it.gndec.ac.in/sites/default/files/jan_june2025_6%2027%20dec_years_days_horizontal%20%284%29.html',
-  ca: 'https://ca.gndec.ac.in/sites/default/files/ca_JAN26_rooms_u.html'
-};
-
-const SOURCE_URL = DEPARTMENT_URLS.cse;
+// CSE Department URL only
+const CSE_URL = 'https://cse.gndec.ac.in/sites/default/files/TT%20Jan-June%202026_groups_days_horizontal%20%281%29.html';
 
 function isLabSubject(subject) {
   if (!subject) return false;
@@ -174,18 +164,30 @@ function filterEntriesBySubgroup(classes, subgroup) {
   });
 }
 
-async function scrapeTimetable(url, department = null) {
-  const { data: html } = await axios.get(url); 
+async function scrapeCseTimetable(url = CSE_URL) {
+  const { data: html } = await axios.get(url);
   const $ = cheerio.load(html);
-
   const result = {};
+  const fs = require('fs');
+  const path = require('path');
+  const groupPath = path.join(__dirname, '../../../web/group/cse.json');
+  let existingGroups = [];
+  // Read existing groups if file exists
+  if (fs.existsSync(groupPath)) {
+    try {
+      const content = fs.readFileSync(groupPath, 'utf8');
+      existingGroups = JSON.parse(content);
+      if (!Array.isArray(existingGroups)) existingGroups = [];
+    } catch (e) {
+      existingGroups = [];
+    }
+  }
 
   $('table').each((_, table) => {
     const yearSec = $(table).find('thead tr:first-child th[colspan]').text().trim();
     if (!yearSec) return;
 
     const classes = [];
-
     const xAxis = [];
     $(table)
       .find('thead tr')
@@ -202,41 +204,35 @@ async function scrapeTimetable(url, department = null) {
       const timeOfClass = yAxisCell.text().trim();
       if (!timeOfClass) return;
 
-      const tds = $(row).children('td'); // IMPORTANT: direct children only
-
+      const tds = $(row).children('td');
       tds.each((colIndex, td) => {
         const dayOfClass = xAxis[colIndex];
         if (!dayOfClass) return;
 
         const data = addLabAndTutFields(parseCell($, td));
-
-        classes.push({
-          dayOfClass,
-          timeOfClass,
-          data,
-        });
+        classes.push({ dayOfClass, timeOfClass, data });
       });
     });
 
-    // Transform section name only for CSE department
-    if (department === 'cse') {
-      // Find max subgroups based on lab/tut entries
-      const maxSubgroups = findMaxSubgroups(classes);
-      const sectionNames = transformSectionName(yearSec, maxSubgroups);
-      
-      sectionNames.forEach(sectionName => {
-        if (sectionNames.length > 1) {
-          const filteredClasses = filterEntriesBySubgroup(JSON.parse(JSON.stringify(classes)), sectionName);
-          result[sectionName] = { classes: filteredClasses };
-        } else {
-          result[sectionName] = { classes: JSON.parse(JSON.stringify(classes)) };
-        }
-      });
-    } else {
-      result[yearSec] = { classes: JSON.parse(JSON.stringify(classes)) };
-    }
+    // Only CSE logic
+    const maxSubgroups = findMaxSubgroups(classes);
+    const sectionNames = transformSectionName(yearSec, maxSubgroups);
+    sectionNames.forEach(sectionName => {
+      // Add new group to cse.json if not already present
+      if (!existingGroups.includes(sectionName)) {
+        existingGroups.push(sectionName);
+        // Write updated group list immediately
+        fs.mkdirSync(path.dirname(groupPath), { recursive: true });
+        fs.writeFileSync(groupPath, JSON.stringify(existingGroups, null, 2));
+      }
+      if (sectionNames.length > 1) {
+        const filteredClasses = filterEntriesBySubgroup(JSON.parse(JSON.stringify(classes)), sectionName);
+        result[sectionName] = { classes: filteredClasses };
+      } else {
+        result[sectionName] = { classes: JSON.parse(JSON.stringify(classes)) };
+      }
+    });
   });
-
   return result;
 }
 
@@ -313,46 +309,34 @@ function parseCell($, cell) {
   return { elective: entries.length > 1, freeClass: false, entries: entries.length > 1 ? entries : null };
 }
 
-async function scrapeGndecTimetable(url = SOURCE_URL) {
-  const timetable = await scrapeTimetable(url, 'cse');
+async function scrapeCseAndSave(url = CSE_URL) {
+  const timetable = await scrapeCseTimetable(url);
+  const fs = require('fs');
+  const path = require('path');
+  const groupPath = path.join(__dirname, '../../../web/group/cse.json');
+  try {
+    if (!timetable || typeof timetable !== 'object') {
+      console.error('Timetable is invalid:', timetable);
+      return { url, timetable };
+    }
+    const groupNames = Object.keys(timetable);
+    fs.mkdirSync(path.dirname(groupPath), { recursive: true });
+    fs.writeFileSync(groupPath, JSON.stringify(groupNames, null, 2));
+  } catch (err) {
+    console.error('Failed to write CSE group info:', err.message);
+  }
   return { url, timetable };
 }
 
-// Scrape a specific department by name
-async function scrapeDepartmentTimetable(department) {
-  const url = DEPARTMENT_URLS[department.toLowerCase()];
-  if (!url) {
-    throw new Error(`Unknown department: ${department}. Available: ${Object.keys(DEPARTMENT_URLS).join(', ')}`);
-  }
-  const timetable = await scrapeTimetable(url, department.toLowerCase());
-  return { department, url, timetable };
-}
+module.exports = { scrapeCseTimetable, scrapeCseAndSave };
 
-// Scrape all departments
-async function scrapeAllDepartments() {
-  const results = {};
-  const departments = Object.keys(DEPARTMENT_URLS);
-  
-  for (const dept of departments) {
-    try {
-      console.log(`Scraping ${dept.toUpperCase()} department...`);
-      const timetable = await scrapeTimetable(DEPARTMENT_URLS[dept], dept);
-      results[dept] = {
-        url: DEPARTMENT_URLS[dept],
-        timetable
-      };
-      console.log(`✓ ${dept.toUpperCase()} done`);
-    } catch (err) {
-      console.error(`✗ Failed to scrape ${dept.toUpperCase()}:`, err.message);
-      results[dept] = {
-        url: DEPARTMENT_URLS[dept],
-        error: err.message,
-        timetable: null
-      };
-    }
-  }
-  
-  return results;
+// Run scraper if executed directly
+if (require.main === module) {
+  scrapeCseAndSave()
+    .then(({ url, timetable }) => {
+      console.log('Scraping complete. Timetable saved for CSE groups.');
+    })
+    .catch(err => {
+      console.error('Error scraping CSE timetable:', err);
+    });
 }
-
-module.exports = { scrapeGndecTimetable, scrapeDepartmentTimetable, scrapeAllDepartments, DEPARTMENT_URLS };

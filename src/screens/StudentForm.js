@@ -14,6 +14,7 @@ import {
 import PrimaryButton from '../components/PrimaryButton';
 import colors from '../constants/colors';
 import { useProfile } from '../context/ProfileContext';
+import cseGroups from '../../web/group/cse.json';
 
 // Year options based on timetable data (D2, D3, D4 = 2nd, 3rd, 4th year)
 const YEAR_OPTIONS = [
@@ -40,7 +41,7 @@ const SUBGROUP_OPTIONS = [
 
 // Department options
 const DEPARTMENT_OPTIONS = [
-  { label: 'CSE', value: 'cse', file: 'timetable.json' },
+  { label: 'CSE', value: 'cse', file: 'timetable_cse.json' },
   { label: 'IT', value: 'it', file: 'timetable_it.json' },
   { label: 'ECE', value: 'ece', file: 'timetable_ece.json' },
   { label: 'Electrical', value: 'electrical', file: 'timetable_electrical.json' },
@@ -53,57 +54,27 @@ export default function StudentForm({ navigate }) {
   const { profile, saveProfile } = useProfile();
   const [name, setName] = useState('');
   const [department, setDepartment] = useState('cse');
-  const [year, setYear] = useState('D2');
-  const [section, setSection] = useState('A');
-  const [subgroup, setSubgroup] = useState('1');
+  const [selectedGroup, setSelectedGroup] = useState('');
   const [availableGroups, setAvailableGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Load timetable data to get available groups based on department
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const deptConfig = DEPARTMENT_OPTIONS.find(d => d.value === department);
-        const resp = await fetch(`/${deptConfig.file}`);
-        if (resp.ok) {
-          const json = await resp.json();
-          if (json.timetable) {
-            const groups = Object.keys(json.timetable);
-            setAvailableGroups(groups);
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to load timetable:', e);
-        setAvailableGroups([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setAvailableGroups([]);
   }, [department]);
 
   // Load saved profile from context
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
-      if (profile.department) {
-        setDepartment(profile.department);
-      }
-      // Parse the group format (e.g., "D2A1" -> year: D2, section: A, subgroup: 1)
       if (profile.group) {
-        const match = profile.group.match(/^(D\d)([A-F])(\d)$/);
-        if (match) {
-          setYear(match[1]);
-          setSection(match[2]);
-          setSubgroup(match[3]);
-        }
+        setSelectedGroup(profile.group);
       }
     }
   }, [profile]);
 
   // Compute the full group code
-  const groupCode = `${year}${section}${subgroup}`;
-  const isValidGroup = availableGroups.length === 0 || availableGroups.includes(groupCode);
+  const isValidGroup = availableGroups.length === 0 || availableGroups.includes(selectedGroup);
 
   async function save() {
     if (!name.trim()) {
@@ -111,19 +82,10 @@ export default function StudentForm({ navigate }) {
       return;
     }
     if (availableGroups.length > 0 && !isValidGroup) {
-      Alert.alert('Error', `Group ${groupCode} is not available in the timetable. Please select a valid combination.`);
+      Alert.alert('Error', `Group ${selectedGroup} is not available in the timetable. Please select a valid group.`);
       return;
     }
-    
-    const newProfile = { 
-      name,
-      department,
-      year, 
-      section,
-      subgroup,
-      group: groupCode 
-    };
-    
+    const newProfile = { name, department, group: selectedGroup };
     const success = await saveProfile(newProfile);
     if (success) {
       Alert.alert('Saved', 'Profile saved successfully!');
@@ -133,15 +95,7 @@ export default function StudentForm({ navigate }) {
     }
   }
 
-  // Check which sections are available for selected year
-  const getAvailableSections = () => {
-    if (availableGroups.length === 0) return SECTION_OPTIONS;
-    return SECTION_OPTIONS.filter(opt => 
-      availableGroups.some(g => g.startsWith(`${year}${opt.value}`))
-    );
-  };
-
-  const availableSections = getAvailableSections();
+  // Remove unused section/year/subgroup logic
 
   return (
     <KeyboardAvoidingView 
@@ -178,7 +132,7 @@ export default function StudentForm({ navigate }) {
                   />
                 </View>
 
-                {/* Department Selection */}
+                {/* Department Display (only CSE) */}
                 <View style={styles.sectionContainer}>
                   <Text style={styles.label}>Select Department</Text>
                   <View style={styles.departmentGrid}>
@@ -202,123 +156,54 @@ export default function StudentForm({ navigate }) {
                   </View>
                 </View>
 
-                {/* Year Selection */}
+                {/* Load Button */}
                 <View style={styles.sectionContainer}>
-                  <Text style={styles.label}>Select Year</Text>
-                  <View style={styles.optionsRow}>
-                    {YEAR_OPTIONS.map((option) => (
-                      <TouchableOpacity
-                        key={option.value}
-                        style={[
-                          styles.optionButton,
-                          year === option.value && styles.optionButtonSelected
-                        ]}
-                        onPress={() => {
-                          setYear(option.value);
-                          // Reset section if not available for new year
-                          const newAvailableSections = SECTION_OPTIONS.filter(opt => 
-                            availableGroups.some(g => g.startsWith(`${option.value}${opt.value}`))
-                          );
-                          if (newAvailableSections.length > 0 && !newAvailableSections.find(s => s.value === section)) {
-                            setSection(newAvailableSections[0].value);
-                          }
-                        }}
-                      >
-                        <Text style={[
-                          styles.optionText,
-                          year === option.value && styles.optionTextSelected
-                        ]}>
-                          {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                  <PrimaryButton title="Load Groups" onPress={async () => {
+                    setLoading(true);
+                    try {
+                      if (department === 'cse') {
+                        setAvailableGroups(cseGroups);
+                      } else {
+                        setAvailableGroups([]); // Or handle other departments
+                      }
+                    } catch (e) {
+                      setAvailableGroups([]);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }} />
                 </View>
 
-                {/* Section Selection */}
+                {/* Group Selection */}
                 <View style={styles.sectionContainer}>
-                  <Text style={styles.label}>Select Section</Text>
-                  <View style={styles.sectionGrid}>
-                    {availableSections.map((option) => (
-                      <TouchableOpacity
-                        key={option.value}
-                        style={[
-                          styles.sectionCard,
-                          section === option.value && styles.sectionCardSelected
-                        ]}
-                        onPress={() => setSection(option.value)}
-                      >
-                        <View style={[
-                          styles.sectionIndicator,
-                          section === option.value && styles.sectionIndicatorSelected
-                        ]}>
-                          <Text style={[
-                            styles.sectionLetter,
-                            section === option.value && styles.sectionLetterSelected
-                          ]}>
-                            {option.value}
-                          </Text>
-                        </View>
-                        <Text style={[
-                          styles.sectionLabel,
-                          section === option.value && styles.sectionLabelSelected
-                        ]}>
-                          Section {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Subgroup Selection */}
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.label}>Select Subgroup (for Labs)</Text>
-                  <Text style={styles.hint}>Your lab batch assignment</Text>
-                  <View style={styles.subgroupRow}>
-                    {SUBGROUP_OPTIONS.map((option) => (
-                      <TouchableOpacity
-                        key={option.value}
-                        style={[
-                          styles.subgroupCard,
-                          subgroup === option.value && styles.subgroupCardSelected
-                        ]}
-                        onPress={() => setSubgroup(option.value)}
-                      >
-                        <Text style={[
-                          styles.subgroupNumber,
-                          subgroup === option.value && styles.subgroupNumberSelected
-                        ]}>
-                          {option.value}
-                        </Text>
-                        <Text style={[
-                          styles.subgroupLabel,
-                          subgroup === option.value && styles.subgroupLabelSelected
-                        ]}>
-                          {option.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                  <Text style={styles.label}>Select Group</Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <View style={styles.sectionGrid}>
+                      {availableGroups.map((group) => (
+                        <TouchableOpacity
+                          key={group}
+                          style={[styles.sectionCard, selectedGroup === group && styles.sectionCardSelected]}
+                          onPress={() => setSelectedGroup(group)}
+                        >
+                          <View style={[styles.sectionIndicator, selectedGroup === group && styles.sectionIndicatorSelected]}>
+                            <Text style={[styles.sectionLetter, selectedGroup === group && styles.sectionLetterSelected]}>{group}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
                 </View>
 
                 {/* Selected Group Display */}
                 <View style={styles.groupDisplay}>
                   <Text style={styles.groupDisplayLabel}>Your Group Code:</Text>
-                  <View style={[
-                    styles.groupCodeBox,
-                    !isValidGroup && styles.groupCodeBoxInvalid
-                  ]}>
-                    <Text style={[
-                      styles.groupCodeText,
-                      !isValidGroup && styles.groupCodeTextInvalid
-                    ]}>
-                      {groupCode}
-                    </Text>
+                  <View style={[styles.groupCodeBox, !isValidGroup && styles.groupCodeBoxInvalid]}>
+                    <Text style={[styles.groupCodeText, !isValidGroup && styles.groupCodeTextInvalid]}>{selectedGroup}</Text>
                   </View>
                   {!isValidGroup && (
-                    <Text style={styles.invalidText}>
-                      This group is not available in the timetable
-                    </Text>
+                    <Text style={styles.invalidText}>This group is not available in the timetable</Text>
                   )}
                 </View>
               </View>
@@ -501,40 +386,6 @@ const styles = StyleSheet.create({
   sectionLabelSelected: {
     color: colors.primary,
   },
-  subgroupRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  subgroupCard: {
-    width: '48%',
-    backgroundColor: '#fafafa',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-  },
-  subgroupCardSelected: {
-    backgroundColor: '#e6f0ff',
-    borderColor: colors.primary,
-  },
-  subgroupNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.muted,
-    marginBottom: 4,
-  },
-  subgroupNumberSelected: {
-    color: colors.primary,
-  },
-  subgroupLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  subgroupLabelSelected: {
-    color: colors.primary,
-  },
   groupDisplay: {
     marginTop: 10,
     alignItems: 'center',
@@ -575,3 +426,4 @@ const styles = StyleSheet.create({
     width: '80%',
   },
 });
+
