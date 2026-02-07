@@ -218,18 +218,28 @@ async function scrapeCseTimetable(url = CSE_URL) {
     const maxSubgroups = findMaxSubgroups(classes);
     const sectionNames = transformSectionName(yearSec, maxSubgroups);
     sectionNames.forEach(sectionName => {
-      // Add new group to cse.json if not already present
-      if (!existingGroups.includes(sectionName)) {
+      let groupClasses = [];
+      if (sectionNames.length > 1) {
+        groupClasses = filterEntriesBySubgroup(JSON.parse(JSON.stringify(classes)), sectionName);
+        result[sectionName] = { classes: groupClasses };
+      } else {
+        groupClasses = JSON.parse(JSON.stringify(classes));
+        result[sectionName] = { classes: groupClasses };
+      }
+
+      // Check if all classes are free for this group
+      const allFree = groupClasses.every(cls => {
+        if (cls && cls.data && typeof cls.data.freeClass === 'boolean') {
+          return cls.data.freeClass === true;
+        }
+        return false;
+      });
+
+      // Only add group if not all classes are free
+      if (!allFree && !existingGroups.includes(sectionName)) {
         existingGroups.push(sectionName);
-        // Write updated group list immediately
         fs.mkdirSync(path.dirname(groupPath), { recursive: true });
         fs.writeFileSync(groupPath, JSON.stringify(existingGroups, null, 2));
-      }
-      if (sectionNames.length > 1) {
-        const filteredClasses = filterEntriesBySubgroup(JSON.parse(JSON.stringify(classes)), sectionName);
-        result[sectionName] = { classes: filteredClasses };
-      } else {
-        result[sectionName] = { classes: JSON.parse(JSON.stringify(classes)) };
       }
     });
   });
