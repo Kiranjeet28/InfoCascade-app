@@ -15,6 +15,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import colors from '../constants/colors';
 import { useProfile } from '../context/ProfileContext';
 import cseGroups from '../../web/group/cse.json';
+import bcaGroups from '../utils/bca/bcaGroups';
 
 // Year options based on timetable data (D2, D3, D4 = 2nd, 3rd, 4th year)
 const YEAR_OPTIONS = [
@@ -48,6 +49,7 @@ const DEPARTMENT_OPTIONS = [
   { label: 'Mechanical', value: 'mechanical', file: 'timetable_mechanical.json' },
   { label: 'Civil', value: 'civil', file: 'timetable_civil.json' },
   { label: 'CA', value: 'ca', file: 'timetable_ca.json' },
+  { label: 'BCA', value: 'bca', file: 'timetable_bca.json' },
 ];
 
 export default function StudentForm({ navigate }) {
@@ -163,8 +165,10 @@ export default function StudentForm({ navigate }) {
                     try {
                       if (department === 'cse') {
                         setAvailableGroups(cseGroups);
+                      } else if (department === 'bca') {
+                        setAvailableGroups(bcaGroups);
                       } else {
-                        setAvailableGroups([]); // Or handle other departments
+                        setAvailableGroups([]);
                       }
                     } catch (e) {
                       setAvailableGroups([]);

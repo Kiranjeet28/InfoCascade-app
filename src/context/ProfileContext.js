@@ -59,8 +59,8 @@ export function ProfileProvider({ children }) {
       mechanical: 'timetable_mechanical.json',
       civil: 'timetable_civil.json',
       ca: 'timetable_ca.json',
+      bca: 'timetable_bca.json',
     };
-    
     return deptFiles[profile.department] || 'timetable_cse.json';
   }
 
@@ -76,8 +76,8 @@ export function ProfileProvider({ children }) {
       mechanical: 'Mechanical',
       civil: 'Civil',
       ca: 'CA',
+      bca: 'BCA',
     };
-    
     return deptLabels[profile.department] || 'CSE';
   }
 
