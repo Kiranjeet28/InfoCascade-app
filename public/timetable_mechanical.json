@@ -1,4 +1,1697 @@
 {
-  "url": "https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html",
-  "timetable": {}
+  "url": "https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html#table_55",
+  "timetable": {
+    "D2 ME A1": {
+      "classes": [
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": "JWS",
+            "classRoom": "FM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "MS L",
+            "teacher": "RSD",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A1, D2 ME B1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A2, D2 ME B2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME B3, D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "IC L",
+            "teacher": "AS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "M-III T",
+            "teacher": "RBK",
+            "classRoom": "F111",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "AT-II T",
+            "teacher": "JJK",
+            "classRoom": "HT LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "AT-II T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "AT LAB P",
+            "teacher": "JJK, IJS",
+            "classRoom": "HE LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "TOM LAB P",
+            "teacher": "KPS, BS",
+            "classRoom": "DOM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        }
+      ]
+    },
+    "D2 ME A2": {
+      "classes": [
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": "JVS",
+            "classRoom": "DOM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "CM L",
+            "teacher": "MS",
+            "classRoom": "G11",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A1, D2 ME B1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A2, D2 ME B2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME B3, D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "IC L",
+            "teacher": "AS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "TOM LAB P",
+            "teacher": "GSG, BS",
+            "classRoom": "DOM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "M-III T",
+            "teacher": "RBK",
+            "classRoom": "G11",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "AT-II T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM T",
+            "teacher": "JWS",
+            "classRoom": "DOM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "FM LAB P",
+            "teacher": "DSB, SJS",
+            "classRoom": "FM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        }
+      ]
+    },
+    "D2 ME A3": {
+      "classes": [
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": "JJK",
+            "classRoom": "IAR LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "08:30",
+          "data": {
+            "subject": "MPD T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "NCER L",
+            "teacher": "HMS",
+            "classRoom": "HE LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A1, D2 ME B1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME A2, D2 ME B2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "09:30",
+          "data": {
+            "subject": "D2 ME B3, D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "IC L",
+            "teacher": "AS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "10:30",
+          "data": {
+            "subject": "M-III L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "11:30",
+          "data": {
+            "subject": null,
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": true,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "FM L",
+            "teacher": "DSB",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "FM LAB P",
+            "teacher": "DSB, SJS",
+            "classRoom": "FM LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "12:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "FM T",
+            "teacher": "DSB",
+            "classRoom": "IAR LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A2",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "D2 ME A3",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "13:30",
+          "data": {
+            "subject": "AT-II T",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "TOM L",
+            "teacher": "JWS",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "M-III T",
+            "teacher": "RBK",
+            "classRoom": "F110",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "14:30",
+          "data": {
+            "subject": "D2 ME A1",
+            "teacher": null,
+            "classRoom": null,
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Monday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Tuesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "BEE L",
+            "teacher": "MBA T1",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Wednesday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "AT-II L",
+            "teacher": "JJK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Thursday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "UHVPE L",
+            "teacher": "RBK",
+            "classRoom": "G10",
+            "elective": false,
+            "freeClass": false,
+            "Lab": false,
+            "Tut": false,
+            "OtherDepartment": false
+          }
+        },
+        {
+          "dayOfClass": "Friday",
+          "timeOfClass": "15:30",
+          "data": {
+            "subject": "AT LAB P",
+            "teacher": "CKJ, IJS",
+            "classRoom": "HE LAB",
+            "elective": false,
+            "freeClass": false,
+            "Lab": true,
+            "Tut": true,
+            "OtherDepartment": false
+          }
+        }
+      ]
+    }
+  }
 }
