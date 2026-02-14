@@ -62,7 +62,28 @@ export default function StudentForm({ navigate }) {
 
   // Load timetable data to get available groups based on department
   useEffect(() => {
-    setAvailableGroups([]);
+    setLoading(true);
+    let groups = [];
+    try {
+      if (department === 'cse') {
+        groups = cseGroups;
+      } else if (department === 'bca') {
+        groups = bcaGroups;
+      } else if (department === 'mechanical') {
+        groups = require('../../web/group/mechanical.json');
+      } else {
+        // Try to require group file dynamically
+        try {
+          groups = require(`../../web/group/${department}.json`);
+        } catch (e) {
+          groups = [];
+        }
+      }
+    } catch (e) {
+      groups = [];
+    }
+    setAvailableGroups(groups);
+    setLoading(false);
   }, [department]);
 
   // Load saved profile from context
@@ -160,22 +181,7 @@ export default function StudentForm({ navigate }) {
 
                 {/* Load Button */}
                 <View style={styles.sectionContainer}>
-                  <PrimaryButton title="Load Groups" onPress={async () => {
-                    setLoading(true);
-                    try {
-                      if (department === 'cse') {
-                        setAvailableGroups(cseGroups);
-                      } else if (department === 'bca') {
-                        setAvailableGroups(bcaGroups);
-                      } else {
-                        setAvailableGroups([]);
-                      }
-                    } catch (e) {
-                      setAvailableGroups([]);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }} />
+                  {/* Removed Load Groups button, groups load automatically on department change */}
                 </View>
 
                 {/* Group Selection */}

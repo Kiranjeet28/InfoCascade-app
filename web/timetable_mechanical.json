@@ -1,7 +1,7 @@
 {
   "url": "https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html",
   "timetable": {
-    "GNDECME A1": {
+    "ME A1": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -565,7 +565,7 @@
         }
       ]
     },
-    "GNDECME A2": {
+    "ME A2": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -1129,7 +1129,7 @@
         }
       ]
     },
-    "GNDECME A3": {
+    "ME A3": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -1693,7 +1693,7 @@
         }
       ]
     },
-    "GNDECME B1": {
+    "ME B1": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -2257,7 +2257,7 @@
         }
       ]
     },
-    "GNDECME B2": {
+    "ME B2": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -2821,7 +2821,7 @@
         }
       ]
     },
-    "GNDECME B3": {
+    "ME B3": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -3385,7 +3385,7 @@
         }
       ]
     },
-    "GNDECMX1": {
+    "MX1": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -3949,7 +3949,7 @@
         }
       ]
     },
-    "GNDECMX2": {
+    "MX2": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -4513,7 +4513,7 @@
         }
       ]
     },
-    "GNDECD2 ME A": {
+    "D2 ME A": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -5077,7 +5077,7 @@
         }
       ]
     },
-    "GNDECD2 ME B": {
+    "D2 ME B": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -5641,7 +5641,7 @@
         }
       ]
     },
-    "GNDECD3 ME A": {
+    "D3 ME A": {
       "classes": [
         {
           "dayOfClass": "Monday",
@@ -6191,7 +6191,7 @@
         }
       ]
     },
-    "GNDECD3 ME B": {
+    "D3 ME B": {
       "classes": [
         {
           "dayOfClass": "Monday",

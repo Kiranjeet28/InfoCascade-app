@@ -1,39 +1,47 @@
 // scrapeTimetable.js for Mechanical Department
-// Scrapes the timetable from the provided HTML table for D2 ME A
+// Scrapes the timetable from the provided HTML tables for all mechanical groups
 // Usage: node scrapeTimetable.js
 
 const fs = require('fs');
 const cheerio = require('cheerio');
 const axios = require('axios');
 
-const URL = 'https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html#table_55';
-const OUTPUT_PATH = 'public/timetable_mechanical.json';
+const URL = 'https://me.gndec.ac.in/sites/default/files/JAN%20MAY%202026%20lock_groups_days_horizontal_0.html';
+const OUTPUT_PATH = 'web/timetable_mechanical.json';
 const TIME_SLOTS = [
   '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30'
 ];
 
-// Paste the table HTML here if you want to use static HTML instead of fetching
-const TABLE_ID = '#table_55';
+// List of all mechanical group table IDs
+const GROUP_TABLES = [
+  '#table_38', '#table_40', '#table_42', '#table_44', '#table_46', '#table_48', '#table_50', '#table_52',
+  '#table_55', '#table_59', '#table_64', '#table_68', '#table_73', '#table_75', '#table_77', '#table_79',
+  '#table_81', '#table_83', '#table_85', '#table_87', '#table_89'
+];
+
+
+const GROUP_LIST_PATH = 'web/group/mechanical.json';
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 
 async function fetchHTML(url) {
   const { data } = await axios.get(url);
   return data;
 }
 
-
-function parseTimetableTableToCSEFormat($, table) {
+function parseTimetableTable($, table, groupName) {
+  function cleanGroupName(raw) {
+    // Remove GNDEC prefix and trim
+    return raw.replace(/^GNDEC\s*/i, '').trim();
+  }
   const days = [];
   $(table)
     .find('thead th.xAxis')
     .each((i, el) => days.push($(el).text().trim()));
 
-  // Group names for D2 ME
-  const groupNames = ['D2 ME A1', 'D2 ME A2', 'D2 ME A3'];
-  const timetable = {};
-  groupNames.forEach(group => {
-    timetable[group] = { classes: [] };
-  });
-
+  const classes = [];
   $(table)
     .find('tbody tr')
     .each((rowIdx, row) => {
@@ -46,102 +54,88 @@ function parseTimetableTableToCSEFormat($, table) {
           const day = days[colIdx];
           if (!day) return;
           const timeOfClass = TIME_SLOTS[periodIdx];
-          const detailedTable = $(cell).find('table.detailed');
-          if (detailedTable.length) {
-            // Each column in detailed table is a group
-            const detailRows = [];
-            detailedTable.find('tr').each((trIdx, tr) => {
-              const rowArr = [];
-              $(tr)
-                .find('td.detailed')
-                .each((tdIdx, td) => {
-                  rowArr.push($(td).text().trim());
-                });
-              detailRows.push(rowArr);
+          let text = $(cell).html() || '';
+          if (text.includes('-x-')) {
+            classes.push({
+              dayOfClass: capitalize(day),
+              timeOfClass,
+              data: {
+                subject: null,
+                teacher: null,
+                classRoom: null,
+                elective: false,
+                freeClass: true,
+                Lab: false,
+                Tut: false,
+                OtherDepartment: false
+              }
             });
-            for (let g = 0; g < groupNames.length; g++) {
-              const group = groupNames[g];
-              // Compose data for this group
-              const subject = detailRows[1]?.[g] || null;
-              const teacher = detailRows[2]?.[g] || null;
-              const classRoom = detailRows[3]?.[g] || null;
-              timetable[group].classes.push({
-                dayOfClass: capitalize(day),
-                timeOfClass,
-                data: {
-                  subject,
-                  teacher,
-                  classRoom,
-                  elective: false,
-                  freeClass: !subject,
-                  Lab: /LAB/i.test(subject || ''),
-                  Tut: /T/i.test(subject || ''),
-                  OtherDepartment: false
-                }
-              });
-            }
           } else {
-            // Simple cell (may have <br> separated values or -x-)
-            let text = $(cell).html() || '';
-            if (text.includes('-x-')) {
-              for (let g = 0; g < groupNames.length; g++) {
-                timetable[groupNames[g]].classes.push({
-                  dayOfClass: capitalize(day),
-                  timeOfClass,
-                  data: {
-                    subject: null,
-                    teacher: null,
-                    classRoom: null,
-                    elective: false,
-                    freeClass: true,
-                    Lab: false,
-                    Tut: false,
-                    OtherDepartment: false
-                  }
-                });
+            // Split by <br> and clean
+            const lines = text
+              .split('<br>')
+              .map(line => line.replace(/<[^>]+>/g, '').trim())
+              .filter(Boolean);
+            classes.push({
+              dayOfClass: capitalize(day),
+              timeOfClass,
+              data: {
+                subject: lines[0] || null,
+                teacher: lines[1] || null,
+                classRoom: lines[2] || null,
+                elective: false,
+                freeClass: !lines[0],
+                Lab: /LAB/i.test(lines[0] || ''),
+                Tut: /T/i.test(lines[0] || ''),
+                OtherDepartment: false
               }
-            } else {
-              // Split by <br> and clean
-              const lines = text
-                .split('<br>')
-                .map(line => line.replace(/<[^>]+>/g, '').trim())
-                .filter(Boolean);
-              for (let g = 0; g < groupNames.length; g++) {
-                timetable[groupNames[g]].classes.push({
-                  dayOfClass: capitalize(day),
-                  timeOfClass,
-                  data: {
-                    subject: lines[0] || null,
-                    teacher: lines[1] || null,
-                    classRoom: lines[2] || null,
-                    elective: false,
-                    freeClass: !lines[0],
-                    Lab: /LAB/i.test(lines[0] || ''),
-                    Tut: /T/i.test(lines[0] || ''),
-                    OtherDepartment: false
-                  }
-                });
-              }
-            }
+            });
           }
         });
     });
-  return timetable;
-}
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return classes;
 }
 
 async function main() {
   try {
     const html = await fetchHTML(URL);
     const $ = cheerio.load(html);
-    const table = $(TABLE_ID);
-    if (!table.length) {
-      throw new Error('Timetable table not found!');
+    const groupList = JSON.parse(fs.readFileSync(GROUP_LIST_PATH, 'utf-8'));
+    const timetable = {};
+    const foundGroups = new Set();
+    for (const tableId of GROUP_TABLES) {
+      const table = $(tableId);
+      if (!table.length) continue;
+      let groupNameRaw = table.find('caption').text().trim();
+      if (!groupNameRaw) {
+        groupNameRaw = tableId.replace('#table_', '');
+      }
+      let groupName = cleanGroupName(groupNameRaw);
+      // Try to match groupName to groupList (case-insensitive)
+      let matched = groupList.find(g => g.toLowerCase() === groupName.toLowerCase());
+      if (!matched) {
+        // Try partial match (for e.g. D2 ME A1, D2 ME A, etc.)
+        matched = groupList.find(g => groupNameRaw.toLowerCase().includes(g.toLowerCase()));
+      }
+      if (!matched) {
+        // Try removing spaces and match
+        matched = groupList.find(g => g.replace(/\s+/g, '').toLowerCase() === groupName.replace(/\s+/g, '').toLowerCase());
+      }
+      if (!matched) {
+        // Fallback to cleaned groupName
+        matched = groupName;
+      }
+      foundGroups.add(matched);
+      timetable[matched] = {
+        classes: parseTimetableTable($, table, matched)
+      };
     }
-    const timetable = parseTimetableTableToCSEFormat($, table);
+    // Ensure all groups in groupList are present in timetable (add empty if missing)
+    for (const g of groupList) {
+      if (!timetable[g]) {
+        timetable[g] = { classes: [] };
+      }
+    }
     const output = {
       url: URL,
       timetable
