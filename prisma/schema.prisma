@@ -19,3 +19,12 @@ model User {
   name  String?
   createdAt DateTime @default(now())
 }
+
+model Student {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  crn      String @unique
+  urn      String @unique
+  name     String
+  password String
+  createdAt DateTime @default(now())
+}
