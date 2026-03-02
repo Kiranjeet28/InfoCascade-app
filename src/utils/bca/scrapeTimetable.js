@@ -45,6 +45,13 @@ function addLabAndTutFields(data) {
       data.elective = false;
       data.Lab = true;
       data.Tut = false;
+        if (data.entries.length === 1) {
+          const entry = data.entries[0];
+          data.subject = entry.subject;
+          data.teacher = entry.teacher || null;
+          data.classRoom = entry.classRoom || null;
+          data.entries = null;
+        }
     } else if (allAreTuts) {
       data.elective = false;
       data.Lab = false;

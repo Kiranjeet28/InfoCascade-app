@@ -5,7 +5,19 @@ const path = require('path');
 
 const TIMETABLE_URLS = require('../timetableUrls');
 const ELECTRICAL_URL = TIMETABLE_URLS.electrical;
-
+function normalizeTimeString(raw) {
+    if (!raw) return raw;
+    // strip AM/PM and extra whitespace
+    let t = String(raw).replace(/\s*(AM|PM|am|pm)\b/, '').trim();
+    const m = t.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return t;
+    let h = parseInt(m[1], 10);
+    const mm = m[2];
+    // if time is 1..6, treat it as afternoon (13..18)
+    if (h >= 1 && h <= 6) h = h + 12;
+    const hh = String(h).padStart(2, '0');
+    return `${hh}:${mm}`;
+}
 function parseCell($, cell) {
     const $cell = $(cell);
     const html = $cell.html() || '';
@@ -128,8 +140,7 @@ async function scrapeElectricalTimetable(url = ELECTRICAL_URL) {
                 const rawTime = yAxisCell.first().text().trim();
                 if (!rawTime) return;
                 // normalize times like "1:30" -> "13:30"
-                const m = rawTime.match(/^(\d{1,2}):(\d{2})$/);
-                const timeOfClass = m ? (parseInt(m[1], 10) >= 1 && parseInt(m[1], 10) <= 6 ? `${String(parseInt(m[1],10)+12).padStart(2,'0')}:${m[2]}` : rawTime) : rawTime;
+               const timeOfClass = normalizeTimeString(rawTime);
 
             $(row).children('td').each((colIndex, td) => {
                 const dayOfClass = xAxis[colIndex];
