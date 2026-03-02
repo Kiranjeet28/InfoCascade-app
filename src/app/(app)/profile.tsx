@@ -92,7 +92,7 @@ export default function StudentForm() {
             case 'civil':
                 groups = civilGroups;
                 break;
-            case 'ca':
+            case 'appliedscience':
                 groups = appliedscienceGroups;
                 break;
             default:
