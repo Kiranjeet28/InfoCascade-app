@@ -249,20 +249,31 @@ async function scrapeBcaTimetable(url = BCA_URL) {
 }
 
 async function scrapeBcaAndSave(url = BCA_URL) {
-  const timetable = await scrapeBcaTimetable(url);
+  const result = await scrapeBcaTimetable(url);
   const groupPath = path.join(__dirname, '../../../web/group/bca.json');
+  const timetablePath = path.join(__dirname, '../../../public/timetable_bca.json');
+  const webTimetablePath = path.join(__dirname, '../../../web/timetable_bca.json');
   try {
+    const { url: sourceUrl, timetable } = result || {};
     if (!timetable || typeof timetable !== 'object') {
-      console.error('Timetable is invalid:', timetable);
-      return { url, timetable };
+      console.error('Timetable is invalid:', result);
+      return result;
     }
-    const groupNames = Object.keys(timetable.timetable || {});
+    const groupNames = Object.keys(timetable);
     fs.mkdirSync(path.dirname(groupPath), { recursive: true });
     fs.writeFileSync(groupPath, JSON.stringify(groupNames, null, 2));
+
+    // Save the full timetable to public/timetable_bca.json
+    fs.mkdirSync(path.dirname(timetablePath), { recursive: true });
+    fs.writeFileSync(timetablePath, JSON.stringify({ url: sourceUrl, timetable }, null, 2));
+
+    // Also save a copy to web/timetable_bca.json
+    fs.mkdirSync(path.dirname(webTimetablePath), { recursive: true });
+    fs.writeFileSync(webTimetablePath, JSON.stringify({ url: sourceUrl, timetable }, null, 2));
   } catch (err) {
-    console.error('Failed to write BCA group info:', err.message);
+    console.error('Failed to write BCA group or timetable info:', err.message);
   }
-  return { url, timetable };
+  return result;
 }
 
 
