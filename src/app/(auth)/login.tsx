@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BackButton from '@/components/layout/back-button';
 import BgBlobs from '@/components/layout/bg-blobs';
 import Badge from '@/components/ui/badge';
@@ -53,6 +54,11 @@ export default function LoginScreen() {
             const data = await res.json();
             if (res.ok) {
                 showMsg('Login successful!', 'success');
+                try {
+                    await AsyncStorage.setItem('user-profile', JSON.stringify(data.student));
+                } catch (e) {
+                    console.error('Failed to save user profile to storage', e);
+                }
                 setTimeout(() => router.replace('/home'), 1000);
             } else {
                 showMsg(data.error ?? 'Invalid credentials.', 'error');

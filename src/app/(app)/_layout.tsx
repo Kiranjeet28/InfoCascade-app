@@ -1,7 +1,7 @@
 // src/app/(app)/_layout.tsx
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useThemeColors } from '../../context/theme-context';
-import { Text } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
 
 function TabIcon({ emoji }: { emoji: string }) {
     return <Text style={{ fontSize: 18 }}>{emoji}</Text>;
@@ -9,6 +9,7 @@ function TabIcon({ emoji }: { emoji: string }) {
 
 export default function AppLayout() {
     const { colors } = useThemeColors();
+    const router = useRouter();
     return (
         <Tabs
             screenOptions={{
@@ -25,8 +26,25 @@ export default function AppLayout() {
         >
             <Tabs.Screen name="home" options={{ title: 'Home', tabBarIcon: () => <TabIcon emoji="🏠" /> }} />
             <Tabs.Screen name="timetable" options={{ title: 'Timetable', tabBarIcon: () => <TabIcon emoji="📅" /> }} />
-            <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: () => <TabIcon emoji="👤" /> }} />
-            <Tabs.Screen name="about" options={{ title: 'About', tabBarIcon: () => <TabIcon emoji="ℹ️" /> }} />
+            <Tabs.Screen 
+                name="profile" 
+                options={{ 
+                    title: 'Profile', 
+                    tabBarIcon: () => <TabIcon emoji="👤" />,
+                    headerShown: true,
+                    headerStyle: {
+                        backgroundColor: colors.surface,
+                    },
+                    headerTitleStyle: {
+                        color: colors.textPrimary,
+                    },
+                    headerRight: () => (
+                        <TouchableOpacity onPress={() => console.log('Edit profile pressed')} style={{ marginRight: 15 }}>
+                            <Text style={{ fontSize: 24, color: colors.primary }}>✎</Text>
+                        </TouchableOpacity>
+                    ),
+                }} 
+            />
         </Tabs>
     );
 }

@@ -156,10 +156,10 @@ export default function StudentForm() {
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.badge}>
-                            <Text style={styles.badgeText}>Profile Setup</Text>
+                            <Text style={styles.badgeText}>Edit Profile</Text>
                         </View>
-                        <Text style={styles.title}>Your Academic{'\n'}Profile</Text>
-                        <Text style={styles.subtitle}>Set your details to get a personalized timetable</Text>
+                        <Text style={styles.title}>Edit Your{'\n'}Profile</Text>
+                        <Text style={styles.subtitle}>Update your details to keep your timetable personalized</Text>
                     </View>
 
                     {/* Name Card */}
