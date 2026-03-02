@@ -146,22 +146,30 @@ function parseTimetableTable($, table, groupName) {
     });
   });
 
-  // Build classes array from grid; time slots mapped by row index
+  // Build classes array from grid; determine times using yAxis numbers when present
   const classes = [];
   for (let r = 0; r < rowCount; r++) {
-    const timeOfClass = TIME_SLOTS[r] || null;
+    // Prefer a yAxis label (like 1,2,3...) for the row to map to TIME_SLOTS.
+    // If not present, fall back to the row index.
+    const rowNumber = rowNumbers[r];
+    const defaultTime = (typeof rowNumber === 'number' && rowNumber >= 1 && rowNumber <= TIME_SLOTS.length)
+      ? TIME_SLOTS[rowNumber - 1]
+      : (TIME_SLOTS[r] || null);
+
     for (let c = 0; c < colCount; c++) {
       const cell = grid[r][c];
       if (!cell) {
-        classes.push({ dayOfClass: capitalize(days[c] || ''), timeOfClass, data: { subject: null, teacher: null, classRoom: null, elective: false, freeClass: true, Lab: false, Tut: false, OtherDepartment: false } });
+        classes.push({ dayOfClass: capitalize(days[c] || ''), timeOfClass: defaultTime, data: { subject: null, teacher: null, classRoom: null, elective: false, freeClass: true, Lab: false, Tut: false, OtherDepartment: false } });
       } else {
-        // push data for this slot (including spans)
-        // If this cell originates from an earlier row (rowspan), use originRow to determine time
+        // If this cell originates from an earlier row (rowspan), try to use that origin's yAxis number
         const originRow = (cell.originRow != null) ? cell.originRow : r;
-        let mappedTime = null;
         const originNumber = rowNumbers[originRow];
-        if (originNumber && originNumber >= 1 && originNumber <= TIME_SLOTS.length) mappedTime = TIME_SLOTS[originNumber - 1];
-        if (!mappedTime) mappedTime = TIME_SLOTS[originRow] || null;
+        let mappedTime = null;
+        if (typeof originNumber === 'number' && originNumber >= 1 && originNumber <= TIME_SLOTS.length) {
+          mappedTime = TIME_SLOTS[originNumber - 1];
+        } else {
+          mappedTime = TIME_SLOTS[originRow] || defaultTime || null;
+        }
         classes.push({ dayOfClass: capitalize(days[c] || ''), timeOfClass: mappedTime, data: cell.data });
       }
     }
