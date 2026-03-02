@@ -125,8 +125,11 @@ async function scrapeElectricalTimetable(url = ELECTRICAL_URL) {
             const yAxisCell = $(row).find('th.yAxis');
             if (!yAxisCell.length) return;
 
-            const timeOfClass = yAxisCell.first().text().trim();
-            if (!timeOfClass) return;
+                const rawTime = yAxisCell.first().text().trim();
+                if (!rawTime) return;
+                // normalize times like "1:30" -> "13:30"
+                const m = rawTime.match(/^(\d{1,2}):(\d{2})$/);
+                const timeOfClass = m ? (parseInt(m[1], 10) >= 1 && parseInt(m[1], 10) <= 6 ? `${String(parseInt(m[1],10)+12).padStart(2,'0')}:${m[2]}` : rawTime) : rawTime;
 
             $(row).children('td').each((colIndex, td) => {
                 const dayOfClass = xAxis[colIndex];

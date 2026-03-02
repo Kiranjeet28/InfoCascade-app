@@ -426,7 +426,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "WT L",
             "teacher": "Dr. Palwinder Kaur-PK",
@@ -440,7 +440,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "WT L",
             "teacher": "Dr. Palwinder Kaur-PK",
@@ -454,7 +454,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "DM L",
             "teacher": "Pf. Parminder Kaur Wadhwa-PKW",
@@ -468,7 +468,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -486,7 +486,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "OS L",
             "teacher": "Pf. Harpreet Kaur-HPK",
@@ -500,7 +500,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "OS L",
             "teacher": "Pf. Harpreet Kaur-HPK",
@@ -514,7 +514,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -537,7 +537,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -560,7 +560,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -583,7 +583,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "AET L",
             "teacher": "Dr. Sachin Bagga-SB",
@@ -597,7 +597,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -625,7 +625,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -648,7 +648,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -671,7 +671,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -694,7 +694,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -1125,7 +1125,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1148,7 +1148,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "OS L",
             "teacher": "Dr. Kulwinder Singh Mann-KSM",
@@ -1162,7 +1162,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "AET L",
             "teacher": "Dr. Amit Kamra-AK",
@@ -1176,7 +1176,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1199,7 +1199,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "AET L",
             "teacher": "Dr. Amit Kamra-AK",
@@ -1213,7 +1213,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1236,7 +1236,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -1259,7 +1259,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "DM L",
             "teacher": "Pf. Jasleen Kaur-JK",
@@ -1273,7 +1273,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1296,7 +1296,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "WT L",
             "teacher": "Dr. Randeep Kaur-RDK",
@@ -1310,7 +1310,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1328,7 +1328,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -1351,7 +1351,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -1366,7 +1366,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1389,7 +1389,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1833,7 +1833,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -1856,7 +1856,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "WT L",
             "teacher": "Pf. Himani Sharma-HM",
@@ -1870,7 +1870,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1888,7 +1888,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "Indian Constitution L",
             "teacher": "Pf. Manpreet Kaur (App Sc.)",
@@ -1902,7 +1902,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "DM L",
             "teacher": "Pf. Jasleen Kaur-JK",
@@ -1916,7 +1916,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1939,7 +1939,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "OS L",
             "teacher": "Dr. Pankaj Bhambri-PB",
@@ -1953,7 +1953,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -1976,7 +1976,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "WT L",
             "teacher": "Pf. Himani Sharma-HM",
@@ -1990,7 +1990,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2013,7 +2013,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2036,7 +2036,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2069,7 +2069,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2092,7 +2092,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2107,7 +2107,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2607,7 +2607,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2645,7 +2645,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2683,7 +2683,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "IML L",
             "teacher": "Dr. Sandeep Kumar Singla-SKS",
@@ -2697,7 +2697,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2720,7 +2720,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2735,7 +2735,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -2747,7 +2747,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "DevOps L",
             "teacher": "Dr. Kamaljit Kaur-KKD",
@@ -2761,7 +2761,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "DevOps L",
             "teacher": "Dr. Kamaljit Kaur-KKD",
@@ -2775,7 +2775,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "D3IT_A, D3IT_B",
             "teacher": "TPO Activity P",
@@ -2789,7 +2789,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2812,7 +2812,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2827,7 +2827,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -2839,7 +2839,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -2877,7 +2877,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -3345,7 +3345,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3383,7 +3383,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3421,7 +3421,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3444,7 +3444,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3467,7 +3467,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3500,7 +3500,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3523,7 +3523,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -3538,7 +3538,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -3556,7 +3556,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "D3IT_A, D3IT_B",
             "teacher": "TPO Activity P",
@@ -3570,7 +3570,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3593,7 +3593,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -3611,7 +3611,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -3623,7 +3623,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -3661,7 +3661,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -4104,7 +4104,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -4116,7 +4116,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -4139,7 +4139,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "MJP with Guide Interaction MJP",
             "teacher": "Dr. Pardeep Jaiswal-PRD, Pf. Gitanjali-GT, Pf. Harjot Kaur-HJ, Pf. Jasleen Kaur-JK, Pf. Neha Gupta-NG, Dr. Pankaj Bhambri-PB",
@@ -4153,7 +4153,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4165,7 +4165,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4177,7 +4177,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4189,7 +4189,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -4201,7 +4201,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4213,7 +4213,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -4236,7 +4236,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -4259,7 +4259,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -4282,7 +4282,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4294,7 +4294,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -4306,7 +4306,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4318,7 +4318,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4622,7 +4622,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4634,7 +4634,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4646,7 +4646,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4658,7 +4658,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "M.Tech_OOAD L",
             "teacher": "Dr. Pardeep Jaiswal-PRD",
@@ -4672,7 +4672,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "M.Tech_E4(AVR) L",
             "teacher": "Dr. Kulwinder Singh Mann-KSM",
@@ -4686,7 +4686,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4698,7 +4698,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4710,7 +4710,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4722,7 +4722,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": "M.Tech_EI(DA_Lab) P",
             "teacher": "Dr. Sandeep Kumar Singla-SKS",
@@ -4736,7 +4736,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -4748,7 +4748,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": "M.Tech_E4(AVR) L",
             "teacher": "Dr. Kulwinder Singh Mann-KSM",
@@ -4762,7 +4762,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": "M.Tech_OOAD L",
             "teacher": "Dr. Pardeep Jaiswal-PRD",
@@ -4776,7 +4776,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": "M.Tech_A.Algo L",
             "teacher": "Dr. Amit Kamra-AK",
@@ -4790,7 +4790,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5108,7 +5108,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -5120,7 +5120,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5132,7 +5132,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5144,7 +5144,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5156,7 +5156,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5168,7 +5168,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5180,7 +5180,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5192,7 +5192,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -5204,7 +5204,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5216,7 +5216,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5228,7 +5228,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -5240,7 +5240,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": false,
             "freeClass": false,
@@ -5252,7 +5252,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5264,7 +5264,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5276,7 +5276,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5628,7 +5628,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5640,7 +5640,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5652,7 +5652,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5664,7 +5664,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -5682,7 +5682,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5694,7 +5694,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -5722,7 +5722,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5734,7 +5734,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5746,7 +5746,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -5764,7 +5764,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5776,7 +5776,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5788,7 +5788,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5800,7 +5800,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5812,7 +5812,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -5824,7 +5824,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6164,7 +6164,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6176,7 +6176,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6194,7 +6194,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6212,7 +6212,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6224,7 +6224,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6252,7 +6252,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6264,7 +6264,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6282,7 +6282,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6300,7 +6300,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6312,7 +6312,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6324,7 +6324,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6336,7 +6336,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6348,7 +6348,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6360,7 +6360,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6372,7 +6372,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6735,7 +6735,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6747,7 +6747,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6759,7 +6759,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6771,7 +6771,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6783,7 +6783,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6795,7 +6795,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6813,7 +6813,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6825,7 +6825,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6837,7 +6837,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6849,7 +6849,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6861,7 +6861,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -6879,7 +6879,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6891,7 +6891,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6903,7 +6903,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -6915,7 +6915,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7231,7 +7231,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7243,7 +7243,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7255,7 +7255,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": "MC MC",
             "teacher": "Dr. Sachin Bagga-SB",
@@ -7269,7 +7269,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7281,7 +7281,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7293,7 +7293,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7305,7 +7305,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7317,7 +7317,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7329,7 +7329,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7341,7 +7341,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7353,7 +7353,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7365,7 +7365,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7377,7 +7377,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7389,7 +7389,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7401,7 +7401,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7747,7 +7747,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7759,7 +7759,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7771,7 +7771,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -7789,7 +7789,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7801,7 +7801,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -7819,7 +7819,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7831,7 +7831,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7843,7 +7843,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7855,7 +7855,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7867,7 +7867,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -7885,7 +7885,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7897,7 +7897,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7909,7 +7909,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7921,7 +7921,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -7933,7 +7933,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8273,7 +8273,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8291,7 +8291,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8309,7 +8309,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8327,7 +8327,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8339,7 +8339,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8351,7 +8351,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8363,7 +8363,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8381,7 +8381,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8393,7 +8393,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8405,7 +8405,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8417,7 +8417,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8429,7 +8429,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8441,7 +8441,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8453,7 +8453,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8465,7 +8465,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8817,7 +8817,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8829,7 +8829,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8847,7 +8847,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8859,7 +8859,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8871,7 +8871,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8883,7 +8883,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8895,7 +8895,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -8913,7 +8913,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8925,7 +8925,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8937,7 +8937,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8949,7 +8949,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8961,7 +8961,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8973,7 +8973,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8985,7 +8985,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -8997,7 +8997,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9349,7 +9349,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9361,7 +9361,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9373,7 +9373,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9385,7 +9385,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9397,7 +9397,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -9415,7 +9415,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9427,7 +9427,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9439,7 +9439,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9451,7 +9451,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9463,7 +9463,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "elective": true,
             "freeClass": false,
@@ -9481,7 +9481,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9493,7 +9493,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9505,7 +9505,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9517,7 +9517,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9529,7 +9529,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9851,7 +9851,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9863,7 +9863,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9875,7 +9875,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9887,7 +9887,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9899,7 +9899,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9911,7 +9911,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9923,7 +9923,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9935,7 +9935,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9947,7 +9947,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9959,7 +9959,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9971,7 +9971,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9983,7 +9983,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -9995,7 +9995,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10007,7 +10007,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10019,7 +10019,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10341,7 +10341,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10353,7 +10353,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10365,7 +10365,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10377,7 +10377,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10389,7 +10389,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "13:30",
+          "timeOfClass": "1:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10401,7 +10401,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10413,7 +10413,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10425,7 +10425,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10437,7 +10437,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10449,7 +10449,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "14:30",
+          "timeOfClass": "2:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10461,7 +10461,7 @@
         },
         {
           "dayOfClass": "Monday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10473,7 +10473,7 @@
         },
         {
           "dayOfClass": "Tuesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10485,7 +10485,7 @@
         },
         {
           "dayOfClass": "Wednesday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10497,7 +10497,7 @@
         },
         {
           "dayOfClass": "Thursday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,
@@ -10509,7 +10509,7 @@
         },
         {
           "dayOfClass": "Friday",
-          "timeOfClass": "15:30",
+          "timeOfClass": "3:30",
           "data": {
             "subject": null,
             "teacher": null,

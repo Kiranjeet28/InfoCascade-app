@@ -96,8 +96,10 @@ async function scrapeCivilTimetable(url = CIVIL_URL) {
       if ($(row).hasClass('foot')) return;
       const yAxisCell = $(row).find('th.yAxis');
       if (!yAxisCell.length) return;
-      const timeOfClass = yAxisCell.first().text().trim();
-      if (!timeOfClass) return;
+      const rawTime = yAxisCell.first().text().trim();
+      if (!rawTime) return;
+      const m = rawTime.match(/^(\d{1,2})[:.](\d{2})$/);
+      const timeOfClass = m ? (parseInt(m[1], 10) >= 1 && parseInt(m[1], 10) <= 6 ? `${String(parseInt(m[1],10)+12).padStart(2,'0')}:${m[2]}` : rawTime) : rawTime;
       $(row).children('td').each((colIndex, td) => {
         const dayOfClass = xAxis[colIndex];
         if (!dayOfClass) return;

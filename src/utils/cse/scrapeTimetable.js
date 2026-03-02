@@ -126,6 +126,17 @@ function findMaxSubgroups(classes) {
   return maxEntries;
 }
 
+function normalizeTime(t) {
+  if (!t) return t;
+  const s = String(t).trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return s;
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  if (h >= 1 && h <= 6) h += 12;
+  return `${String(h).padStart(2, '0')}:${min}`;
+}
+
 // Helper to filter entries by exact subgroup match for CSE
 function filterEntriesBySubgroup(classes, subgroup) {
   // Extract the subgroup number from the end (supports any number: 1, 2, 3, 4, ...)
@@ -201,8 +212,9 @@ async function scrapeCseTimetable(url = CSE_URL) {
       const yAxisCell = $(row).find('th.yAxis');
       if (!yAxisCell.length) return;
 
-      const timeOfClass = yAxisCell.text().trim();
-      if (!timeOfClass) return;
+      const rawTime = yAxisCell.text().trim();
+      if (!rawTime) return;
+      const timeOfClass = normalizeTime(rawTime);
 
       const tds = $(row).children('td');
       tds.each((colIndex, td) => {

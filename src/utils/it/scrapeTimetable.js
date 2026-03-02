@@ -87,6 +87,18 @@ function timeStrToMinutes(t) {
   return h * 60 + min;
 }
 
+// Normalize a time string like "1:30" -> "13:30" for afternoon slots
+function normalizeTime(t) {
+  if (!t) return t;
+  const s = String(t).trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return s;
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  if (h >= 1 && h <= 6) h += 12;
+  return `${String(h).padStart(2, '0')}:${min}`;
+}
+
 // Parse a single schedule table element into JSON.
 // Stops collecting rows once time passes 12:30 (inclusive up to 12:30).
 function parseScheduleTable($, table) {
@@ -105,8 +117,9 @@ function parseScheduleTable($, table) {
   $(table).find('tbody tr').each((_, row) => {
     const yAxisCell = $(row).find('th.yAxis');
     if (!yAxisCell.length) return;
-    const timeOfClass = yAxisCell.text().trim();
-    if (!timeOfClass) return;
+    const rawTime = yAxisCell.text().trim();
+    if (!rawTime) return;
+    const timeOfClass = normalizeTime(rawTime);
     // no cutoff: parse all rows including 1:30 and later
 
     const tds = $(row).children('td');
@@ -151,8 +164,9 @@ async function scrapeItTimetable(url = IT_URL) {
     table.find('tbody tr').each((_, row) => {
       const yAxisCell = $(row).find('th.yAxis');
       if (!yAxisCell.length) return;
-        const timeOfClass = yAxisCell.text().trim();
-        if (!timeOfClass) return;
+        const rawTime = yAxisCell.text().trim();
+        if (!rawTime) return;
+        const timeOfClass = normalizeTime(rawTime);
       const tds = $(row).children('td');
       tds.each((colIndex, td) => {
         const dayOfClass = xAxis[colIndex];
