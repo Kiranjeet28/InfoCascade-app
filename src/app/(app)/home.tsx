@@ -1,13 +1,13 @@
+import { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Animated, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '../../context/theme-context';
+import { useProfile } from '../../context/profile-context';
+import { useLiveClass, getEndTime } from '../../hooks/Useliveclass';
+import { ClassSlot } from '../../types';
 import BgBlobs from '../../components/layout/bg-blobs';
 import SectionTitle from '../../components/ui/section-title';
-import { useProfile } from '../../context/profile-context';
-import { useThemeColors } from '../../context/theme-context';
-import { getEndTime, useLiveClass } from '../../hooks/Useliveclass';
-import { ClassSlot } from '../../types';
 
 // ── Quick action card ──────────────────────────────────────────────────────
 interface QuickActionProps {
@@ -241,15 +241,10 @@ export default function HomeScreen() {
                             onPress={() => router.push('/(app)/profile')}
                             activeOpacity={0.75}
                         >
-                            {profile?.name ? (
-                                <Image
-                                    source={require('../../../assets/images/icon.png')}
-                                    style={{ width: 38, height: 38, borderRadius: 19 }}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <Text style={{ fontSize: 18 }}>👤</Text>
-                            )}
+                            {profile?.name
+                                ? <Text style={{ fontSize: 17, fontWeight: '800', color: colors.primary }}>{profile.name[0].toUpperCase()}</Text>
+                                : <Text style={{ fontSize: 18 }}>👤</Text>
+                            }
                         </TouchableOpacity>
                     </View>
 
@@ -266,7 +261,7 @@ export default function HomeScreen() {
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 28 }}>
                         <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
                         <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
-
+                       
                     </View>
 
                     {/* ── Profile card ── */}
@@ -329,7 +324,7 @@ export default function HomeScreen() {
                         </View>
                     )}
 
-
+               
 
                 </Animated.View>
             </ScrollView>

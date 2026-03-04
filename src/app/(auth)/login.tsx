@@ -1,13 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Animated, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useThemeColors } from '../../context/theme-context';
-import InputField from '../../components/ui/input-field';
-import Badge from '../../components/ui/badge';
-import BgBlobs from '../../components/layout/bg-blobs';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import BackButton from '../../components/layout/back-button';
-import { saveSession, getSession } from '../../utils/auth-cache';
+import BgBlobs from '../../components/layout/bg-blobs';
+import Badge from '../../components/ui/badge';
+import InputField from '../../components/ui/input-field';
+import { useThemeColors } from '../../context/theme-context';
+import { postJson, resolveApiBase } from '../../utils/api';
+import { getSession, saveSession } from '../../utils/auth-cache';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -51,18 +52,14 @@ export default function LoginScreen() {
         setTimeout(() => setMessage(null), 3000);
     }
 
+
     async function handleLogin() {
         if (!urn.trim() || !password.trim()) { showMsg('All fields required.', 'error'); return; }
         setLoading(true);
         try {
-            const res = await fetch('http://10.0.2.2:5000/api/students/sign', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier: urn, password }),
-            });
-            const data = await res.json();
+            const res = await postJson('/api/students/sign', { identifier: urn, password }, 12000);
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
-                // ── Persist session so future app opens skip login ────────────────
                 await saveSession({
                     urn: urn.trim(),
                     token: data.token ?? data.accessToken ?? 'local',
@@ -71,10 +68,16 @@ export default function LoginScreen() {
                 showMsg('Login successful!', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 900);
             } else {
-                showMsg(data.error ?? 'Invalid credentials.', 'error');
+                const errMsg = data?.error || data?.message || `Server returned ${res.status}`;
+                showMsg(errMsg, 'error');
             }
-        } catch {
-            showMsg('Could not reach the server.', 'error');
+        } catch (e: any) {
+            const base = resolveApiBase();
+            if (e?.name === 'AbortError') {
+                showMsg(`Request timed out. Tried ${base}/api/students/sign`, 'error');
+            } else {
+                showMsg(`Could not reach server (${base}).`, 'error');
+            }
         } finally {
             setLoading(false);
         }
@@ -121,7 +124,7 @@ export default function LoginScreen() {
 
                         {/* Logo */}
                         <View style={{ alignItems: 'center', marginBottom: 10 }}>
-                           
+
                         </View>
 
                         <BackButton label="← Back" />

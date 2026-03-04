@@ -2,6 +2,10 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 export function resolveApiBase(): string {
+    // Prefer explicit environment variable if provided (EXPO_PUBLIC_API_URL)
+    const envUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (envUrl && envUrl.trim()) return envUrl.trim().replace(/\/$/, '');
+
     const manifest: any = (Constants as any).manifest || (Constants as any).manifest2;
     const dbg = manifest && manifest.debuggerHost;
     if (dbg && typeof dbg === 'string') {

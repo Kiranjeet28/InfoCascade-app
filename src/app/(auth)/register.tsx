@@ -17,6 +17,7 @@ import {
     Text, TouchableOpacity,
     View,
 } from 'react-native';
+import { postJson, resolveApiBase } from '../../utils/api';
 
 interface StepDotProps { active: boolean; done: boolean; num: number; }
 
@@ -84,22 +85,23 @@ export default function RegisterScreen() {
         setLoading(true);
         setMessage(null);
         try {
-            const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/students/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urn, crn, password, name, department, group }),
-            });
-            const data = await res.json();
+            const res = await postJson('/api/students/register', { urn, crn, password, name, department, group }, 12000);
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
                 setMessage('Registration successful!');
                 setMessageType('success');
                 setTimeout(() => { setMessage(null); router.replace('/home'); }, 1200);
             } else {
-                setMessage(data.error ?? 'Something went wrong.');
+                setMessage(data.error ?? data.message ?? `Server returned ${res.status}`);
                 setMessageType('error');
             }
-        } catch {
-            setMessage('Could not reach the server.');
+        } catch (e: any) {
+            const base = resolveApiBase();
+            if (e?.name === 'AbortError') {
+                setMessage(`Request timed out. Tried ${base}/api/students/register`);
+            } else {
+                setMessage(`Could not reach server (${base}).`);
+            }
             setMessageType('error');
         } finally {
             setLoading(false);
