@@ -1,13 +1,14 @@
-import { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Animated, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useThemeColors } from '../../context/theme-context';
-import { useProfile } from '../../context/profile-context';
-import { useLiveClass, getEndTime } from '../../hooks/Useliveclass';
-import { ClassSlot } from '../../types';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import BgBlobs from '../../components/layout/bg-blobs';
 import SectionTitle from '../../components/ui/section-title';
+import { useProfile } from '../../context/profile-context';
+import { useThemeColors } from '../../context/theme-context';
+import { getEndTime, useLiveClass } from '../../hooks/Useliveclass';
+import { ClassSlot } from '../../types';
+import { fetchJson } from '../../utils/api';
 
 // ── Quick action card ──────────────────────────────────────────────────────
 interface QuickActionProps {
@@ -90,6 +91,8 @@ function CurrentClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => voi
                     <View style={{ backgroundColor: typeColor + '20', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: typeColor + '40' }}>
                         <Text style={{ fontSize: 10, fontWeight: '800', color: typeColor, letterSpacing: 0.8 }}>{info.type.toUpperCase()}</Text>
                     </View>
+
+             
                 ) : null}
                 <Text style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: '600' }}>{info.time} – {info.end}</Text>
             </View>
@@ -206,12 +209,42 @@ export default function HomeScreen() {
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
+    const [backendInfo, setBackendInfo] = useState<any>(null);
+    const [backendLoading, setBackendLoading] = useState(true);
+    const [backendError, setBackendError] = useState<string | null>(null);
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
             Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
         ]).start();
+    }, []);
+
+    // Fetch backend root info for status/debugging
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setBackendLoading(true);
+                const res = await fetchJson('/');
+                if (!mounted) return;
+                if (!res.ok) {
+                    setBackendError(`Server returned ${res.status}`);
+                    setBackendInfo(null);
+                } else {
+                    const json = await res.json().catch(() => null);
+                    setBackendInfo(json ?? { ok: true });
+                    setBackendError(null);
+                }
+            } catch (e: any) {
+                if (!mounted) return;
+                setBackendError(String(e?.message ?? e));
+                setBackendInfo(null);
+            } finally {
+                if (mounted) setBackendLoading(false);
+            }
+        })();
+        return () => { mounted = false; };
     }, []);
 
     const hour = new Date().getHours();
@@ -261,7 +294,7 @@ export default function HomeScreen() {
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 28 }}>
                         <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
                         <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
-                       
+
                     </View>
 
                     {/* ── Profile card ── */}
@@ -324,7 +357,7 @@ export default function HomeScreen() {
                         </View>
                     )}
 
-               
+
 
                 </Animated.View>
             </ScrollView>
