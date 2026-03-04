@@ -1,65 +1,211 @@
-import { Picker } from '@react-native-picker/picker';
+import { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Animated, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    KeyboardAvoidingView, Platform,
-    ScrollView,
-    Text, TouchableOpacity,
-    View,
-} from 'react-native';
-import BackButton from '../../components/layout/back-button';
-import BgBlobs from '../../components/layout/bg-blobs';
-import Badge from '../../components/ui/badge';
-import InputField from '../../components/ui/input-field';
 import { useThemeColors } from '../../context/theme-context';
-import { fetchDepartments, fetchGroups } from '../../utils/departmentUtils';
+import { useProfile } from '../../context/profile-context';
+import { useLiveClass, getEndTime } from '../../hooks/Useliveclass';
+import { ClassSlot } from '../../types';
+import BgBlobs from '../../components/layout/bg-blobs';
+import SectionTitle from '../../components/ui/section-title';
 
-interface StepDotProps { active: boolean; done: boolean; num: number; }
-
-function StepDot({ active, done, num }: StepDotProps) {
+// ── Quick action card ──────────────────────────────────────────────────────
+interface QuickActionProps {
+    icon: string; label: string; color: string; onPress: () => void;
+}
+function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
     const { colors } = useThemeColors();
+    const scaleAnim = useRef(new Animated.Value(1)).current;
     return (
-        <View style={{ alignItems: 'center' }}>
-            <View
-                style={{
-                    width: 32, height: 32, borderRadius: 16,
-                    backgroundColor: done ? colors.accent + '20' : active ? colors.primary + '20' : colors.surface,
-                    borderWidth: 2,
-                    borderColor: done ? colors.accent : active ? colors.primary : colors.border,
-                    justifyContent: 'center', alignItems: 'center',
-                }}
+        <Animated.View style={{ transform: [{ scale: scaleAnim }], flex: 1 }}>
+            <TouchableOpacity
+                style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: color + '30' }}
+                onPress={onPress}
+                onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.93, useNativeDriver: true }).start()}
+                onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
+                activeOpacity={1}
             >
-                <Text style={{ fontSize: 13, fontWeight: '700', color: active || done ? colors.textPrimary : colors.textMuted }}>
-                    {done ? '✓' : num}
-                </Text>
-            </View>
-        </View>
+                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: color + '20', justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 20 }}>{icon}</Text>
+                </View>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>{label}</Text>
+            </TouchableOpacity>
+        </Animated.View>
     );
 }
 
-export default function RegisterScreen() {
+// ── Extract readable info from a ClassSlot ─────────────────────────────────
+function slotInfo(cls: ClassSlot) {
+    const subject = cls.data.subject ?? cls.data.entries?.[0]?.subject ?? 'Unknown';
+    const room = cls.data.classRoom ?? cls.data.entries?.[0]?.classRoom ?? '';
+    const teacher =
+        (cls.data as any).teacherName ??
+        (cls.data.entries?.[0] as any)?.teacherName ??
+        (cls.data as any).teacher ??
+        (cls.data.entries?.[0] as any)?.teacher ??
+        (cls.data as any).teacher_name ??
+        (cls.data.entries?.[0] as any)?.teacher_name ??
+        '';
+    const type = (cls.data as any).classType ?? (cls.data.entries?.[0] as any)?.classType ?? (cls.data as any).class_type ?? (cls.data.entries?.[0] as any)?.class_type ?? '';
+    return { subject, room, teacher, type, time: cls.timeOfClass, end: getEndTime(cls.timeOfClass) };
+}
+
+// ── Current class card ─────────────────────────────────────────────────────
+function CurrentClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => void }) {
+    const { colors } = useThemeColors();
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+    const info = slotInfo(cls);
+
+    useEffect(() => {
+        const anim = Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, { toValue: 1.6, duration: 900, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+            ])
+        );
+        anim.start();
+        return () => anim.stop();
+    }, []);
+
+    const typeColors: Record<string, string> = {
+        LAB: '#FF8C42', TUT: '#00D9AA', ELECTIVE: '#A78BFA', PROJECT: '#F472B6',
+    };
+    const typeColor = typeColors[info.type?.toUpperCase()] ?? colors.accent;
+
+    return (
+        <TouchableOpacity
+            onPress={onPress} activeOpacity={0.88}
+            style={{
+                backgroundColor: colors.accent + '10', borderRadius: 20, padding: 20, marginBottom: 12,
+                borderWidth: 1.5, borderColor: colors.accent + '40',
+            }}
+        >
+            {/* Badge row */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Animated.View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: colors.accent, transform: [{ scale: pulseAnim }] }} />
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: colors.accent, letterSpacing: 1.2 }}>LIVE NOW</Text>
+                </View>
+                {info.type ? (
+                    <View style={{ backgroundColor: typeColor + '20', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: typeColor + '40' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '800', color: typeColor, letterSpacing: 0.8 }}>{info.type.toUpperCase()}</Text>
+                    </View>
+                ) : null}
+                <Text style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: '600' }}>{info.time} – {info.end}</Text>
+            </View>
+
+            {/* Subject */}
+            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.5, marginBottom: 8 }}>
+                {info.subject}
+            </Text>
+
+            {/* Room + teacher */}
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+                {info.room ? <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500' }}>📍 {info.room}</Text> : null}
+                {info.teacher ? <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500' }}>👨‍🏫 {info.teacher}</Text> : null}
+            </View>
+        </TouchableOpacity>
+    );
+}
+
+// ── Next class card ────────────────────────────────────────────────────────
+function NextClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => void }) {
+    const { colors } = useThemeColors();
+    const info = slotInfo(cls);
+    return (
+        <TouchableOpacity
+            onPress={onPress} activeOpacity={0.88}
+            style={{
+                backgroundColor: colors.primary + '0D', borderRadius: 20, padding: 18, marginBottom: 12,
+                borderWidth: 1, borderColor: colors.primary + '30',
+                flexDirection: 'row', alignItems: 'center', gap: 16,
+            }}
+        >
+            {/* Time pill */}
+            <View style={{
+                backgroundColor: colors.primary + '18', borderRadius: 14,
+                paddingVertical: 10, paddingHorizontal: 12, alignItems: 'center', minWidth: 60,
+                borderWidth: 1, borderColor: colors.primary + '30',
+            }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: colors.primary }}>{info.time}</Text>
+                <Text style={{ fontSize: 10, color: colors.textMuted, fontWeight: '500', marginTop: 2 }}>{info.end}</Text>
+            </View>
+
+            {/* Info */}
+            <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 10, fontWeight: '800', color: colors.primary, letterSpacing: 1, marginBottom: 4 }}>NEXT UP</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>{info.subject}</Text>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                    {info.room ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>📍 {info.room}</Text> : null}
+                    {info.teacher ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>👨‍🏫 {info.teacher}</Text> : null}
+                </View>
+            </View>
+            <Text style={{ fontSize: 20, color: colors.textMuted }}>›</Text>
+        </TouchableOpacity>
+    );
+}
+
+// ── Now & Next wrapper ─────────────────────────────────────────────────────
+function LiveClassSection({ onNavigate }: { onNavigate: () => void }) {
+    const { colors } = useThemeColors();
+    const { current, next, loading, error, isWeekend } = useLiveClass();
+
+    if (loading) {
+        return (
+            <View style={{ alignItems: 'center', paddingVertical: 28, gap: 10 }}>
+                <ActivityIndicator color={colors.primary} />
+                <Text style={{ fontSize: 13, color: colors.textMuted }}>Loading schedule...</Text>
+            </View>
+        );
+    }
+
+    if (error === 'profile_missing') return null;
+
+    if (isWeekend) {
+        return (
+            <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                <Text style={{ fontSize: 32 }}>🎉</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>It's the weekend!</Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>No classes today. Enjoy your break.</Text>
+                <TouchableOpacity onPress={onNavigate} style={{ marginTop: 4, backgroundColor: colors.primary + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 18, borderWidth: 1, borderColor: colors.primary + '30' }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>View Timetable</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    if (!current && !next) {
+        return (
+            <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 12, gap: 10 }}>
+                <Text style={{ fontSize: 32 }}>☕</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>All done for today!</Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>No more classes scheduled today.</Text>
+                <TouchableOpacity onPress={onNavigate} style={{ marginTop: 4, backgroundColor: colors.primary + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 18, borderWidth: 1, borderColor: colors.primary + '30' }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>Full Timetable</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    return (
+        <>
+            {current && <CurrentClassCard cls={current} onPress={onNavigate} />}
+            {next && <NextClassCard cls={next} onPress={onNavigate} />}
+            <TouchableOpacity onPress={onNavigate} style={{ alignItems: 'center', paddingVertical: 8, marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>See full day schedule →</Text>
+            </TouchableOpacity>
+        </>
+    );
+}
+
+// ── Main screen ────────────────────────────────────────────────────────────
+export default function HomeScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
-
-    const [step, setStep] = useState(0);
-    const [urn, setUrn] = useState('');
-    const [crn, setCrn] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [department, setDepartment] = useState('');
-    const [group, setGroup] = useState('');
-    const [departments, setDepartments] = useState<string[]>([]);
-    const [groups, setGroups] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<string | null>(null);
-    const [messageType, setMessageType] = useState<'success' | 'error'>('error');
+    const { profile, hasProfile, getDepartmentLabel } = useProfile();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
+    const slideAnim = useRef(new Animated.Value(20)).current;
 
     useEffect(() => {
         Animated.parallel([
@@ -68,262 +214,120 @@ export default function RegisterScreen() {
         ]).start();
     }, []);
 
-    useEffect(() => {
-        fetchDepartments().then(setDepartments);
-    }, []);
-
-    useEffect(() => {
-        if (department) {
-            fetchGroups(department).then((list) => { setGroups(list); setGroup(''); });
-        } else {
-            setGroups([]); setGroup('');
-        }
-    }, [department]);
-
-    async function handleRegister() {
-        setLoading(true);
-        setMessage(null);
-        try {
-            const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/students/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urn, crn, password, name, department, group }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setMessage('Registration successful!');
-                setMessageType('success');
-                setTimeout(() => { setMessage(null); router.replace('/home'); }, 1200);
-            } else {
-                setMessage(data.error ?? 'Something went wrong.');
-                setMessageType('error');
-            }
-        } catch {
-            setMessage('Could not reach the server.');
-            setMessageType('error');
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const steps = [{ label: 'Identity', icon: '🎓' }, { label: 'Security', icon: '🔐' }, { label: 'Academic', icon: '📚' }];
-
-    const cardStyle = {
-        backgroundColor: colors.surface, borderRadius: 20, padding: 24,
-        borderWidth: 1, borderColor: colors.border, marginBottom: 20,
-    };
-
-    const nextBtnStyle = {
-        backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 16,
-        flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'center' as const,
-        gap: 8, marginTop: 4,
-        shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
-    };
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
     return (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
+            <BgBlobs />
 
-            <ScrollView
-                style={{ flex: 1, backgroundColor: colors.bg }}
-                contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 48 }}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
-                <BgBlobs />
-
-                {/* Notification */}
-                {message && (
-                    <View
-                        style={{
-                            marginBottom: 8, padding: 12, borderRadius: 10, alignItems: 'center',
-                            backgroundColor: messageType === 'success' ? '#00D9AA33' : '#FF4D6D33',
-                            borderColor: messageType === 'success' ? colors.accent : colors.error,
-                            borderWidth: 1,
-                        }}
-                    >
-                        <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15 }}>{message}</Text>
-                    </View>
-                )}
-
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 32 }}>
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <BackButton label="← Back" />
 
-                    {/* Header */}
-                    <View style={{ marginBottom: 28 }}>
-                        <Badge label="New Account" />
-                        <Text style={{ fontSize: 36, fontWeight: '800', color: colors.textPrimary, letterSpacing: -1.2, lineHeight: 40, marginBottom: 10 }}>
-                            Create Your{'\n'}Profile
-                        </Text>
-                        <Text style={{ fontSize: 14, color: colors.textSecondary }}>
-                            Join and access your timetable instantly
-                        </Text>
+                    {/* ── Top Bar ── */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+                        <View>
+                            <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500', marginBottom: 2 }}>{greeting} 👋</Text>
+                            <Text style={{ fontSize: 22, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.8 }}>InfoCascade</Text>
+                        </View>
+                        <TouchableOpacity
+                            style={{
+                                width: 42, height: 42, borderRadius: 21,
+                                backgroundColor: profile?.name ? colors.primary + '20' : colors.surface,
+                                borderWidth: 2, borderColor: profile?.name ? colors.primary + '60' : colors.border,
+                                justifyContent: 'center', alignItems: 'center',
+                            }}
+                            onPress={() => router.push('/(app)/profile')}
+                            activeOpacity={0.75}
+                        >
+                            {profile?.name
+                                ? <Text style={{ fontSize: 17, fontWeight: '800', color: colors.primary }}>{profile.name[0].toUpperCase()}</Text>
+                                : <Text style={{ fontSize: 18 }}>👤</Text>
+                            }
+                        </TouchableOpacity>
                     </View>
 
-                    {/* Step indicator */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 28 }}>
-                        {steps.map((s, i) => (
-                            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 0 }}>
-                                <View style={{ alignItems: 'center', gap: 6 }}>
-                                    <StepDot num={i + 1} active={step === i} done={step > i} />
-                                    <Text style={{ fontSize: 11, color: step === i ? colors.primary : colors.textMuted, fontWeight: '600' }}>
-                                        {s.label}
-                                    </Text>
+                    {/* ── Now & Next (only when profile set) ── */}
+                    {hasProfile && (
+                        <>
+                            <SectionTitle label="Now & Next" />
+                            <LiveClassSection onNavigate={() => router.push('/(app)/timetable')} />
+                        </>
+                    )}
+
+                    {/* ── Quick Actions ── */}
+                    <SectionTitle label="Quick Actions" />
+                    <View style={{ flexDirection: 'row', gap: 12, marginBottom: 28 }}>
+                        <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
+                        <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
+                       
+                    </View>
+
+                    {/* ── Profile card ── */}
+                    <SectionTitle label="Your Profile" />
+
+                    {hasProfile && profile ? (
+                        <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                                <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: '#6C63FF20', borderWidth: 2, borderColor: '#6C63FF50', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                                    <Text style={{ fontSize: 20, fontWeight: '800', color: colors.primary }}>{profile.name ? profile.name[0].toUpperCase() : '?'}</Text>
                                 </View>
-                                {i < steps.length - 1 && (
-                                    <View
-                                        style={{
-                                            flex: 1, height: 2, marginHorizontal: 8, marginBottom: 16,
-                                            backgroundColor: step > i ? colors.accent : colors.border,
-                                            borderRadius: 2,
-                                        }}
-                                    />
-                                )}
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 }}>{profile.name}</Text>
+                                    <Text style={{ fontSize: 12, color: colors.textSecondary }}>Student</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={{ backgroundColor: '#6C63FF15', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: '#6C63FF30' }}
+                                    onPress={() => router.push('/(app)/profile')}
+                                >
+                                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.primary }}>Edit ✏️</Text>
+                                </TouchableOpacity>
                             </View>
-                        ))}
-                    </View>
 
-                    {/* Step 0: Identity */}
-                    {step === 0 && (
-                        <View style={cardStyle}>
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🎓 Your Identity
-                            </Text>
-                            <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>
-                                Your university credentials
-                            </Text>
-                            <InputField label="Full Name" value={name} onChangeText={setName} placeholder="Enter your full name" icon="👤" autoCapitalize="words" />
-                            <InputField label="URN (University Roll No.)" value={urn} onChangeText={setUrn} placeholder="e.g. 12345678" icon="🎓" keyboardType="numeric" />
-                            <InputField label="CRN (Class Roll No.)" value={crn} onChangeText={setCrn} placeholder="e.g. 1234" icon="📋" keyboardType="numeric" />
+                            <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16 }} />
+
+                            <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+                                <View style={{ flex: 1, alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: '600', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Department</Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>{getDepartmentLabel()}</Text>
+                                </View>
+                                <View style={{ width: 1, backgroundColor: colors.border, marginHorizontal: 16 }} />
+                                <View style={{ flex: 1, alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: '600', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Group</Text>
+                                    <Text style={{ fontSize: 16, fontWeight: '800', color: colors.primary }}>{profile.group}</Text>
+                                </View>
+                            </View>
+
                             <TouchableOpacity
-                                style={[nextBtnStyle, (!name.trim() || !urn.trim() || !crn.trim()) && { opacity: 0.5 }]}
-                                onPress={() => {
-                                    if (!name.trim() || !urn.trim() || !crn.trim()) {
-                                        Alert.alert('Missing fields', 'Please fill all fields to continue.');
-                                        return;
-                                    }
-                                    setStep(1);
-                                }}
+                                style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
+                                onPress={() => router.push('/(app)/timetable')}
                             >
-                                <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Continue</Text>
-                                <Text style={{ fontSize: 16, color: '#fff', fontWeight: '700' }}>→</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>View My Timetable →</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: colors.border, alignItems: 'center' }}>
+                            <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: colors.surfaceElevated, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                                <Text style={{ fontSize: 30 }}>📋</Text>
+                            </View>
+                            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 }}>Profile Not Set Up</Text>
+                            <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', lineHeight: 19, marginBottom: 20 }}>
+                                Set your department, year, and group to unlock your personalized timetable.
+                            </Text>
+                            <TouchableOpacity
+                                style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
+                                onPress={() => router.push('/(app)/profile')}
+                            >
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Set Up Profile →</Text>
                             </TouchableOpacity>
                         </View>
                     )}
 
-                    {/* Step 1: Security */}
-                    {step === 1 && (
-                        <View style={cardStyle}>
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🔐 Set Password
-                            </Text>
-                            <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>
-                                Choose a secure password
-                            </Text>
-                            <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min. 6 characters" icon="🔒" secureTextEntry />
-                            <View style={{ marginTop: 4, marginBottom: 20, gap: 6 }}>
-                                {['6+ characters', 'Mix of letters & numbers', 'Easy to remember'].map((hint, i) => (
-                                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                        <Text style={{ fontSize: 16, color: password.length >= 6 && i === 0 ? colors.accent : colors.textMuted }}>•</Text>
-                                        <Text style={{ fontSize: 13, color: password.length >= 6 && i === 0 ? colors.accent : colors.textMuted }}>{hint}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                            <View style={{ flexDirection: 'row', gap: 12 }}>
-                                <TouchableOpacity
-                                    style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
-                                    onPress={() => setStep(0)}
-                                >
-                                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[{ ...nextBtnStyle, flex: 1 }, (!password.trim() || password.length < 6) && { opacity: 0.5 }]}
-                                    onPress={() => {
-                                        if (!password.trim() || password.length < 6) {
-                                            Alert.alert('Weak password', 'Password must be at least 6 characters.');
-                                            return;
-                                        }
-                                        setStep(2);
-                                    }}
-                                >
-                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Continue →</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Step 2: Academic */}
-                    {step === 2 && (
-                        <View style={cardStyle}>
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                📚 Academic Info
-                            </Text>
-                            <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>
-                                Select your department and group
-                            </Text>
-
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 7, letterSpacing: 0.8, textTransform: 'uppercase' }}>
-                                Department
-                            </Text>
-                            <View style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.bg, overflow: 'hidden', marginBottom: 16 }}>
-                                <Picker selectedValue={department} onValueChange={setDepartment}
-                                    style={{ color: colors.textPrimary, backgroundColor: 'transparent' }}
-                                    dropdownIconColor={colors.textSecondary}>
-                                    <Picker.Item label="Select Department" value="" color={colors.textMuted} />
-                                    {departments.map((dept) => (
-                                        <Picker.Item key={dept} label={dept.charAt(0).toUpperCase() + dept.slice(1)} value={dept} color={colors.textPrimary} />
-                                    ))}
-                                </Picker>
-                            </View>
-
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 7, letterSpacing: 0.8, textTransform: 'uppercase' }}>
-                                Group
-                            </Text>
-                            <View style={[{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.bg, overflow: 'hidden' }, !department && { opacity: 0.5 }]}>
-                                <Picker selectedValue={group} onValueChange={setGroup} enabled={!!department && groups.length > 0}
-                                    style={{ color: colors.textPrimary, backgroundColor: 'transparent' }}
-                                    dropdownIconColor={colors.textSecondary}>
-                                    <Picker.Item
-                                        label={!department ? 'Select department first' : groups.length ? 'Select Group' : 'No groups found'}
-                                        value="" color={colors.textMuted}
-                                    />
-                                    {groups.map((grp) => (
-                                        <Picker.Item key={grp} label={grp} value={grp} color={colors.textPrimary} />
-                                    ))}
-                                </Picker>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
-                                <TouchableOpacity
-                                    style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 14, paddingVertical: 16, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
-                                    onPress={() => setStep(1)}
-                                >
-                                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[{ ...nextBtnStyle, flex: 1 }, (loading || !department || !group) && { opacity: 0.5 }]}
-                                    onPress={handleRegister}
-                                    disabled={loading || !department || !group}
-                                >
-                                    {loading
-                                        ? <ActivityIndicator color="#fff" size="small" />
-                                        : <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Register 🎉</Text>
-                                    }
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-
-                    {/* Sign in link */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 4 }}>
-                        <Text style={{ fontSize: 14, color: colors.textSecondary }}>Already registered? </Text>
-                        <TouchableOpacity onPress={() => router.push('/login')}>
-                            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '700' }}>Sign In</Text>
-                        </TouchableOpacity>
-                    </View>
+               
 
                 </Animated.View>
             </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
     );
 }

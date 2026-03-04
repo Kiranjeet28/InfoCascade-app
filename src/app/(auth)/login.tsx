@@ -1,13 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import BackButton from '@/components/layout/back-button';
-import BgBlobs from '@/components/layout/bg-blobs';
-import Badge from '@/components/ui/badge';
-import InputField from '@/components/ui/input-field';
-import { useThemeColors } from '@/context/theme-context';
+import { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Animated, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeColors } from '../../context/theme-context';
+import InputField from '../../components/ui/input-field';
+import Badge from '../../components/ui/badge';
+import BgBlobs from '../../components/layout/bg-blobs';
+import BackButton from '../../components/layout/back-button';
+import { saveSession, getSession } from '../../utils/auth-cache';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -16,6 +16,7 @@ export default function LoginScreen() {
     const [urn, setUrn] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [checkingCache, setCheckingCache] = useState(true);
     const [message, setMessage] = useState<string | null>(null);
     const [messageType, setMessageType] = useState<'success' | 'error'>('error');
 
@@ -23,11 +24,19 @@ export default function LoginScreen() {
     const slideAnim = useRef(new Animated.Value(30)).current;
     const notifAnim = useRef(new Animated.Value(-60)).current;
 
+    // ── Check cache: if already logged in skip the login screen ──────────────
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-            Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
-        ]).start();
+        getSession().then((session) => {
+            if (session?.token) {
+                router.replace('/(app)/home');
+            } else {
+                setCheckingCache(false);
+                Animated.parallel([
+                    Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+                    Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+                ]).start();
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -46,20 +55,21 @@ export default function LoginScreen() {
         if (!urn.trim() || !password.trim()) { showMsg('All fields required.', 'error'); return; }
         setLoading(true);
         try {
-            const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/students/sign`, {
+            const res = await fetch('http://10.0.2.2:5000/api/students/sign', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier: urn, password }),
             });
             const data = await res.json();
             if (res.ok) {
+                // ── Persist session so future app opens skip login ────────────────
+                await saveSession({
+                    urn: urn.trim(),
+                    token: data.token ?? data.accessToken ?? 'local',
+                    name: data.name ?? data.student?.name ?? '',
+                });
                 showMsg('Login successful!', 'success');
-                try {
-                    await AsyncStorage.setItem('user-profile', JSON.stringify(data.student));
-                } catch (e) {
-                    console.error('Failed to save user profile to storage', e);
-                }
-                setTimeout(() => router.replace('/home'), 1000);
+                setTimeout(() => router.replace('/(app)/home'), 900);
             } else {
                 showMsg(data.error ?? 'Invalid credentials.', 'error');
             }
@@ -71,6 +81,14 @@ export default function LoginScreen() {
     }
 
     const isSuccess = messageType === 'success';
+
+    if (checkingCache) {
+        return (
+            <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator color={colors.primary} size="large" />
+            </View>
+        );
+    }
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -193,7 +211,7 @@ export default function LoginScreen() {
                         {/* Register link */}
                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                             <Text style={{ fontSize: 15, color: colors.textSecondary }}>New student? </Text>
-                            <TouchableOpacity onPress={() => router.push('/register')}>
+                            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
                                 <Text style={{ fontSize: 15, color: colors.primary, fontWeight: '800' }}>Create Account</Text>
                             </TouchableOpacity>
                         </View>
