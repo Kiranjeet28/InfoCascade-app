@@ -121,15 +121,7 @@ export default function LoginScreen() {
 
                         {/* Logo */}
                         <View style={{ alignItems: 'center', marginBottom: 10 }}>
-                            <View
-                                style={{
-                                    width: 80, height: 80, borderRadius: 20,
-                                    backgroundColor: '#6C63FF20', borderWidth: 2, borderColor: '#6C63FF40',
-                                    justifyContent: 'center', alignItems: 'center', marginBottom: 8,
-                                }}
-                            >
-                                <Text style={{ fontSize: 36 }}>⏱</Text>
-                            </View>
+                           
                         </View>
 
                         <BackButton label="← Back" />
