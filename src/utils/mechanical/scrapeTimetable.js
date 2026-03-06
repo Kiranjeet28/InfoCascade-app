@@ -8,7 +8,7 @@ const axios = require('axios');
 
 const TIMETABLE_URLS = require('../timetableUrls');
 const URL = TIMETABLE_URLS.mechanical;
-const OUTPUT_PATH = 'web/timetable_mechanical.json';
+const OUTPUT_PATH = '../../web/timetable_mechanical.json';
 const TIME_SLOTS = [
   '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30'
 ];
