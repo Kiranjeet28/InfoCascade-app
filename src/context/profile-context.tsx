@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Profile } from '../types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DEPT_LABELS } from '../constants/theme';
+import { Profile } from '../types';
 
 interface ProfileContextType {
     profile: Profile | null;
@@ -24,6 +24,12 @@ const ProfileContext = createContext<ProfileContextType>({
 });
 
 const STORAGE_KEY = 'studentProfile';
+const PROFILE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+type StoredProfile = {
+    profile: Profile;
+    savedAt: number;
+};
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -32,14 +38,25 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         AsyncStorage.getItem(STORAGE_KEY)
             .then((val) => {
-                if (val) setProfile(JSON.parse(val) as Profile);
+                if (!val) return;
+                try {
+                    const stored = JSON.parse(val) as StoredProfile;
+                    if (!stored.savedAt || Date.now() - stored.savedAt > PROFILE_TTL_MS) {
+                        AsyncStorage.removeItem(STORAGE_KEY);
+                        return;
+                    }
+                    setProfile(stored.profile);
+                } catch {
+                    // ignore parse errors
+                }
             })
             .finally(() => setLoading(false));
     }, []);
 
     async function saveProfile(p: Profile): Promise<boolean> {
         try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+            const stored: StoredProfile = { profile: p, savedAt: Date.now() };
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
             setProfile(p);
             return true;
         } catch {

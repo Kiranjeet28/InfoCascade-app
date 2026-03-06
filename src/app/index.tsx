@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, View } from 'react-native';
 import { useThemeColors } from '@/context/theme-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function StartPage() {
     const router = useRouter();
@@ -11,15 +11,16 @@ export default function StartPage() {
     useEffect(() => {
         const checkProfile = async () => {
             try {
-                const profile = await AsyncStorage.getItem('user-profile');
+                // use the same storage key as `ProfileContext` ('studentProfile')
+                const profile = await AsyncStorage.getItem('studentProfile');
                 if (profile) {
-                    router.replace('/home');
+                    router.replace('/(app)/home');
                 } else {
-                    router.replace('/login');
+                    router.replace('/(auth)/login');
                 }
             } catch (e) {
                 console.error('Failed to load user profile from storage', e);
-                router.replace('/login');
+                router.replace('/(auth)/login');
             }
         };
 

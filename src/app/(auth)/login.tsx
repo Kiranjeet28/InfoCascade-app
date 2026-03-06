@@ -6,6 +6,7 @@ import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
 import InputField from '../../components/ui/input-field';
+import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { postJson, resolveApiBase } from '../../utils/api';
 import { getSession, saveSession } from '../../utils/auth-cache';
@@ -13,6 +14,7 @@ import { getSession, saveSession } from '../../utils/auth-cache';
 export default function LoginScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
+    const { saveProfile } = useProfile();
 
     const [urn, setUrn] = useState('');
     const [password, setPassword] = useState('');
@@ -65,6 +67,16 @@ export default function LoginScreen() {
                     token: data.token ?? data.accessToken ?? 'local',
                     name: data.name ?? data.student?.name ?? '',
                 });
+                // persist profile (name, department, group) into profile context + cache
+                try {
+                    await saveProfile({
+                        name: data.name ?? data.student?.name ?? urn.trim(),
+                        department: data.department ?? data.student?.department ?? '',
+                        group: data.group ?? data.student?.group ?? '',
+                    });
+                } catch {
+                    // ignore save errors
+                }
                 showMsg('Login successful!', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 900);
             } else {

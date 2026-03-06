@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SESSION_KEY = 'auth_session';
+// 30 days default TTL
+const DEFAULT_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface AuthSession {
     urn: string;
@@ -14,10 +16,18 @@ export async function saveSession(data: Omit<AuthSession, 'savedAt'>): Promise<v
     await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
-export async function getSession(): Promise<AuthSession | null> {
+// Returns session if present and not expired. ttlMs defaults to 30 days.
+export async function getSession(ttlMs = DEFAULT_SESSION_TTL_MS): Promise<AuthSession | null> {
     try {
         const raw = await AsyncStorage.getItem(SESSION_KEY);
-        return raw ? (JSON.parse(raw) as AuthSession) : null;
+        if (!raw) return null;
+        const session = JSON.parse(raw) as AuthSession;
+        if (!session.savedAt) return session;
+        if (Date.now() - session.savedAt > ttlMs) {
+            await AsyncStorage.removeItem(SESSION_KEY);
+            return null;
+        }
+        return session;
     } catch {
         return null;
     }

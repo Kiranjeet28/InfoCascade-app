@@ -17,7 +17,9 @@ import {
     Text, TouchableOpacity,
     View,
 } from 'react-native';
+import { useProfile } from '../../context/profile-context';
 import { postJson, resolveApiBase } from '../../utils/api';
+import { saveSession } from '../../utils/auth-cache';
 
 interface StepDotProps { active: boolean; done: boolean; num: number; }
 
@@ -45,6 +47,7 @@ function StepDot({ active, done, num }: StepDotProps) {
 export default function RegisterScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
+    const { saveProfile } = useProfile();
 
     const [step, setStep] = useState(0);
     const [urn, setUrn] = useState('');
@@ -88,9 +91,21 @@ export default function RegisterScreen() {
             const res = await postJson('/api/students/register', { urn, crn, password, name, department, group }, 12000);
             const data = await res.json().catch(() => ({}));
             if (res.ok) {
+                // attempt to parse returned token/name
+                try {
+                    const nameFromResp = data.name ?? data.student?.name ?? name;
+                    // save session if token provided
+                    if (data.token || data.accessToken) {
+                        await saveSession({ urn: urn.trim(), token: data.token ?? data.accessToken, name: nameFromResp });
+                    }
+                    // save profile (name, department, group)
+                    await saveProfile({ name: nameFromResp, department, group });
+                } catch {
+                    // ignore errors saving cache
+                }
                 setMessage('Registration successful!');
                 setMessageType('success');
-                setTimeout(() => { setMessage(null); router.replace('/home'); }, 1200);
+                setTimeout(() => { setMessage(null); router.replace('/(app)/home'); }, 1200);
             } else {
                 setMessage(data.error ?? data.message ?? `Server returned ${res.status}`);
                 setMessageType('error');

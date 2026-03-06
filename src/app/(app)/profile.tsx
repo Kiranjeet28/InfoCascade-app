@@ -118,7 +118,7 @@ export default function ProfileScreen() {
                     onPress: async () => {
                         await clearSession();
                         await clearProfile();
-                        router.replace('/');
+                        router.replace('/(auth)/login');
                     },
                 },
             ]
