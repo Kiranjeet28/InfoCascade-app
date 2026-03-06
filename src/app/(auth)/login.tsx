@@ -62,20 +62,44 @@ export default function LoginScreen() {
             const res = await postJson('/api/students/sign', { identifier: urn, password }, 12000);
             const data = await res.json().catch(() => ({}));
             if (res.ok) {
-                await saveSession({
-                    urn: urn.trim(),
-                    token: data.token ?? data.accessToken ?? 'local',
-                    name: data.name ?? data.student?.name ?? '',
-                });
-                // persist profile (name, department, group) into profile context + cache
+                const token = data.token ?? data.accessToken ?? 'local';
+                await saveSession({ urn: urn.trim(), token, name: data.name ?? data.student?.name ?? '' });
+
+                // After login, fetch full student details from the auth endpoint and persist them.
                 try {
-                    await saveProfile({
-                        name: data.name ?? data.student?.name ?? urn.trim(),
-                        department: data.department ?? data.student?.department ?? '',
-                        group: data.group ?? data.student?.group ?? '',
-                    });
+                    const authUrl = 'http://localhost:3000/students/auth';
+                    const authRes = await postJson(authUrl, { urn: urn.trim(), password }, 10000);
+                    const authData = await authRes.json().catch(() => ({}));
+                    if (authRes.ok) {
+                        const student = authData.student ?? authData;
+                        await saveProfile({
+                            name: student.name ?? data.name ?? urn.trim(),
+                            department: student.department ?? data.department ?? student.dept ?? '',
+                            group: student.group ?? data.group ?? '',
+                        });
+                    } else {
+                        // fallback to any profile data returned from sign endpoint
+                        try {
+                            await saveProfile({
+                                name: data.name ?? data.student?.name ?? urn.trim(),
+                                department: data.department ?? data.student?.department ?? '',
+                                group: data.group ?? data.student?.group ?? '',
+                            });
+                        } catch {
+                            // ignore
+                        }
+                    }
                 } catch {
-                    // ignore save errors
+                    // network/parse error: still try to save basic profile
+                    try {
+                        await saveProfile({
+                            name: data.name ?? data.student?.name ?? urn.trim(),
+                            department: data.department ?? data.student?.department ?? '',
+                            group: data.group ?? data.student?.group ?? '',
+                        });
+                    } catch {
+                        // ignore
+                    }
                 }
                 showMsg('Login successful!', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 900);
