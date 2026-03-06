@@ -282,7 +282,7 @@ export default function RegisterScreen() {
                             <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 7, letterSpacing: 0.8, textTransform: 'uppercase' }}>
                                 Department
                             </Text>
-                            <View style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.bg, overflow: 'hidden', marginBottom: 16 }}>
+                            <View style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface, overflow: 'hidden', marginBottom: 16 }}>
                                 <Picker selectedValue={department} onValueChange={setDepartment}
                                     style={{ color: colors.textPrimary, backgroundColor: 'transparent' }}
                                     dropdownIconColor={colors.textSecondary}>
@@ -296,7 +296,7 @@ export default function RegisterScreen() {
                             <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 7, letterSpacing: 0.8, textTransform: 'uppercase' }}>
                                 Group
                             </Text>
-                            <View style={[{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.bg, overflow: 'hidden' }, !department && { opacity: 0.5 }]}>
+                            <View style={[{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface, overflow: 'hidden' }, !department && { opacity: 0.5 }]}>
                                 <Picker selectedValue={group} onValueChange={setGroup} enabled={!!department && groups.length > 0}
                                     style={{ color: colors.textPrimary, backgroundColor: 'transparent' }}
                                     dropdownIconColor={colors.textSecondary}>

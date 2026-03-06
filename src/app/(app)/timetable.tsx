@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import mechanicalTimetable from '../../../web/timetable_mechanical.json';
 import ClassCard from '../../components/timetable/class-card';
 import DaySelector from '../../components/timetable/day-selector';
 import { TIME_SLOTS, WEEK_DAYS } from '../../constants/theme';
@@ -125,10 +126,20 @@ export default function TimetableScreen() {
             try {
                 setLoading(true);
                 const resp = await fetch(`/${getTimetableFile()}`);
-                if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-                const json: TimetableJson = await resp.json();
+                let json: TimetableJson | null = null;
+                if (resp.ok) {
+                    json = await resp.json();
+                } else {
+                    // fallback for departments which don't have a public file (e.g. mechanical)
+                    if (profile?.department === 'mechanical') {
+                        // mechanicalTimetable is bundled from web/timetable_mechanical.json
+                        json = (mechanicalTimetable as unknown) as TimetableJson;
+                    } else {
+                        throw new Error(`${resp.status} ${resp.statusText}`);
+                    }
+                }
                 if (!mounted) return;
-                if (json.timetable && profile?.group && json.timetable[profile.group]) {
+                if (json && json.timetable && profile?.group && json.timetable[profile.group]) {
                     const data = json.timetable[profile.group];
                     setTimetableData(data);
                     setCurrentNext(findCurrentAndNextClass(data.classes));

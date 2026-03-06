@@ -222,7 +222,7 @@ export default function ProfileScreen() {
                                     <Text style={{ fontSize: 18 }}>{selectedDept?.emoji ?? '🏛️'}</Text>
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>{selectedDept?.label ?? department}</Text>
                                 </View>
-                                <Text style={{ fontSize: 12, color: colors.textMuted }}>Department cannot be changed</Text>
+ 
                             </View>
                         )}
                     </View>
