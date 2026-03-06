@@ -92,7 +92,7 @@ function CurrentClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => voi
                         <Text style={{ fontSize: 10, fontWeight: '800', color: typeColor, letterSpacing: 0.8 }}>{info.type.toUpperCase()}</Text>
                     </View>
 
-             
+
                 ) : null}
                 <Text style={{ marginLeft: 'auto', fontSize: 12, color: colors.textMuted, fontWeight: '600' }}>{info.time} – {info.end}</Text>
             </View>
@@ -205,7 +205,7 @@ function LiveClassSection({ onNavigate }: { onNavigate: () => void }) {
 export default function HomeScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
-    const { profile, hasProfile, getDepartmentLabel } = useProfile();
+    const { profile, hasProfile, getDepartmentLabel, loading: profileLoading } = useProfile();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
@@ -246,6 +246,13 @@ export default function HomeScreen() {
         })();
         return () => { mounted = false; };
     }, []);
+
+    // If profile is missing after profile store finished loading, redirect to login
+    useEffect(() => {
+        if (!profileLoading && !hasProfile) {
+            router.replace('/(auth)/login');
+        }
+    }, [profileLoading, hasProfile]);
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
