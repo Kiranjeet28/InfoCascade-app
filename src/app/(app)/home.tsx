@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Platform, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import BgBlobs from '../../components/layout/bg-blobs';
 import SectionTitle from '../../components/ui/section-title';
+import { useInAppNotifications } from '../../context/in-app-notification-context';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { getEndTime, useLiveClass } from '../../hooks/Useliveclass';
+import { useNotifications } from '../../hooks/use-notifications';
 import { ClassSlot } from '../../types';
 import { fetchJson } from '../../utils/api';
 
@@ -149,9 +151,15 @@ function NextClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => void }
 }
 
 // ── Now & Next wrapper ─────────────────────────────────────────────────────
-function LiveClassSection({ onNavigate }: { onNavigate: () => void }) {
+function LiveClassSection({ onNavigate, onRefresh }: { onNavigate: () => void; onRefresh?: () => void }) {
     const { colors } = useThemeColors();
-    const { current, next, loading, error, isWeekend } = useLiveClass();
+    const { current, next, loading, error, isWeekend, refresh } = useLiveClass();
+
+    // Combined refresh handler
+    const handleRefresh = useCallback(() => {
+        refresh();
+        onRefresh?.();
+    }, [refresh, onRefresh]);
 
     if (loading) {
         return (
@@ -206,12 +214,55 @@ export default function HomeScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
     const { profile, hasProfile, getDepartmentLabel, loading: profileLoading } = useProfile();
+    const { showNotification } = useInAppNotifications();
+    const { current, next } = useLiveClass();
+
+    // Notifications hook
+    const {
+        notificationsEnabled,
+        scheduledCount,
+        enableNotifications,
+        refreshNotifications,
+        loading: notificationsLoading,
+    } = useNotifications();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
     const [backendInfo, setBackendInfo] = useState<any>(null);
     const [backendLoading, setBackendLoading] = useState(true);
     const [backendError, setBackendError] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Test notification function
+    const testNotification = useCallback(() => {
+        const nextClass = next || current;
+        if (nextClass) {
+            const subject = nextClass.data.subject ?? nextClass.data.entries?.[0]?.subject ?? 'Class';
+            const room = nextClass.data.classRoom ?? nextClass.data.entries?.[0]?.classRoom ?? '';
+            const time = nextClass.timeOfClass;
+
+            showNotification({
+                title: '⏰ Class in 10 minutes!',
+                body: `${subject} starts at ${time}${room ? `\n📍 Room: ${room}` : ''}`,
+                type: 'reminder',
+            });
+
+            // Show "class starting" notification after 2 seconds
+            setTimeout(() => {
+                showNotification({
+                    title: '🔔 Class Starting Now!',
+                    body: `${subject} is starting now!${room ? `\n📍 Room: ${room}` : ''}`,
+                    type: 'start',
+                });
+            }, 2000);
+        } else {
+            showNotification({
+                title: '📚 Test Notification',
+                body: 'This is how your class notifications will appear!',
+                type: 'info',
+            });
+        }
+    }, [next, current, showNotification]);
 
     useEffect(() => {
         Animated.parallel([
@@ -221,31 +272,44 @@ export default function HomeScreen() {
     }, []);
 
     // Fetch backend root info for status/debugging
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                setBackendLoading(true);
-                const res = await fetchJson('/');
-                if (!mounted) return;
-                if (!res.ok) {
-                    setBackendError(`Server returned ${res.status}`);
-                    setBackendInfo(null);
-                } else {
-                    const json = await res.json().catch(() => null);
-                    setBackendInfo(json ?? { ok: true });
-                    setBackendError(null);
-                }
-            } catch (e: any) {
-                if (!mounted) return;
-                setBackendError(String(e?.message ?? e));
+    const fetchBackendInfo = useCallback(async () => {
+        try {
+            setBackendLoading(true);
+            const res = await fetchJson('/');
+            if (!res.ok) {
+                setBackendError(`Server returned ${res.status}`);
                 setBackendInfo(null);
-            } finally {
-                if (mounted) setBackendLoading(false);
+            } else {
+                const json = await res.json().catch(() => null);
+                setBackendInfo(json ?? { ok: true });
+                setBackendError(null);
             }
-        })();
-        return () => { mounted = false; };
+        } catch (e: any) {
+            setBackendError(String(e?.message ?? e));
+            setBackendInfo(null);
+        } finally {
+            setBackendLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchBackendInfo();
+    }, [fetchBackendInfo]);
+
+    // Pull-to-refresh handler
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                fetchBackendInfo(),
+                refreshNotifications(),
+            ]);
+        } catch (e) {
+            console.error('Refresh error:', e);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [fetchBackendInfo, refreshNotifications]);
 
     // If profile is missing after profile store finished loading, redirect to login
     useEffect(() => {
@@ -257,12 +321,38 @@ export default function HomeScreen() {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
+    // Show loading screen while profile is loading
+    if (profileLoading) {
+        return (
+            <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}>
+                <StatusBar style={isDark ? 'light' : 'dark'} />
+                <BgBlobs />
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={{ marginTop: 16, fontSize: 15, color: colors.textSecondary, fontWeight: '500' }}>
+                    Loading your profile...
+                </Text>
+            </View>
+        );
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <BgBlobs />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 32 }}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 32 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                        progressBackgroundColor={colors.surface}
+                    />
+                }
+            >
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
                     {/* ── Top Bar ── */}
@@ -271,37 +361,102 @@ export default function HomeScreen() {
                             <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500', marginBottom: 2 }}>{greeting} 👋</Text>
                             <Text style={{ fontSize: 22, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.8 }}>InfoCascade</Text>
                         </View>
-                        <TouchableOpacity
-                            style={{
-                                width: 42, height: 42, borderRadius: 21,
-                                backgroundColor: profile?.name ? colors.primary + '20' : colors.surface,
-                                borderWidth: 2, borderColor: profile?.name ? colors.primary + '60' : colors.border,
-                                justifyContent: 'center', alignItems: 'center',
-                            }}
-                            onPress={() => router.push('/(app)/profile')}
-                            activeOpacity={0.75}
-                        >
-                            {profile?.name
-                                ? <Text style={{ fontSize: 17, fontWeight: '800', color: colors.primary }}>{profile.name[0].toUpperCase()}</Text>
-                                : <Text style={{ fontSize: 18 }}>👤</Text>
-                            }
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            {/* Notification Bell */}
+                            {Platform.OS !== 'web' && (
+                                <TouchableOpacity
+                                    style={{
+                                        width: 42, height: 42, borderRadius: 21,
+                                        backgroundColor: notificationsEnabled ? colors.accent + '20' : colors.surface,
+                                        borderWidth: 2, borderColor: notificationsEnabled ? colors.accent + '60' : colors.border,
+                                        justifyContent: 'center', alignItems: 'center',
+                                    }}
+                                    onPress={() => {
+                                        if (notificationsEnabled) {
+                                            refreshNotifications();
+                                        } else {
+                                            enableNotifications();
+                                        }
+                                    }}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={{ fontSize: 18 }}>{notificationsEnabled ? '🔔' : '🔕'}</Text>
+                                    {notificationsEnabled && scheduledCount > 0 && (
+                                        <View style={{
+                                            position: 'absolute', top: -2, right: -2,
+                                            backgroundColor: colors.accent, borderRadius: 8,
+                                            minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center',
+                                        }}>
+                                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#fff' }}>{scheduledCount}</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            {/* Profile Avatar */}
+                            <TouchableOpacity
+                                style={{
+                                    width: 42, height: 42, borderRadius: 21,
+                                    backgroundColor: profile?.name ? colors.primary + '20' : colors.surface,
+                                    borderWidth: 2, borderColor: profile?.name ? colors.primary + '60' : colors.border,
+                                    justifyContent: 'center', alignItems: 'center',
+                                }}
+                                onPress={() => router.push('/(app)/profile')}
+                                activeOpacity={0.75}
+                            >
+                                {profile?.name
+                                    ? <Text style={{ fontSize: 17, fontWeight: '800', color: colors.primary }}>{profile.name[0].toUpperCase()}</Text>
+                                    : <Text style={{ fontSize: 18 }}>👤</Text>
+                                }
+                            </TouchableOpacity>
+                        </View>
                     </View>
+
+                    {/* ── Notification Banner (Android) ── */}
+                    {Platform.OS !== 'web' && !notificationsEnabled && hasProfile && (
+                        <TouchableOpacity
+                            onPress={enableNotifications}
+                            style={{
+                                backgroundColor: colors.accent + '15',
+                                borderRadius: 14,
+                                padding: 14,
+                                marginBottom: 16,
+                                borderWidth: 1,
+                                borderColor: colors.accent + '30',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 12,
+                            }}
+                        >
+                            <Text style={{ fontSize: 24 }}>🔔</Text>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 }}>
+                                    Enable Class Notifications
+                                </Text>
+                                <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                                    Get notified 10 min before & when classes start
+                                </Text>
+                            </View>
+                            <Text style={{ fontSize: 14, color: colors.accent, fontWeight: '600' }}>Enable</Text>
+                        </TouchableOpacity>
+                    )}
 
                     {/* ── Now & Next (only when profile set) ── */}
                     {hasProfile && (
                         <>
                             <SectionTitle label="Now & Next" />
-                            <LiveClassSection onNavigate={() => router.push('/(app)/timetable')} />
+                            <LiveClassSection
+                                onNavigate={() => router.push('/(app)/timetable')}
+                                onRefresh={refreshNotifications}
+                            />
                         </>
                     )}
 
                     {/* ── Quick Actions ── */}
                     <SectionTitle label="Quick Actions" />
-                    <View style={{ flexDirection: 'row', gap: 12, marginBottom: 28 }}>
+                    <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
                         <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
                         <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
-
+                        <QuickAction icon="🔔" label="Test Alert" color="#FF8C42" onPress={testNotification} />
                     </View>
 
                     {/* ── Profile card ── */}
