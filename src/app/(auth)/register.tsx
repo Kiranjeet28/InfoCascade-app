@@ -12,7 +12,7 @@ import Badge from '../../components/ui/badge';
 import InputField from '../../components/ui/input-field';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
-import { isValidGNDECEmail, sendOTP, verifyOTP } from '../../services/otp-service';
+import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
 import { postJson, resolveApiBase } from '../../utils/api';
 import { saveSession } from '../../utils/auth-cache';
 import { fetchDepartments, fetchGroups } from '../../utils/departmentUtils';
@@ -189,12 +189,14 @@ export default function RegisterScreen() {
     };
 
     // ─── Verify OTP ─────────────────────────────────────────────────────────────
-    const handleVerifyOTP = () => {
+    const handleVerifyOTP = async () => {
         if (otp.length !== 6) {
             showMessage('Enter 6-digit OTP', 'error');
             return;
         }
-        const result = verifyOTP(email, otp);
+        setLoading(true);
+        const result = await verifyOTP(email, otp);
+        setLoading(false);
         if (result.success) {
             showMessage(result.message, 'success');
             setStep(2);
@@ -207,7 +209,7 @@ export default function RegisterScreen() {
     const handleResendOTP = async () => {
         if (countdown > 0) return;
         setLoading(true);
-        const result = await sendOTP(email);
+        const result = await resendOTP(email);
         setLoading(false);
         if (result.success) {
             setOtp('');
@@ -233,10 +235,14 @@ export default function RegisterScreen() {
 
             if (res.ok) {
                 const nameFromResp = data.name ?? data.student?.name ?? name;
-                if (data.token || data.accessToken) {
-                    await saveSession({ urn, token: data.token ?? data.accessToken, name: nameFromResp });
-                }
-                await saveProfile({ name: nameFromResp, department, group });
+                const token = data.token ?? data.accessToken ?? 'local';
+
+                // Always save session so auto-login works on next launch
+                await saveSession({ urn, token, name: nameFromResp });
+
+                // Save profile to context + AsyncStorage
+                await saveProfile({ name: nameFromResp, email, urn, crn, department, group });
+
                 showMessage('Registration successful! 🎉', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 1200);
             } else {
@@ -375,11 +381,13 @@ export default function RegisterScreen() {
                                     <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[btn, { flex: 1 }, otp.length !== 6 && btnDisabled]}
+                                    style={[btn, { flex: 1 }, (otp.length !== 6 || loading) && btnDisabled]}
                                     onPress={handleVerifyOTP}
-                                    disabled={otp.length !== 6}
+                                    disabled={otp.length !== 6 || loading}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify ✓</Text>
+                                    {loading ? <ActivityIndicator color="#fff" /> : (
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify ✓</Text>
+                                    )}
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -448,9 +456,9 @@ export default function RegisterScreen() {
                                     style={{ color: colors.textPrimary }}
                                     dropdownIconColor={colors.textSecondary}
                                 >
-                                    <Picker.Item label="Select Department" value="" color={colors.textMuted} />
+                                    <Picker.Item label="Select Department" value="" color={Platform.OS === 'android' ? '#999' : colors.textMuted} />
                                     {departments.map((d) => (
-                                        <Picker.Item key={d} label={d.charAt(0).toUpperCase() + d.slice(1)} value={d} color={colors.textPrimary} />
+                                        <Picker.Item key={d} label={d.charAt(0).toUpperCase() + d.slice(1)} value={d} color={Platform.OS === 'android' ? '#333' : colors.textPrimary} />
                                     ))}
                                 </Picker>
                             </View>
@@ -472,10 +480,10 @@ export default function RegisterScreen() {
                                     <Picker.Item
                                         label={!department ? 'Select department first' : groups.length ? 'Select Group' : 'No groups'}
                                         value=""
-                                        color={colors.textMuted}
+                                        color={Platform.OS === 'android' ? '#999' : colors.textMuted}
                                     />
                                     {groups.map((g) => (
-                                        <Picker.Item key={g} label={g} value={g} color={colors.textPrimary} />
+                                        <Picker.Item key={g} label={g} value={g} color={Platform.OS === 'android' ? '#333' : colors.textPrimary} />
                                     ))}
                                 </Picker>
                             </View>
@@ -503,7 +511,7 @@ export default function RegisterScreen() {
                     {/* Sign In Link */}
                     <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
                         <Text style={{ fontSize: 13, color: colors.textSecondary }}>Already have account? </Text>
-                        <TouchableOpacity onPress={() => router.push('/login')}>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
                             <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '700' }}>Sign In</Text>
                         </TouchableOpacity>
                     </View>

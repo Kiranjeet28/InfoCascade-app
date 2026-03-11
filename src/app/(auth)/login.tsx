@@ -62,45 +62,23 @@ export default function LoginScreen() {
             const res = await postJson('/api/students/sign', { identifier: urn, password }, 12000);
             const data = await res.json().catch(() => ({}));
             if (res.ok) {
+                const student = data.student ?? data;
                 const token = data.token ?? data.accessToken ?? 'local';
-                await saveSession({ urn: urn.trim(), token, name: data.name ?? data.student?.name ?? '' });
+                const nameVal = student.name ?? data.name ?? urn.trim();
 
-                // After login, fetch full student details from the auth endpoint and persist them.
-                try {
-                    const authUrl = 'http://localhost:3000/students/auth';
-                    const authRes = await postJson(authUrl, { urn: urn.trim(), password }, 10000);
-                    const authData = await authRes.json().catch(() => ({}));
-                    if (authRes.ok) {
-                        const student = authData.student ?? authData;
-                        await saveProfile({
-                            name: student.name ?? data.name ?? urn.trim(),
-                            department: student.department ?? data.department ?? student.dept ?? '',
-                            group: student.group ?? data.group ?? '',
-                        });
-                    } else {
-                        // fallback to any profile data returned from sign endpoint
-                        try {
-                            await saveProfile({
-                                name: data.name ?? data.student?.name ?? urn.trim(),
-                                department: data.department ?? data.student?.department ?? '',
-                                group: data.group ?? data.student?.group ?? '',
-                            });
-                        } catch {
-                            // ignore
-                        }
-                    }
-                } catch {
-                    // network/parse error: still try to save basic profile
-                    try {
-                        await saveProfile({
-                            name: data.name ?? data.student?.name ?? urn.trim(),
-                            department: data.department ?? data.student?.department ?? '',
-                            group: data.group ?? data.student?.group ?? '',
-                        });
-                    } catch {
-                        // ignore
-                    }
-                }
+                // Save auth session (token + urn) for auto-login on next launch
+                await saveSession({ urn: urn.trim(), token, name: nameVal });
+
+                // Save profile to context + AsyncStorage so the app has department/group
+                await saveProfile({
+                    name: nameVal,
+                    email: student.email ?? data.email ?? '',
+                    urn: student.urn ?? urn.trim(),
+                    crn: student.crn ?? data.crn ?? '',
+                    department: student.department ?? data.department ?? student.dept ?? '',
+                    group: student.group ?? data.group ?? '',
+                });
+
                 showMsg('Login successful!', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 900);
             } else {
@@ -158,11 +136,6 @@ export default function LoginScreen() {
                 >
                     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-                        {/* Logo */}
-                        <View style={{ alignItems: 'center', marginBottom: 10 }}>
-
-                        </View>
-
                         <BackButton label="← Back" />
 
                         {/* Header */}
@@ -200,16 +173,9 @@ export default function LoginScreen() {
                                 icon="🔒"
                                 secureTextEntry
                             />
-                            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: -8 }}>
+                            <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: -8 }} onPress={() => router.push('/(auth)/forgot-password')}>
                                 <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>Forgot password?</Text>
                             </TouchableOpacity>
-                        </View>
-
-                        {/* Divider */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10, marginBottom: 18 }}>
-                            <View style={{ flex: 1, height: 1.5, backgroundColor: '#23263A', borderRadius: 2, marginHorizontal: 8 }} />
-                            <Text style={{ color: colors.textMuted, fontWeight: '700', fontSize: 13, letterSpacing: 1 }}>OR</Text>
-                            <View style={{ flex: 1, height: 1.5, backgroundColor: '#23263A', borderRadius: 2, marginHorizontal: 8 }} />
                         </View>
 
                         {/* Login button */}
