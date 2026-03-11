@@ -233,37 +233,6 @@ export default function HomeScreen() {
     const [backendError, setBackendError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Test notification function
-    const testNotification = useCallback(() => {
-        const nextClass = next || current;
-        if (nextClass) {
-            const subject = nextClass.data.subject ?? nextClass.data.entries?.[0]?.subject ?? 'Class';
-            const room = nextClass.data.classRoom ?? nextClass.data.entries?.[0]?.classRoom ?? '';
-            const time = nextClass.timeOfClass;
-
-            showNotification({
-                title: '⏰ Class in 10 minutes!',
-                body: `${subject} starts at ${time}${room ? `\n📍 Room: ${room}` : ''}`,
-                type: 'reminder',
-            });
-
-            // Show "class starting" notification after 2 seconds
-            setTimeout(() => {
-                showNotification({
-                    title: '🔔 Class Starting Now!',
-                    body: `${subject} is starting now!${room ? `\n📍 Room: ${room}` : ''}`,
-                    type: 'start',
-                });
-            }, 2000);
-        } else {
-            showNotification({
-                title: '📚 Test Notification',
-                body: 'This is how your class notifications will appear!',
-                type: 'info',
-            });
-        }
-    }, [next, current, showNotification]);
-
     useEffect(() => {
         Animated.parallel([
             Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
@@ -456,7 +425,6 @@ export default function HomeScreen() {
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
                         <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
                         <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
-                        <QuickAction icon="🔔" label="Test Alert" color="#FF8C42" onPress={testNotification} />
                     </View>
 
                     {/* ── Profile card ── */}

@@ -3,28 +3,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { getSession } from '../utils/auth-cache';
 
 export default function StartPage() {
     const router = useRouter();
     const { colors } = useThemeColors();
 
     useEffect(() => {
-        const checkProfile = async () => {
+        const checkAuth = async () => {
             try {
-                // use the same storage key as `ProfileContext` ('studentProfile')
-                const profile = await AsyncStorage.getItem('studentProfile');
-                if (profile) {
+                // Check both session (token) and profile (department/group)
+                const [session, profileRaw] = await Promise.all([
+                    getSession(),
+                    AsyncStorage.getItem('studentProfile'),
+                ]);
+
+                if (session?.token && profileRaw) {
+                    // Fully logged in — go straight to home
                     router.replace('/(app)/home');
                 } else {
+                    // Missing session or profile — send to login
                     router.replace('/(auth)/login');
                 }
             } catch (e) {
-                console.error('Failed to load user profile from storage', e);
+                console.error('Failed to check auth state', e);
                 router.replace('/(auth)/login');
             }
         };
 
-        checkProfile();
+        checkAuth();
     }, []);
 
     return (

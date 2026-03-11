@@ -1,6 +1,9 @@
 // ─── Profile Types ────────────────────────────────────────────────────────────
 export interface Profile {
     name: string;
+    email: string;
+    urn: string;
+    crn: string;
     department: string;
     group: string;
 }
