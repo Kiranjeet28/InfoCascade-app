@@ -10,10 +10,10 @@ import {
     Text, TextInput, TouchableOpacity,
     View,
 } from 'react-native';
+import AppIcon from '../../components/app-icon';
 import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
-import AppIcon from '../../components/app-icon';
 import { DEPARTMENT_OPTIONS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
@@ -213,7 +213,7 @@ export default function ProfileScreen() {
                                             }}
                                             onPress={() => setDepartment(opt.value)}
                                             activeOpacity={0.8}
-                                            >
+                                        >
                                             <AppIcon
                                                 family={(opt as any).icon.family}
                                                 name={(opt as any).icon.name}
@@ -239,7 +239,7 @@ export default function ProfileScreen() {
                                     />
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>{selectedDept?.label ?? department}</Text>
                                 </View>
- 
+
                             </View>
                         )}
                     </View>

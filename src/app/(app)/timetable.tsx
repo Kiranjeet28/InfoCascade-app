@@ -4,12 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import mechanicalTimetable from '../../../web/timetable_mechanical.json';
+import AppIcon from '../../components/app-icon';
 import ClassCard from '../../components/timetable/class-card';
 import DaySelector from '../../components/timetable/day-selector';
 import { TIME_SLOTS, WEEK_DAYS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
-import AppIcon from '../../components/app-icon';
 import { ClassSlot, TimetableJson } from '../../types';
 
 function getCurrentDay(): string {

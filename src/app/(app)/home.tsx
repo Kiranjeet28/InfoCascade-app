@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Platform, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import AppIcon from '../../components/app-icon';
 import BgBlobs from '../../components/layout/bg-blobs';
 import SectionTitle from '../../components/ui/section-title';
 import { useInAppNotifications } from '../../context/in-app-notification-context';
@@ -14,7 +15,8 @@ import { fetchJson } from '../../utils/api';
 
 // ── Quick action card ──────────────────────────────────────────────────────
 interface QuickActionProps {
-    icon: string; label: string; color: string; onPress: () => void;
+    icon: string | { family?: 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome'; name: string };
+    label: string; color: string; onPress: () => void;
 }
 function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
     const { colors } = useThemeColors();
@@ -29,7 +31,11 @@ function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
                 activeOpacity={1}
             >
                 <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: color + '20', justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 20 }}>{icon}</Text>
+                    {typeof icon === 'string' ? (
+                        <Text style={{ fontSize: 20 }}>{icon}</Text>
+                    ) : (
+                        <AppIcon family={icon.family ?? 'MaterialCommunityIcons'} name={icon.name} size={20} color={color} />
+                    )}
                 </View>
                 <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>{label}</Text>
             </TouchableOpacity>
@@ -107,7 +113,7 @@ function CurrentClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => voi
             {/* Room + teacher */}
             <View style={{ flexDirection: 'row', gap: 16 }}>
                 {info.room ? <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500' }}>📍 {info.room}</Text> : null}
-                {info.teacher ? <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500' }}>👨‍🏫 {info.teacher}</Text> : null}
+                {info.teacher ? <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '500' }}>Instructor: {info.teacher}</Text> : null}
             </View>
         </TouchableOpacity>
     );
@@ -142,7 +148,7 @@ function NextClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => void }
                 <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>{info.subject}</Text>
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                     {info.room ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>📍 {info.room}</Text> : null}
-                    {info.teacher ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>👨‍🏫 {info.teacher}</Text> : null}
+                    {info.teacher ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>Instructor: {info.teacher}</Text> : null}
                 </View>
             </View>
             <Text style={{ fontSize: 20, color: colors.textMuted }}>›</Text>
@@ -349,7 +355,7 @@ export default function HomeScreen() {
                                     }}
                                     activeOpacity={0.75}
                                 >
-                                    <Text style={{ fontSize: 18 }}>{notificationsEnabled ? '🔔' : '🔕'}</Text>
+                                    <AppIcon family="Ionicons" name={notificationsEnabled ? 'notifications' : 'notifications-off'} size={18} color={notificationsEnabled ? colors.accent : colors.textSecondary} />
                                     {notificationsEnabled && scheduledCount > 0 && (
                                         <View style={{
                                             position: 'absolute', top: -2, right: -2,
@@ -374,7 +380,7 @@ export default function HomeScreen() {
                             >
                                 {profile?.name
                                     ? <Text style={{ fontSize: 17, fontWeight: '800', color: colors.primary }}>{profile.name[0].toUpperCase()}</Text>
-                                    : <Text style={{ fontSize: 18 }}>👤</Text>
+                                    : <AppIcon family="MaterialCommunityIcons" name="account" size={18} color={colors.textSecondary} />
                                 }
                             </TouchableOpacity>
                         </View>
@@ -396,7 +402,7 @@ export default function HomeScreen() {
                                 gap: 12,
                             }}
                         >
-                            <Text style={{ fontSize: 24 }}>🔔</Text>
+                            <AppIcon family="Ionicons" name="notifications" size={24} color={colors.accent} />
                             <View style={{ flex: 1 }}>
                                 <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 }}>
                                     Enable Class Notifications
@@ -423,8 +429,8 @@ export default function HomeScreen() {
                     {/* ── Quick Actions ── */}
                     <SectionTitle label="Quick Actions" />
                     <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
-                        <QuickAction icon="📅" label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
-                        <QuickAction icon="👤" label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
+                        <QuickAction icon={{ family: 'Ionicons', name: 'calendar' }} label="Timetable" color="#6C63FF" onPress={() => router.push('/(app)/timetable')} />
+                        <QuickAction icon={{ family: 'MaterialCommunityIcons', name: 'account' }} label="Profile" color="#00D9AA" onPress={() => router.push('/(app)/profile')} />
                     </View>
 
                     {/* ── Profile card ── */}
@@ -472,7 +478,7 @@ export default function HomeScreen() {
                     ) : (
                         <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, marginBottom: 20, borderWidth: 1, borderColor: colors.border, alignItems: 'center' }}>
                             <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: colors.surfaceElevated, justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-                                <Text style={{ fontSize: 30 }}>📋</Text>
+                                <AppIcon family="Ionicons" name="clipboard" size={30} color={colors.textSecondary} />
                             </View>
                             <Text style={{ fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 }}>Profile Not Set Up</Text>
                             <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', lineHeight: 19, marginBottom: 20 }}>

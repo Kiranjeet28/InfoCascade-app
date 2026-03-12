@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Text, View } from 'react-native';
-import { useThemeColors } from '../../context/theme-context';
+import AppIcon from '../../components/app-icon';
 import { useProfile } from '../../context/profile-context';
+import { useThemeColors } from '../../context/theme-context';
 
 // Shows name initial when profile exists, otherwise emoji
 function ProfileTabIcon({ focused }: { focused: boolean }) {
@@ -24,11 +25,11 @@ function ProfileTabIcon({ focused }: { focused: boolean }) {
             </View>
         );
     }
-    return <Text style={{ fontSize: 18 }}>👤</Text>;
+    return <AppIcon family="MaterialCommunityIcons" name="account" size={20} color={focused ? '#fff' : colors.primary} />;
 }
 
-function TabIcon({ emoji }: { emoji: string }) {
-    return <Text style={{ fontSize: 18 }}>{emoji}</Text>;
+function TabIcon({ name, family }: { name: string; family?: 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome' }) {
+    return <AppIcon name={name} family={family} size={20} />;
 }
 
 export default function AppLayout() {
@@ -52,11 +53,11 @@ export default function AppLayout() {
         >
             <Tabs.Screen
                 name="home"
-                options={{ title: 'Home', tabBarIcon: () => <TabIcon emoji="" /> }}
+                options={{ title: 'Home', tabBarIcon: () => <TabIcon name="home" family="Ionicons" /> }}
             />
             <Tabs.Screen
                 name="timetable"
-                options={{ title: 'Timetable', tabBarIcon: () => <TabIcon emoji="" /> }}
+                options={{ title: 'Timetable', tabBarIcon: () => <TabIcon name="calendar" family="Ionicons" /> }}
             />
             <Tabs.Screen
                 name="profile"
