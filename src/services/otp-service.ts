@@ -9,17 +9,17 @@ const API_URL = resolveApiBase();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Validate GNDEC email format
+// Validate Gmail email format
 export function isValidGNDECEmail(email: string): boolean {
     const emailLower = email.toLowerCase().trim();
-    return emailLower.endsWith('@gndec.ac.in');
+    return emailLower.endsWith('@gmail.com');
 }
 
 // ─── Send OTP (POST /api/otp/send) ───────────────────────────────────────────
 // Backend generates the OTP, stores it in Redis and sends the email.
 export async function sendOTP(email: string): Promise<{ success: boolean; message: string }> {
     if (!isValidGNDECEmail(email)) {
-        return { success: false, message: 'Please enter a valid GNDEC email (@gndec.ac.in)' };
+        return { success: false, message: 'Please enter a valid Gmail address (@gmail.com)' };
     }
 
     const emailKey = email.toLowerCase().trim();
@@ -96,7 +96,7 @@ export async function verifyOTP(email: string, otp: string): Promise<{ success: 
 // Invalidates the previous OTP and sends a fresh one via backend.
 export async function resendOTP(email: string): Promise<{ success: boolean; message: string }> {
     if (!isValidGNDECEmail(email)) {
-        return { success: false, message: 'Please enter a valid GNDEC email (@gndec.ac.in)' };
+        return { success: false, message: 'Please enter a valid Gmail address (@gmail.com)' };
     }
 
     const emailKey = email.toLowerCase().trim();

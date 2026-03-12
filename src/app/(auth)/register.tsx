@@ -1,4 +1,3 @@
-import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,6 +9,7 @@ import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
 import InputField from '../../components/ui/input-field';
+import SelectField from '../../components/ui/select-field';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
@@ -72,10 +72,10 @@ function OTPInput({ value, onChange, length = 6 }: { value: string; onChange: (v
 function EmailHelpCard({ onClose }: { onClose: () => void }) {
     const { colors } = useThemeColors();
     const steps = [
-        { icon: '1️⃣', text: 'Go to Academic Portal & Login' },
-        { icon: '2️⃣', text: 'Open "Control Panel"' },
-        { icon: '3️⃣', text: 'Click "GNDEC E-mail Credentials"' },
-        { icon: '4️⃣', text: 'Note your email & password' },
+        { num: '1', text: 'Go to Academic Portal & Login' },
+        { num: '2', text: 'Open "Control Panel"' },
+        { num: '3', text: 'Click "GNDEC E-mail Credentials"' },
+        { num: '4', text: 'Note your email & password' },
     ];
 
     return (
@@ -85,16 +85,18 @@ function EmailHelpCard({ onClose }: { onClose: () => void }) {
         }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                    📧 How to get GNDEC Email?
+                    How to get Email?
                 </Text>
                 <TouchableOpacity onPress={onClose}>
-                    <Text style={{ fontSize: 18, color: colors.textMuted }}>✕</Text>
+                    <Text style={{ fontSize: 20, color: colors.textMuted, fontWeight: '300' }}>×</Text>
                 </TouchableOpacity>
             </View>
 
             {steps.map((s, i) => (
                 <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Text style={{ fontSize: 16 }}>{s.icon}</Text>
+                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: colors.accent + '20', justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accent }}>{s.num}</Text>
+                    </View>
                     <Text style={{ fontSize: 13, color: colors.textSecondary, flex: 1 }}>{s.text}</Text>
                 </View>
             ))}
@@ -173,7 +175,7 @@ export default function RegisterScreen() {
     // ─── Send OTP ───────────────────────────────────────────────────────────────
     const handleSendOTP = async () => {
         if (!isValidGNDECEmail(email)) {
-            showMessage('Enter valid GNDEC email (@gndec.ac.in)', 'error');
+            showMessage('Enter a valid Gmail address (@gmail.com)', 'error');
             return;
         }
         setLoading(true);
@@ -293,7 +295,7 @@ export default function RegisterScreen() {
                             Create Account
                         </Text>
                         <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                            Verify your GNDEC email to continue
+                            Verify your Gmail to continue
                         </Text>
                     </View>
 
@@ -316,10 +318,10 @@ export default function RegisterScreen() {
                     {step === 0 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                📧 GNDEC Email
+                                Gmail Address
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
-                                Enter your college email ending with @gndec.ac.in
+                                Enter your Gmail address ending with @gmail.com
                             </Text>
 
                             {showHelp && <EmailHelpCard onClose={() => setShowHelp(false)} />}
@@ -328,15 +330,15 @@ export default function RegisterScreen() {
                                 label="Email Address"
                                 value={email}
                                 onChangeText={setEmail}
-                                placeholder="yourname@gndec.ac.in"
-                                icon="📧"
+                                placeholder="yourname@gmail.com"
+                                icon="envelope"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />
 
                             <TouchableOpacity onPress={() => setShowHelp(!showHelp)} style={{ marginBottom: 16 }}>
                                 <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
-                                    {showHelp ? 'Hide help' : "Don't know your GNDEC email? →"}
+                                    {showHelp ? 'Hide help' : "Need help with your email? →"}
                                 </Text>
                             </TouchableOpacity>
 
@@ -440,53 +442,36 @@ export default function RegisterScreen() {
                     {step === 3 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                📚 Academic Info
+                                Academic Info
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
                                 Select your department and group
                             </Text>
 
-                            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, marginBottom: 6, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                Department
-                            </Text>
-                            <View style={{ borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface, overflow: 'hidden', marginBottom: 14 }}>
-                                <Picker
-                                    selectedValue={department}
-                                    onValueChange={setDepartment}
-                                    style={{ color: colors.textPrimary }}
-                                    dropdownIconColor={colors.textSecondary}
-                                >
-                                    <Picker.Item label="Select Department" value="" color={Platform.OS === 'android' ? '#999' : colors.textMuted} />
-                                    {departments.map((d) => (
-                                        <Picker.Item key={d} label={d.charAt(0).toUpperCase() + d.slice(1)} value={d} color={Platform.OS === 'android' ? '#333' : colors.textPrimary} />
-                                    ))}
-                                </Picker>
-                            </View>
+                            <SelectField
+                                label="Department"
+                                value={department}
+                                onValueChange={setDepartment}
+                                items={departments.map(d => ({
+                                    label: d.charAt(0).toUpperCase() + d.slice(1),
+                                    value: d,
+                                }))}
+                                placeholder="Select Department"
+                                icon={{ name: 'school', family: 'MaterialCommunityIcons' }}
+                            />
 
-                            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, marginBottom: 6, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                                Group
-                            </Text>
-                            <View style={[
-                                { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface, overflow: 'hidden' },
-                                !department && { opacity: 0.5 },
-                            ]}>
-                                <Picker
-                                    selectedValue={group}
-                                    onValueChange={setGroup}
-                                    enabled={!!department && groups.length > 0}
-                                    style={{ color: colors.textPrimary }}
-                                    dropdownIconColor={colors.textSecondary}
-                                >
-                                    <Picker.Item
-                                        label={!department ? 'Select department first' : groups.length ? 'Select Group' : 'No groups'}
-                                        value=""
-                                        color={Platform.OS === 'android' ? '#999' : colors.textMuted}
-                                    />
-                                    {groups.map((g) => (
-                                        <Picker.Item key={g} label={g} value={g} color={Platform.OS === 'android' ? '#333' : colors.textPrimary} />
-                                    ))}
-                                </Picker>
-                            </View>
+                            <SelectField
+                                label="Group"
+                                value={group}
+                                onValueChange={setGroup}
+                                items={groups.map(g => ({
+                                    label: g,
+                                    value: g,
+                                }))}
+                                placeholder={!department ? 'Select department first' : groups.length ? 'Select Group' : 'No groups'}
+                                icon={{ name: 'people', family: 'MaterialCommunityIcons' }}
+                                disabled={!department || groups.length === 0}
+                            />
 
                             <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
                                 <TouchableOpacity

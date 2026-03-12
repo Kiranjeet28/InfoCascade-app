@@ -109,7 +109,7 @@ export default function ForgotPasswordScreen() {
             return;
         }
         if (!isValidGNDECEmail(email)) {
-            showMessage('Enter a valid GNDEC email (@gndec.ac.in)', 'error');
+            showMessage('Enter a valid Gmail address (@gmail.com)', 'error');
             return;
         }
         setLoading(true);
@@ -229,7 +229,7 @@ export default function ForgotPasswordScreen() {
                             Forgot Password?
                         </Text>
                         <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                            Verify your GNDEC email to reset your password
+                            Verify your Gmail to reset your password
                         </Text>
                     </View>
 
@@ -252,25 +252,25 @@ export default function ForgotPasswordScreen() {
                     {step === 0 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🔑 Identify Yourself
+                                Identify Yourself
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
-                                Enter your URN, CRN, or email and your GNDEC email for OTP
+                                Enter your URN, CRN, or email and your Gmail for OTP
                             </Text>
 
                             <InputField
                                 label="URN / CRN / Email"
                                 value={identifier}
                                 onChangeText={setIdentifier}
-                                placeholder="e.g. 12345678 or yourname@gndec.ac.in"
-                                icon="🎓"
+                                placeholder="e.g. 12345678 or yourname@gmail.com"
+                                icon="school"
                             />
                             <InputField
-                                label="GNDEC Email (for OTP)"
+                                label="Gmail Address (for OTP)"
                                 value={email}
                                 onChangeText={setEmail}
-                                placeholder="yourname@gndec.ac.in"
-                                icon="📧"
+                                placeholder="yourname@gmail.com"
+                                icon="envelope"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />
@@ -291,7 +291,7 @@ export default function ForgotPasswordScreen() {
                     {step === 1 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🔐 Verify OTP
+                                Verify OTP
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 20 }}>
                                 Enter the 6-digit code sent to {email}

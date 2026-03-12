@@ -79,14 +79,14 @@ export const radius = {
 
 // ─── Department Options ───────────────────────────────────────────────────────
 export const DEPARTMENT_OPTIONS = [
-  { label: 'CSE', value: 'cse', emoji: '💻' },
-  { label: 'IT', value: 'it', emoji: '🌐' },
-  { label: 'ECE', value: 'ece', emoji: '📡' },
-  { label: 'Electrical', value: 'electrical', emoji: '⚡' },
-  { label: 'Mechanical', value: 'mechanical', emoji: '⚙️' },
-  { label: 'Civil', value: 'civil', emoji: '🏗️' },
-  { label: 'Applied Science', value: 'appliedscience', emoji: '📊' },
-  { label: 'BCA', value: 'bca', emoji: '🎓' },
+  { label: 'CSE', value: 'cse', icon: { family: 'MaterialCommunityIcons', name: 'laptop' } },
+  { label: 'IT', value: 'it', icon: { family: 'MaterialCommunityIcons', name: 'web' } },
+  { label: 'ECE', value: 'ece', icon: { family: 'MaterialCommunityIcons', name: 'satellite-variant' } },
+  { label: 'Electrical', value: 'electrical', icon: { family: 'MaterialCommunityIcons', name: 'flash' } },
+  { label: 'Mechanical', value: 'mechanical', icon: { family: 'MaterialCommunityIcons', name: 'cog' } },
+  { label: 'Civil', value: 'civil', icon: { family: 'MaterialCommunityIcons', name: 'bridge' } },
+  { label: 'Applied Science', value: 'appliedscience', icon: { family: 'MaterialCommunityIcons', name: 'chart-bar' } },
+  { label: 'BCA', value: 'bca', icon: { family: 'MaterialCommunityIcons', name: 'school' } },
 ] as const;
 
 export const DEPT_LABELS: Record<string, string> = {
