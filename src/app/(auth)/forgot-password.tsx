@@ -220,7 +220,7 @@ export default function ForgotPasswordScreen() {
                 )}
 
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <BackButton label="← Back" />
+                    <BackButton label="Back" />
 
                     {/* Header */}
                     <View style={{ marginBottom: 24 }}>
@@ -281,7 +281,7 @@ export default function ForgotPasswordScreen() {
                                 disabled={!identifier.trim() || !isValidGNDECEmail(email) || loading}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
-                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP →</Text>
+                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -313,7 +313,7 @@ export default function ForgotPasswordScreen() {
                                     style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
                                     onPress={() => { setStep(0); setOtp(''); }}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[btn, { flex: 1 }, (otp.length !== 6 || loading) && btnDisabled]}
@@ -321,7 +321,7 @@ export default function ForgotPasswordScreen() {
                                     disabled={otp.length !== 6 || loading}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
-                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify ✓</Text>
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify</Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
@@ -368,7 +368,7 @@ export default function ForgotPasswordScreen() {
                                     disabled={loading || newPassword.length < 6 || newPassword !== confirmPassword}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
-                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Reset Password 🔑</Text>
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Reset Password</Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
