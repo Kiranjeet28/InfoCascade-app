@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import { useRef } from 'react';
-import { Animated, Platform, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import { useThemeColors } from '../../context/theme-context';
 import AppIcon from '../app-icon';
 
@@ -67,7 +67,11 @@ export default function SelectField({
                     selectedValue={value}
                     onValueChange={onValueChange}
                     enabled={!disabled}
-                    style={{ flex: 1, color: colors.textPrimary }}
+                    style={{
+                        flex: 1,
+                        color: colors.textPrimary,
+                        backgroundColor: colors.surface,
+                    }}
                     dropdownIconColor={disabled ? colors.textMuted : colors.textSecondary}
                     onFocus={onFocus}
                     onBlur={onBlur}
@@ -75,14 +79,14 @@ export default function SelectField({
                     <Picker.Item
                         label={placeholder}
                         value=""
-                        color={Platform.OS === 'android' ? '#999' : colors.textMuted}
+                        color={colors.textMuted}
                     />
                     {items.map((item) => (
                         <Picker.Item
                             key={item.value}
                             label={item.label}
                             value={item.value}
-                            color={Platform.OS === 'android' ? '#333' : colors.textPrimary}
+                            color={colors.textPrimary}
                         />
                     ))}
                 </Picker>
