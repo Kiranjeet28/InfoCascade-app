@@ -13,6 +13,7 @@ import {
 import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
+import AppIcon from '../../components/app-icon';
 import { DEPARTMENT_OPTIONS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
@@ -97,7 +98,7 @@ export default function ProfileScreen() {
         const success = await saveProfile({ name, department, group: selectedGroup });
         setSaving(false);
         if (success) {
-            Alert.alert('✅ Profile Saved', 'Your profile has been updated!', [
+            Alert.alert('Profile Saved', 'Your profile has been updated!', [
                 { text: 'View Timetable', onPress: () => router.push('/(app)/timetable') },
                 { text: 'Done', onPress: () => router.push('/(app)/home') },
             ]);
@@ -159,9 +160,12 @@ export default function ProfileScreen() {
 
                     {/* Name card */}
                     <View style={cardStyle}>
-                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                            👤 Personal Info
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <AppIcon family="MaterialCommunityIcons" name="account" size={18} color={colors.textPrimary} />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
+                                Personal Info
+                            </Text>
+                        </View>
                         <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 8, marginTop: 12, letterSpacing: 0.8, textTransform: 'uppercase' }}>
                             Full Name
                         </Text>
@@ -185,9 +189,12 @@ export default function ProfileScreen() {
 
                     {/* Department card */}
                     <View style={cardStyle}>
-                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                            🏛️ Department
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <AppIcon family="MaterialCommunityIcons" name="school" size={18} color={colors.textPrimary} />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
+                                Department
+                            </Text>
+                        </View>
                         <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>Select your department</Text>
 
                         {/* Allow changing department only when currently selected dept is "appliedscience" */}
@@ -206,8 +213,13 @@ export default function ProfileScreen() {
                                             }}
                                             onPress={() => setDepartment(opt.value)}
                                             activeOpacity={0.8}
-                                        >
-                                            <Text style={{ fontSize: 14 }}>{opt.emoji}</Text>
+                                            >
+                                            <AppIcon
+                                                family={(opt as any).icon.family}
+                                                name={(opt as any).icon.name}
+                                                size={16}
+                                                color={isSel ? colors.primary : colors.textSecondary}
+                                            />
                                             <Text style={{ fontSize: 13, fontWeight: '600', color: isSel ? colors.primary : colors.textSecondary }}>
                                                 {opt.label}
                                             </Text>
@@ -219,7 +231,12 @@ export default function ProfileScreen() {
                         ) : (
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                    <Text style={{ fontSize: 18 }}>{selectedDept?.emoji ?? '🏛️'}</Text>
+                                    <AppIcon
+                                        family={(selectedDept as any)?.icon?.family ?? 'MaterialCommunityIcons'}
+                                        name={(selectedDept as any)?.icon?.name ?? 'school'}
+                                        size={18}
+                                        color={colors.textPrimary}
+                                    />
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>{selectedDept?.label ?? department}</Text>
                                 </View>
  
@@ -230,12 +247,18 @@ export default function ProfileScreen() {
                     {/* Group card */}
                     <View style={cardStyle}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>📋 Select Group</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <AppIcon family="Ionicons" name="clipboard" size={16} color={colors.textPrimary} />
+                                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Select Group</Text>
+                            </View>
                             {selectedDept && (
                                 <View style={{ backgroundColor: colors.primary + '20', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: colors.primary + '30' }}>
-                                    <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '600' }}>
-                                        {selectedDept.emoji} {selectedDept.label}
-                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                        <AppIcon family={(selectedDept as any).icon.family} name={(selectedDept as any).icon.name} size={12} color={colors.primary} />
+                                        <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '600' }}>
+                                            {selectedDept.label}
+                                        </Text>
+                                    </View>
                                 </View>
                             )}
                         </View>
@@ -286,7 +309,7 @@ export default function ProfileScreen() {
                             }}
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                <Text style={{ fontSize: 20 }}>{isValidGroup ? '✅' : '❌'}</Text>
+                                <AppIcon name={isValidGroup ? 'check-circle' : 'close-circle'} family="MaterialCommunityIcons" size={20} color={isValidGroup ? colors.success : colors.error} />
                                 <View>
                                     <Text style={{ fontSize: 11, color: colors.textSecondary, marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: '600' }}>
                                         {isValidGroup ? 'Selected Group' : 'Invalid Group'}
@@ -334,7 +357,7 @@ export default function ProfileScreen() {
                         onPress={handleLogout}
                         activeOpacity={0.8}
                     >
-                        <Text style={{ fontSize: 16 }}>🚪</Text>
+                        <AppIcon family="MaterialCommunityIcons" name="logout" size={16} color={colors.error} />
                         <Text style={{ fontSize: 15, fontWeight: '700', color: colors.error }}>Log Out</Text>
                     </TouchableOpacity>
 

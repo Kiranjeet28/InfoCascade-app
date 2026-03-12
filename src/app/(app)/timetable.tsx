@@ -9,6 +9,7 @@ import DaySelector from '../../components/timetable/day-selector';
 import { TIME_SLOTS, WEEK_DAYS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
+import AppIcon from '../../components/app-icon';
 import { ClassSlot, TimetableJson } from '../../types';
 
 function getCurrentDay(): string {
@@ -182,7 +183,7 @@ export default function TimetableScreen() {
             <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
                 <StatusBar style={isDark ? 'light' : 'dark'} />
                 <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 40 }}>{!hasProfile ? '👤' : '⚠️'}</Text>
+                    <AppIcon family="MaterialCommunityIcons" name={!hasProfile ? 'account' : 'alert-circle'} size={40} color={colors.textSecondary} />
                 </View>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' }}>
                     {!hasProfile ? 'No Profile Found' : 'Something went wrong'}
