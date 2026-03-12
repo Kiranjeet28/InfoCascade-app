@@ -1,5 +1,5 @@
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { MaterialCommunityIcons, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { useThemeColors } from '../context/theme-context';
 
 type IconFamily = 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome';

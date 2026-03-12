@@ -106,5 +106,5 @@ export const WEEK_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
 export const TIME_SLOTS = ['08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30'] as const;
 
 export const Fonts = {
-    mono: 'monospace',
+  mono: 'monospace',
 };
