@@ -270,7 +270,6 @@ export default function ForgotPasswordScreen() {
                                 value={email}
                                 onChangeText={setEmail}
                                 placeholder="yourname@gmail.com"
-                                icon="envelope"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />

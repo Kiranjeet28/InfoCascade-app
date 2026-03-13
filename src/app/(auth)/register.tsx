@@ -2,8 +2,8 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Linking,
-    Platform, ScrollView, Text, TextInput, TouchableOpacity, View,
+    ActivityIndicator, Alert, Animated, KeyboardAvoidingView,
+    Platform, ScrollView, Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
@@ -15,9 +15,9 @@ import { useThemeColors } from '../../context/theme-context';
 import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
 import { postJson, resolveApiBase } from '../../utils/api';
 import { saveSession } from '../../utils/auth-cache';
+import type { AvailabilityStatus } from '../../utils/availability';
+import { cancelPendingChecks, checkAvailabilityDebounced } from '../../utils/availability';
 import { fetchDepartments, fetchGroups } from '../../utils/departmentUtils';
-
-// ─── Step Indicator ───────────────────────────────────────────────────────────
 function StepDot({ num, active, done }: { num: number; active: boolean; done: boolean }) {
     const { colors } = useThemeColors();
     return (
@@ -68,54 +68,6 @@ function OTPInput({ value, onChange, length = 6 }: { value: string; onChange: (v
     );
 }
 
-// ─── Help Modal for Email ─────────────────────────────────────────────────────
-function EmailHelpCard({ onClose }: { onClose: () => void }) {
-    const { colors } = useThemeColors();
-    const steps = [
-        { num: '1', text: 'Go to Academic Portal & Login' },
-        { num: '2', text: 'Open "Control Panel"' },
-        { num: '3', text: 'Click "GNDEC E-mail Credentials"' },
-        { num: '4', text: 'Note your email & password' },
-    ];
-
-    return (
-        <View style={{
-            backgroundColor: colors.surface, borderRadius: 16, padding: 20,
-            borderWidth: 1, borderColor: colors.accent + '40', marginBottom: 16,
-        }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                    How to get Email?
-                </Text>
-                <TouchableOpacity onPress={onClose}>
-                    <Text style={{ fontSize: 20, color: colors.textMuted, fontWeight: '300' }}>×</Text>
-                </TouchableOpacity>
-            </View>
-
-            {steps.map((s, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: colors.accent + '20', justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accent }}>{s.num}</Text>
-                    </View>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary, flex: 1 }}>{s.text}</Text>
-                </View>
-            ))}
-
-            <TouchableOpacity
-                onPress={() => Linking.openURL('https://gndec.ac.in')}
-                style={{
-                    backgroundColor: colors.primary + '15', borderRadius: 10, padding: 12,
-                    marginTop: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.primary + '30',
-                }}
-            >
-                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
-                    Open Academic Portal →
-                </Text>
-            </TouchableOpacity>
-        </View>
-    );
-}
-
 // ─── Main Register Screen ─────────────────────────────────────────────────────
 export default function RegisterScreen() {
     const router = useRouter();
@@ -134,10 +86,17 @@ export default function RegisterScreen() {
     const [group, setGroup] = useState('');
     const [departments, setDepartments] = useState<string[]>([]);
     const [groups, setGroups] = useState<string[]>([]);
-    const [showHelp, setShowHelp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+    // Availability check states
+    const [emailStatus, setEmailStatus] = useState<AvailabilityStatus>('idle');
+    const [emailMsg, setEmailMsg] = useState<string>('');
+    const [urnStatus, setUrnStatus] = useState<AvailabilityStatus>('idle');
+    const [urnMsg, setUrnMsg] = useState<string>('');
+    const [crnStatus, setCrnStatus] = useState<AvailabilityStatus>('idle');
+    const [crnMsg, setCrnMsg] = useState<string>('');
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -147,7 +106,44 @@ export default function RegisterScreen() {
             Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
             Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
         ]).start();
+        return () => cancelPendingChecks(); // Cleanup on unmount
     }, []);
+
+    // Check email availability (debounced)
+    useEffect(() => {
+        if (!email.trim() || !isValidGNDECEmail(email)) {
+            setEmailStatus('idle');
+            return;
+        }
+        checkAvailabilityDebounced('email', email, (result: any) => {
+            setEmailStatus(result.status);
+            setEmailMsg(result.message || '');
+        }, 400);
+    }, [email]);
+
+    // Check URN availability (debounced)
+    useEffect(() => {
+        if (!urn.trim()) {
+            setUrnStatus('idle');
+            return;
+        }
+        checkAvailabilityDebounced('urn', urn, (result: any) => {
+            setUrnStatus(result.status);
+            setUrnMsg(result.message || '');
+        }, 400);
+    }, [urn]);
+
+    // Check CRN availability (debounced)
+    useEffect(() => {
+        if (!crn.trim()) {
+            setCrnStatus('idle');
+            return;
+        }
+        checkAvailabilityDebounced('crn', crn, (result: any) => {
+            setCrnStatus(result.status);
+            setCrnMsg(result.message || '');
+        }, 400);
+    }, [crn]);
 
     // Load departments
     useEffect(() => { fetchDepartments().then(setDepartments); }, []);
@@ -222,20 +218,126 @@ export default function RegisterScreen() {
         }
     };
 
+    // ─── Validate all required fields ──────────────────────────────────────────
+    const validateRegistration = (): boolean => {
+        if (!name.trim()) {
+            showMessage('Full name is required', 'error');
+            return false;
+        }
+        if (!email.trim()) {
+            showMessage('Email is required', 'error');
+            return false;
+        }
+        if (!isValidGNDECEmail(email)) {
+            showMessage('Email must end with @gmail.com', 'error');
+            return false;
+        }
+        if (emailStatus === 'checking') {
+            showMessage('Please wait for email validation to complete', 'error');
+            return false;
+        }
+        if (emailStatus === 'taken') {
+            showMessage('This email is already registered', 'error');
+            return false;
+        }
+        if (emailStatus === 'error') {
+            showMessage('Unable to validate email. Please try again.', 'error');
+            return false;
+        }
+        if (!urn.trim()) {
+            showMessage('URN is required', 'error');
+            return false;
+        }
+        if (urnStatus === 'checking') {
+            showMessage('Please wait for URN validation to complete', 'error');
+            return false;
+        }
+        if (urnStatus === 'taken') {
+            showMessage('This URN is already registered', 'error');
+            return false;
+        }
+        if (urnStatus === 'error') {
+            showMessage('Unable to validate URN. Please try again.', 'error');
+            return false;
+        }
+        if (!crn.trim()) {
+            showMessage('CRN is required', 'error');
+            return false;
+        }
+        if (crnStatus === 'checking') {
+            showMessage('Please wait for CRN validation to complete', 'error');
+            return false;
+        }
+        if (crnStatus === 'taken') {
+            showMessage('This CRN is already registered', 'error');
+            return false;
+        }
+        if (crnStatus === 'error') {
+            showMessage('Unable to validate CRN. Please try again.', 'error');
+            return false;
+        }
+        if (!password.trim()) {
+            showMessage('Password is required', 'error');
+            return false;
+        }
+        if (password.length < 6) {
+            showMessage('Password must be at least 6 characters', 'error');
+            return false;
+        }
+        if (!department.trim()) {
+            showMessage('Department is required', 'error');
+            return false;
+        }
+        return true;
+    };
+
     // ─── Register ───────────────────────────────────────────────────────────────
     const handleRegister = async () => {
-        if (!department || !group) {
-            showMessage('Select department and group', 'error');
+        // Validate all fields
+        if (!validateRegistration()) {
             return;
         }
+
         setLoading(true);
+
         try {
-            const res = await postJson('/api/students/register', {
-                email, urn, crn, password, name, department, group,
-            }, 12000);
+            // Build payload according to backend contract
+            const payload: any = {
+                name: name.trim(),
+                email: email.trim(),
+                urn: urn.trim(),
+                crn: crn.trim(),
+                password: password.trim(),
+                department: department.trim(),
+            };
+
+            // Add optional fields if provided
+            if (group && group.trim()) {
+                payload.group = group.trim();
+            }
+
+            const base = resolveApiBase();
+            const endpoint = '/api/students/register';
+            const fullUrl = `${base}${endpoint}`;
+
+            console.log('[Registration] Sending POST to:', fullUrl);
+            console.log('[Registration] Method: POST');
+            console.log('[Registration] Headers: Content-Type: application/json');
+            console.log('[Registration] Payload:', JSON.stringify(payload, null, 2));
+
+            // Send request
+            const res = await postJson(endpoint, payload, 12000);
             const data = await res.json().catch(() => ({}));
 
-            if (res.ok) {
+            console.log('[Registration] Response Status:', res.status);
+            console.log('[Registration] Response Headers:', {
+                'content-type': res.headers.get('content-type'),
+                'content-length': res.headers.get('content-length'),
+            });
+            console.log('[Registration] Response Body:', JSON.stringify(data, null, 2));
+
+            // Handle success (status 201 Created or 200 OK)
+            if (res.status === 201 || res.status === 200 || res.ok) {
                 const nameFromResp = data.name ?? data.student?.name ?? name;
                 const token = data.token ?? data.accessToken ?? 'local';
 
@@ -247,12 +349,47 @@ export default function RegisterScreen() {
 
                 showMessage('Registration successful! 🎉', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 1200);
+            }
+            // Handle client/validation errors
+            else if (res.status === 400) {
+                const errorMsg = data.error ?? data.message ?? 'Invalid request data';
+                console.error('[Registration] 400 - Bad Request Details:', {
+                    endpoint: fullUrl,
+                    payload,
+                    responseHeaders: Object.fromEntries(res.headers.entries()),
+                    responseData: data,
+                });
+                showMessage(errorMsg, 'error');
+            }
+            // Handle duplicate/conflict errors (duplicate URN, CRN, or email)
+            else if (res.status === 409) {
+                const errorMsg = data.error ?? data.message ?? 'This data is already registered';
+                showMessage(errorMsg, 'error');
+                console.warn('[Registration] 409 Conflict:', errorMsg);
+            }
+            // Handle other errors
+            else if (res.status === 404) {
+                console.error('[Registration] 404 - Endpoint not found', {
+                    endpoint: fullUrl,
+                    method: 'POST',
+                    note: 'Check if backend has this endpoint',
+                });
+                showMessage('Backend endpoint not found. Check server or endpoint path.', 'error');
+            } else if (res.status >= 500) {
+                showMessage('Server error. Please try again later.', 'error');
+                console.error('[Registration] Server error:', res.status, data);
             } else {
-                showMessage(data.error ?? data.message ?? `Error ${res.status}`, 'error');
+                const errorMsg = data.error ?? data.message ?? `Error ${res.status}`;
+                showMessage(errorMsg, 'error');
+                console.error('[Registration] Error:', res.status, errorMsg);
             }
         } catch (e: any) {
             const base = resolveApiBase();
-            showMessage(e?.name === 'AbortError' ? 'Request timed out' : `Server error (${base})`, 'error');
+            const errorMsg = e?.name === 'AbortError'
+                ? 'Request timed out. Please try again.'
+                : `Network error: ${e?.message || 'Unable to connect to server'}`;
+            showMessage(errorMsg, 'error');
+            console.error('[Registration] Exception:', e);
         } finally {
             setLoading(false);
         }
@@ -320,32 +457,51 @@ export default function RegisterScreen() {
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
                                 Gmail Address
                             </Text>
-                            <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
-                                Enter your Gmail address ending with @gmail.com
-                            </Text>
 
-                            {showHelp && <EmailHelpCard onClose={() => setShowHelp(false)} />}
 
                             <InputField
                                 label="Email Address"
                                 value={email}
                                 onChangeText={setEmail}
                                 placeholder="yourname@gmail.com"
-                                icon="envelope"
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                             />
 
-                            <TouchableOpacity onPress={() => setShowHelp(!showHelp)} style={{ marginBottom: 16 }}>
-                                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
-                                    {showHelp ? 'Hide help' : "Need help with your email? →"}
-                                </Text>
-                            </TouchableOpacity>
+                            {/* Email Availability Status */}
+                            {email.trim() && isValidGNDECEmail(email) && (
+                                <View style={{ marginBottom: 16, paddingHorizontal: 2 }}>
+                                    {emailStatus === 'checking' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <ActivityIndicator size="small" color={colors.primary} />
+                                            <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>Checking...</Text>
+                                        </View>
+                                    )}
+                                    {emailStatus === 'available' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
+                                            <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{emailMsg || 'Available'}</Text>
+                                        </View>
+                                    )}
+                                    {emailStatus === 'taken' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{emailMsg || 'Already taken'}</Text>
+                                        </View>
+                                    )}
+                                    {emailStatus === 'error' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
+                                            <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{emailMsg || 'Unable to validate'}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
 
                             <TouchableOpacity
-                                style={[btn, (!isValidGNDECEmail(email) || loading) && btnDisabled]}
+                                style={[btn, (!isValidGNDECEmail(email) || loading || emailStatus === 'taken') && btnDisabled]}
                                 onPress={handleSendOTP}
-                                disabled={!isValidGNDECEmail(email) || loading}
+                                disabled={!isValidGNDECEmail(email) || loading || emailStatus === 'taken'}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP →</Text>
@@ -407,7 +563,69 @@ export default function RegisterScreen() {
 
                             <InputField label="Full Name" value={name} onChangeText={setName} placeholder="Your full name" icon="👤" autoCapitalize="words" />
                             <InputField label="URN (University Roll)" value={urn} onChangeText={setUrn} placeholder="e.g. 12345678" icon="🎓" keyboardType="numeric" />
+
+                            {/* URN Availability Status */}
+                            {urn.trim() && (
+                                <View style={{ marginBottom: 16, marginTop: -12, paddingHorizontal: 2 }}>
+                                    {urnStatus === 'checking' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <ActivityIndicator size="small" color={colors.primary} />
+                                            <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>Checking...</Text>
+                                        </View>
+                                    )}
+                                    {urnStatus === 'available' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
+                                            <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{urnMsg || 'Available'}</Text>
+                                        </View>
+                                    )}
+                                    {urnStatus === 'taken' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{urnMsg || 'Already taken'}</Text>
+                                        </View>
+                                    )}
+                                    {urnStatus === 'error' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
+                                            <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{urnMsg || 'Unable to validate'}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
+
                             <InputField label="CRN (Class Roll)" value={crn} onChangeText={setCrn} placeholder="e.g. 1234" icon="📋" keyboardType="numeric" />
+
+                            {/* CRN Availability Status */}
+                            {crn.trim() && (
+                                <View style={{ marginBottom: 16, marginTop: -12, paddingHorizontal: 2 }}>
+                                    {crnStatus === 'checking' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <ActivityIndicator size="small" color={colors.primary} />
+                                            <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>Checking...</Text>
+                                        </View>
+                                    )}
+                                    {crnStatus === 'available' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
+                                            <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{crnMsg || 'Available'}</Text>
+                                        </View>
+                                    )}
+                                    {crnStatus === 'taken' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{crnMsg || 'Already taken'}</Text>
+                                        </View>
+                                    )}
+                                    {crnStatus === 'error' && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
+                                            <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{crnMsg || 'Unable to validate'}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            )}
+
                             <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min 6 characters" icon="🔒" secureTextEntry />
 
                             <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
@@ -461,14 +679,14 @@ export default function RegisterScreen() {
                             />
 
                             <SelectField
-                                label="Group"
+                                label="Group (Optional)"
                                 value={group}
                                 onValueChange={setGroup}
                                 items={groups.map(g => ({
                                     label: g,
                                     value: g,
                                 }))}
-                                placeholder={!department ? 'Select department first' : groups.length ? 'Select Group' : 'No groups'}
+                                placeholder={!department ? 'Select department first' : groups.length ? 'Select Group (optional)' : 'No groups available'}
                                 icon={{ name: 'people', family: 'MaterialCommunityIcons' }}
                                 disabled={!department || groups.length === 0}
                             />
@@ -481,9 +699,9 @@ export default function RegisterScreen() {
                                     <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[btn, { flex: 1 }, (loading || !department || !group) && btnDisabled]}
+                                    style={[btn, { flex: 1 }, (loading || !department) && btnDisabled]}
                                     onPress={handleRegister}
-                                    disabled={loading || !department || !group}
+                                    disabled={loading || !department}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
                                         <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Register 🎉</Text>
