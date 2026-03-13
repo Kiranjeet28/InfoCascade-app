@@ -23,8 +23,9 @@ export function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, tim
 }
 
 export async function postJson(path: string, body: any, timeoutMs = 12000) {
-    const base = resolveApiBase();
-    const url = path.startsWith('http') ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    const base = resolveApiBase().replace(/\/$/, ''); // Remove trailing slash if exists
+    const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+    const url = `${base}${pathWithSlash}`;
     const res = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,8 +35,9 @@ export async function postJson(path: string, body: any, timeoutMs = 12000) {
 }
 
 export async function fetchJson(path: string, init: RequestInit = {}, timeoutMs = 12000) {
-    const base = resolveApiBase();
-    const url = path.startsWith('http') ? path : `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    const base = resolveApiBase().replace(/\/$/, ''); // Remove trailing slash if exists
+    const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+    const url = `${base}${pathWithSlash}`;
     const res = await fetchWithTimeout(url, init, timeoutMs);
     return res;
 }
