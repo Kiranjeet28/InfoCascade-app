@@ -28,7 +28,7 @@ function StepDot({ num, active, done }: { num: number; active: boolean; done: bo
             justifyContent: 'center', alignItems: 'center',
         }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: active || done ? colors.textPrimary : colors.textMuted }}>
-                {done ? '✓' : num}
+                {done ? '●' : num}
             </Text>
         </View>
     );
@@ -347,7 +347,7 @@ export default function RegisterScreen() {
                 // Save profile to context + AsyncStorage
                 await saveProfile({ name: nameFromResp, email, urn, crn, department, group });
 
-                showMessage('Registration successful! 🎉', 'success');
+                showMessage('Registration successful!', 'success');
                 setTimeout(() => router.replace('/(app)/home'), 1200);
             }
             // Handle client/validation errors
@@ -423,7 +423,7 @@ export default function RegisterScreen() {
                 )}
 
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <BackButton label="← Back" />
+                    <BackButton label="Back" />
 
                     {/* Header */}
                     <View style={{ marginBottom: 24 }}>
@@ -479,19 +479,16 @@ export default function RegisterScreen() {
                                     )}
                                     {emailStatus === 'available' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
                                             <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{emailMsg || 'Available'}</Text>
                                         </View>
                                     )}
                                     {emailStatus === 'taken' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
-                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{emailMsg || 'Already taken'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{emailMsg || 'Already registered'}</Text>
                                         </View>
                                     )}
                                     {emailStatus === 'error' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
                                             <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{emailMsg || 'Unable to validate'}</Text>
                                         </View>
                                     )}
@@ -504,7 +501,7 @@ export default function RegisterScreen() {
                                 disabled={!isValidGNDECEmail(email) || loading || emailStatus === 'taken'}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
-                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP →</Text>
+                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -514,7 +511,7 @@ export default function RegisterScreen() {
                     {step === 1 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🔐 Verify OTP
+                                Verify OTP
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 20 }}>
                                 Enter the 6-digit code sent to {email}
@@ -536,7 +533,7 @@ export default function RegisterScreen() {
                                     style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
                                     onPress={() => { setStep(0); setOtp(''); }}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[btn, { flex: 1 }, (otp.length !== 6 || loading) && btnDisabled]}
@@ -544,7 +541,7 @@ export default function RegisterScreen() {
                                     disabled={otp.length !== 6 || loading}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
-                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify ✓</Text>
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Verify</Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
@@ -555,14 +552,14 @@ export default function RegisterScreen() {
                     {step === 2 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🎓 Your Details
+                                Your Details
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
                                 Enter your university credentials
                             </Text>
 
-                            <InputField label="Full Name" value={name} onChangeText={setName} placeholder="Your full name" icon="👤" autoCapitalize="words" />
-                            <InputField label="URN (University Roll)" value={urn} onChangeText={setUrn} placeholder="e.g. 12345678" icon="🎓" keyboardType="numeric" />
+                            <InputField label="Full Name" value={name} onChangeText={setName} placeholder="Your full name" icon={{ family: 'MaterialCommunityIcons', name: 'account' }} autoCapitalize="words" />
+                            <InputField label="URN (University Roll)" value={urn} onChangeText={setUrn} placeholder="e.g. 12345678" icon={{ family: 'MaterialCommunityIcons', name: 'identifier' }} keyboardType="numeric" />
 
                             {/* URN Availability Status */}
                             {urn.trim() && (
@@ -575,26 +572,23 @@ export default function RegisterScreen() {
                                     )}
                                     {urnStatus === 'available' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
                                             <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{urnMsg || 'Available'}</Text>
                                         </View>
                                     )}
                                     {urnStatus === 'taken' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
-                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{urnMsg || 'Already taken'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{urnMsg || 'Already registered'}</Text>
                                         </View>
                                     )}
                                     {urnStatus === 'error' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
                                             <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{urnMsg || 'Unable to validate'}</Text>
                                         </View>
                                     )}
                                 </View>
                             )}
 
-                            <InputField label="CRN (Class Roll)" value={crn} onChangeText={setCrn} placeholder="e.g. 1234" icon="📋" keyboardType="numeric" />
+                            <InputField label="CRN (Class Roll)" value={crn} onChangeText={setCrn} placeholder="e.g. 1234" icon={{ family: 'MaterialCommunityIcons', name: 'note-outline' }} keyboardType="numeric" />
 
                             {/* CRN Availability Status */}
                             {crn.trim() && (
@@ -607,33 +601,30 @@ export default function RegisterScreen() {
                                     )}
                                     {crnStatus === 'available' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.accent }}>✓</Text>
                                             <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{crnMsg || 'Available'}</Text>
                                         </View>
                                     )}
                                     {crnStatus === 'taken' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.error }}>✗</Text>
-                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{crnMsg || 'Already taken'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{crnMsg || 'Already registered'}</Text>
                                         </View>
                                     )}
                                     {crnStatus === 'error' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 14, color: colors.textMuted }}>⚠</Text>
                                             <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{crnMsg || 'Unable to validate'}</Text>
                                         </View>
                                     )}
                                 </View>
                             )}
 
-                            <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min 6 characters" icon="🔒" secureTextEntry />
+                            <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min 6 characters" icon={{ family: 'MaterialCommunityIcons', name: 'lock' }} secureTextEntry />
 
                             <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                                 <TouchableOpacity
                                     style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
                                     onPress={() => setStep(1)}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[btn, { flex: 1 }, (!name.trim() || !urn.trim() || !crn.trim() || password.length < 6) && btnDisabled]}
@@ -650,7 +641,7 @@ export default function RegisterScreen() {
                                     }}
                                     disabled={!name.trim() || !urn.trim() || !crn.trim() || password.length < 6}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Continue →</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Continue</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -696,7 +687,7 @@ export default function RegisterScreen() {
                                     style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
                                     onPress={() => setStep(2)}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[btn, { flex: 1 }, (loading || !department) && btnDisabled]}
@@ -704,7 +695,7 @@ export default function RegisterScreen() {
                                     disabled={loading || !department}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
-                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Register 🎉</Text>
+                                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Register</Text>
                                     )}
                                 </TouchableOpacity>
                             </View>

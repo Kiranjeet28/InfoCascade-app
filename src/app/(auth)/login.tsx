@@ -136,7 +136,7 @@ export default function LoginScreen() {
                 >
                     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-                        <BackButton label="← Back" />
+                        <BackButton label="Back" />
 
                         {/* Header */}
                         <View style={{ marginBottom: 28 }}>
@@ -163,14 +163,14 @@ export default function LoginScreen() {
                                 value={urn}
                                 onChangeText={setUrn}
                                 placeholder="e.g. 12345678"
-                                icon="🎓"
+                                icon={{ family: 'MaterialCommunityIcons', name: 'identifier' }}
                             />
                             <InputField
                                 label="Password"
                                 value={password}
                                 onChangeText={setPassword}
                                 placeholder="Enter your password"
-                                icon="🔒"
+                                icon={{ family: 'MaterialCommunityIcons', name: 'lock' }}
                                 secureTextEntry
                             />
                             <TouchableOpacity style={{ alignSelf: 'flex-end', marginTop: -8 }} onPress={() => router.push('/(auth)/forgot-password')}>
@@ -200,7 +200,7 @@ export default function LoginScreen() {
                                     <Text style={{ fontSize: 18, fontWeight: '800', color: '#fff', letterSpacing: 0.5, marginRight: 8 }}>
                                         Sign In
                                     </Text>
-                                    <Text style={{ fontSize: 20, color: '#fff', fontWeight: '800' }}>→</Text>
+                                    <Text style={{ fontSize: 20, color: '#fff', fontWeight: '800' }}>Login</Text>
                                 </View>
                             )}
                         </TouchableOpacity>

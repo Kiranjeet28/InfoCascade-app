@@ -181,9 +181,8 @@ function LiveClassSection({ onNavigate, onRefresh }: { onNavigate: () => void; o
     if (isWeekend) {
         return (
             <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 12, gap: 10 }}>
-                <Text style={{ fontSize: 32 }}>🎉</Text>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>It's the weekend!</Text>
-                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>No classes today. Enjoy your break.</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Weekend Break</Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>No classes scheduled. Enjoy your break.</Text>
                 <TouchableOpacity onPress={onNavigate} style={{ marginTop: 4, backgroundColor: colors.primary + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 18, borderWidth: 1, borderColor: colors.primary + '30' }}>
                     <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>View Timetable</Text>
                 </TouchableOpacity>
@@ -194,8 +193,7 @@ function LiveClassSection({ onNavigate, onRefresh }: { onNavigate: () => void; o
     if (!current && !next) {
         return (
             <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 12, gap: 10 }}>
-                <Text style={{ fontSize: 32 }}>☕</Text>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>All done for today!</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>Schedule Complete</Text>
                 <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>No more classes scheduled today.</Text>
                 <TouchableOpacity onPress={onNavigate} style={{ marginTop: 4, backgroundColor: colors.primary + '15', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 18, borderWidth: 1, borderColor: colors.primary + '30' }}>
                     <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>Full Timetable</Text>
@@ -209,7 +207,7 @@ function LiveClassSection({ onNavigate, onRefresh }: { onNavigate: () => void; o
             {current && <CurrentClassCard cls={current} onPress={onNavigate} />}
             {next && <NextClassCard cls={next} onPress={onNavigate} />}
             <TouchableOpacity onPress={onNavigate} style={{ alignItems: 'center', paddingVertical: 8, marginBottom: 4 }}>
-                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>See full day schedule →</Text>
+                <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>See full day schedule</Text>
             </TouchableOpacity>
         </>
     );
@@ -472,7 +470,7 @@ export default function HomeScreen() {
                                 style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
                                 onPress={() => router.push('/(app)/timetable')}
                             >
-                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>View My Timetable →</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>View My Timetable</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
@@ -488,7 +486,7 @@ export default function HomeScreen() {
                                 style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
                                 onPress={() => router.push('/(app)/profile')}
                             >
-                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Set Up Profile →</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Set Up Profile</Text>
                             </TouchableOpacity>
                         </View>
                     )}

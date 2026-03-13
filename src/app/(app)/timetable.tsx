@@ -235,7 +235,7 @@ export default function TimetableScreen() {
                                 borderWidth: 1, borderColor: colors.border,
                             }}
                         >
-                            <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: '600' }}>← Home</Text>
+                            <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: '600' }}>Home</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => router.push('/(app)/profile')}
@@ -271,7 +271,7 @@ export default function TimetableScreen() {
                                 borderWidth: 1, borderColor: colors.border,
                                 flexDirection: 'row', alignItems: 'center', gap: 6,
                             }}>
-                                <Text style={{ fontSize: 12 }}>👤</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>•</Text>
                                 <Text style={{ fontSize: 12, color: colors.textSecondary, fontWeight: '600' }}>{profile?.name}</Text>
                             </View>
                             <View style={{

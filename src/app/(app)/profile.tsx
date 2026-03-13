@@ -145,7 +145,7 @@ export default function ProfileScreen() {
                 <BgBlobs />
 
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <BackButton label="← Home" onPress={() => router.push('/(app)/home')} />
+                    <BackButton label="Home" onPress={() => router.push('/(app)/home')} />
 
                     {/* Header */}
                     <View style={{ marginBottom: 28 }}>
@@ -342,7 +342,7 @@ export default function ProfileScreen() {
                     >
                         {saving
                             ? <ActivityIndicator color="#fff" size="small" />
-                            : <Text style={{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 }}>Save Profile →</Text>
+                            : <Text style={{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 }}>Save Profile</Text>
                         }
                     </TouchableOpacity>
 

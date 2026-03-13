@@ -24,7 +24,7 @@ function StepDot({ num, active, done }: { num: number; active: boolean; done: bo
             justifyContent: 'center', alignItems: 'center',
         }}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: active || done ? colors.textPrimary : colors.textMuted }}>
-                {done ? '✓' : num}
+                {done ? '●' : num}
             </Text>
         </View>
     );
@@ -174,7 +174,7 @@ export default function ForgotPasswordScreen() {
             }, 12000);
             const data = await res.json().catch(() => ({}));
             if (res.ok) {
-                showMessage(data.message || 'Password updated successfully! 🎉', 'success');
+                showMessage(data.message || 'Password updated successfully!', 'success');
                 setTimeout(() => router.replace('/(auth)/login'), 1500);
             } else {
                 showMessage(data.error || data.message || `Error ${res.status}`, 'error');
@@ -331,7 +331,7 @@ export default function ForgotPasswordScreen() {
                     {step === 2 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                🔒 Set New Password
+                                Set New Password
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
                                 Choose a strong password (min 6 characters)
@@ -342,7 +342,7 @@ export default function ForgotPasswordScreen() {
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                                 placeholder="Min 6 characters"
-                                icon="🔒"
+                                icon={{ family: 'MaterialCommunityIcons', name: 'lock' }}
                                 secureTextEntry
                             />
                             <InputField
@@ -350,7 +350,7 @@ export default function ForgotPasswordScreen() {
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 placeholder="Re-enter password"
-                                icon="🔒"
+                                icon={{ family: 'MaterialCommunityIcons', name: 'lock' }}
                                 secureTextEntry
                             />
 
@@ -359,7 +359,7 @@ export default function ForgotPasswordScreen() {
                                     style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border }}
                                     onPress={() => setStep(1)}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>← Back</Text>
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[btn, { flex: 1 }, (loading || newPassword.length < 6 || newPassword !== confirmPassword) && btnDisabled]}
