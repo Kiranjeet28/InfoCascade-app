@@ -17,7 +17,6 @@ import Badge from '../../components/ui/badge';
 import { DEPARTMENT_OPTIONS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
-import { clearSession } from '../../utils/auth-cache';
 
 // static group lists (imported from web/group/*.json)
 import appliedscienceGroups from '../../../web/group/appliedscience.json';
@@ -107,25 +106,6 @@ export default function ProfileScreen() {
         }
     }
 
-    async function handleLogout() {
-        Alert.alert(
-            'Log Out',
-            'Are you sure you want to log out?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Log Out',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await clearSession();
-                        await clearProfile();
-                        router.replace('/(auth)/login');
-                    },
-                },
-            ]
-        );
-    }
-
     const borderColor = nameBorderAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.border, colors.primary] });
 
     const cardStyle = {
@@ -145,7 +125,22 @@ export default function ProfileScreen() {
                 <BgBlobs />
 
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                    <BackButton label="Home" onPress={() => router.push('/(app)/home')} />
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                        <BackButton label="Home" onPress={() => router.push('/(app)/home')} />
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: colors.primary + '15',
+                                borderRadius: 10,
+                                padding: 8,
+                                borderWidth: 1,
+                                borderColor: colors.primary + '30',
+                            }}
+                            onPress={() => router.push('/(app)/settings')}
+                            activeOpacity={0.7}
+                        >
+                            <AppIcon family="MaterialCommunityIcons" name="cog" size={20} color={colors.primary} />
+                        </TouchableOpacity>
+                    </View>
 
                     {/* Header */}
                     <View style={{ marginBottom: 28 }}>
@@ -344,21 +339,6 @@ export default function ProfileScreen() {
                             ? <ActivityIndicator color="#fff" size="small" />
                             : <Text style={{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 }}>Save Profile</Text>
                         }
-                    </TouchableOpacity>
-
-                    {/* Logout button */}
-                    <TouchableOpacity
-                        style={{
-                            marginTop: 16, borderRadius: 16, paddingVertical: 16, alignItems: 'center',
-                            borderWidth: 1.5, borderColor: colors.error + '60',
-                            backgroundColor: colors.error + '10',
-                            flexDirection: 'row', justifyContent: 'center', gap: 8,
-                        }}
-                        onPress={handleLogout}
-                        activeOpacity={0.8}
-                    >
-                        <AppIcon family="MaterialCommunityIcons" name="logout" size={16} color={colors.error} />
-                        <Text style={{ fontSize: 15, fontWeight: '700', color: colors.error }}>Log Out</Text>
                     </TouchableOpacity>
 
                 </Animated.View>
