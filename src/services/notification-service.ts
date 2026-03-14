@@ -5,16 +5,18 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { ClassSlot } from '../types';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-    }),
-});
+// Configure notification behavior (only on native platforms)
+if (Platform.OS !== 'web') {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+        }),
+    });
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ScheduledNotification {
