@@ -1,9 +1,17 @@
 // ─── Notification Service ─────────────────────────────────────────────────────
-// Handles class notifications: 10 min before, when class starts
+// Handles class notifications with user preferences support
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { ClassSlot } from '../types';
+
+// Types for preferences
+export interface NotificationPreferencesForService {
+    soundEnabled: boolean;
+    vibrationEnabled: boolean;
+    reminderTime: 10 | 15 | 30;
+    notifyOnClassStart: boolean;
+}
 
 // Configure notification behavior (only on native platforms)
 if (Platform.OS !== 'web') {
@@ -90,13 +98,14 @@ function getClassType(cls: ClassSlot): string {
 // ─── Schedule Notifications ───────────────────────────────────────────────────
 
 /**
- * Schedule notifications for a class:
- * - 10 minutes before class starts
- * - When class starts
+ * Schedule notifications for a class with user preferences
+ * - Reminder before class starts (timing based on user preference)
+ * - Optional notification when class starts
  */
 export async function scheduleClassNotification(
     cls: ClassSlot,
-    dayOffset: number = 0 // 0 = today, 1 = tomorrow, etc.
+    dayOffset: number = 0, // 0 = today, 1 = tomorrow, etc.
+    preferences?: NotificationPreferencesForService
 ): Promise<string[]> {
     const scheduledIds: string[] = [];
     const subject = getSubjectName(cls);
@@ -104,6 +113,14 @@ export async function scheduleClassNotification(
     const classType = getClassType(cls);
     const time = cls.timeOfClass;
     const endTime = getEndTime(time);
+
+    // Use provided preferences or defaults
+    const prefs = preferences || {
+        soundEnabled: true,
+        vibrationEnabled: true,
+        reminderTime: 10,
+        notifyOnClassStart: true,
+    };
 
     const now = new Date();
     const [hours, minutes] = time.split(':').map(Number);
@@ -113,56 +130,65 @@ export async function scheduleClassNotification(
     classDate.setDate(classDate.getDate() + dayOffset);
     classDate.setHours(hours, minutes, 0, 0);
 
-    // 10 minutes before
+    // Calculate reminder time based on user preference
     const reminderDate = new Date(classDate);
-    reminderDate.setMinutes(reminderDate.getMinutes() - 10);
+    reminderDate.setMinutes(reminderDate.getMinutes() - prefs.reminderTime);
 
-    // Only schedule if the time is in the future
+    // Schedule reminder notification
     if (reminderDate > now) {
-        const reminderId = await Notifications.scheduleNotificationAsync({
-            content: {
-                title: '⏰ Class in 10 minutes!',
-                body: `${subject} starts at ${time}\n${classType} ${room ? `• Room: ${room}` : ''}`,
-                data: { type: 'reminder', classTime: time, subject },
-                sound: true,
-            },
-            trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: reminderDate,
-                channelId: Platform.OS === 'android' ? 'class-notifications' : undefined,
-            },
-        });
-        scheduledIds.push(reminderId);
+        try {
+            const reminderId = await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: `⏰ Class in ${prefs.reminderTime} minutes!`,
+                    body: `${subject} starts at ${time}\n${classType} ${room ? `• Room: ${room}` : ''}`,
+                    data: { type: 'reminder', classTime: time, subject },
+                    sound: prefs.soundEnabled,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: reminderDate,
+                    channelId: Platform.OS === 'android' ? 'class-notifications' : undefined,
+                },
+            });
+            scheduledIds.push(reminderId);
+        } catch (error) {
+            console.error('Error scheduling reminder notification:', error);
+        }
     }
 
-    // At class start time
-    if (classDate > now) {
-        const startId = await Notifications.scheduleNotificationAsync({
-            content: {
-                title: '🔔 Class Starting Now!',
-                body: `${subject} (${time} - ${endTime})\n${classType} ${room ? `• Room: ${room}` : ''}`,
-                data: { type: 'start', classTime: time, subject },
-                sound: true,
-            },
-            trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: classDate,
-                channelId: Platform.OS === 'android' ? 'class-notifications' : undefined,
-            },
-        });
-        scheduledIds.push(startId);
+    // Schedule class start notification if enabled
+    if (prefs.notifyOnClassStart && classDate > now) {
+        try {
+            const startId = await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: '🔔 Class Starting Now!',
+                    body: `${subject} (${time} - ${endTime})\n${classType} ${room ? `• Room: ${room}` : ''}`,
+                    data: { type: 'start', classTime: time, subject },
+                    sound: prefs.soundEnabled,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: classDate,
+                    channelId: Platform.OS === 'android' ? 'class-notifications' : undefined,
+                },
+            });
+            scheduledIds.push(startId);
+        } catch (error) {
+            console.error('Error scheduling class start notification:', error);
+        }
     }
 
     return scheduledIds;
 }
 
 /**
- * Schedule notifications for all classes in a day
+ * Schedule notifications for all classes in a day with user preferences
  */
 export async function scheduleDayNotifications(
     classes: ClassSlot[],
     day: string,
-    dayOffset: number = 0
+    dayOffset: number = 0,
+    preferences?: NotificationPreferencesForService
 ): Promise<string[]> {
     const allIds: string[] = [];
 
@@ -172,7 +198,7 @@ export async function scheduleDayNotifications(
     );
 
     for (const cls of dayClasses) {
-        const ids = await scheduleClassNotification(cls, dayOffset);
+        const ids = await scheduleClassNotification(cls, dayOffset, preferences);
         allIds.push(...ids);
     }
 

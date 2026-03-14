@@ -94,7 +94,14 @@ export default function ProfileScreen() {
             return;
         }
         setSaving(true);
-        const success = await saveProfile({ name, department, group: selectedGroup });
+        const success = await saveProfile({
+            name,
+            department,
+            group: selectedGroup,
+            email: '',
+            urn: '',
+            crn: ''
+        });
         setSaving(false);
         if (success) {
             Alert.alert('Profile Saved', 'Your profile has been updated!', [

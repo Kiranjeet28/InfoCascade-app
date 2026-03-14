@@ -37,7 +37,7 @@ export function findCurrentAndNext(
     for (let i = 0; i < todayClasses.length; i++) {
         const cls = todayClasses[i];
         const start = timeToMinutes(cls.timeOfClass);
-        const end = start + 50;
+        const end = start + 60;
         if (currentMin >= start && currentMin < end) {
             current = cls;
             next = todayClasses[i + 1] ?? null;

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { InAppNotificationProvider } from '../context/in-app-notification-context';
+import { NotificationPreferencesProvider } from '../context/notification-preferences-context';
 import { ProfileProvider } from '../context/profile-context';
 import { ThemeProvider, useThemeColors } from '../context/theme-context';
 
@@ -27,9 +28,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <ProfileProvider>
-        <InAppNotificationProvider>
-          <RootStack />
-        </InAppNotificationProvider>
+        <NotificationPreferencesProvider>
+          <InAppNotificationProvider>
+            <RootStack />
+          </InAppNotificationProvider>
+        </NotificationPreferencesProvider>
       </ProfileProvider>
     </ThemeProvider>
   );

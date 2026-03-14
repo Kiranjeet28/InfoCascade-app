@@ -1,7 +1,7 @@
 // ─── useNotifications Hook ────────────────────────────────────────────────────
 // Manages class notifications scheduling and permissions
 // NOTE: expo-notifications is not available in Expo Go (SDK 53+).
-// We dynamically require it and fall back to no-ops when unavailable.
+// We dynamically require it only when needed to avoid module-level errors.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus, Platform } from 'react-native';
@@ -9,12 +9,14 @@ import { WEEK_DAYS } from '../constants/theme';
 import { useProfile } from '../context/profile-context';
 import { ClassSlot, TimetableJson } from '../types';
 
-// ─── Safe dynamic import of expo-notifications ───────────────────────────────
-let Notifications: typeof import('expo-notifications') | null = null;
-try {
-    Notifications = require('expo-notifications');
-} catch {
-    console.warn('expo-notifications is not available (Expo Go). Notifications disabled.');
+// ─── Lazy load expo-notifications only when needed ─────────────────────────────
+function getNotificationsModule() {
+    if (Platform.OS === 'web') return null;
+    try {
+        return require('expo-notifications');
+    } catch {
+        return null;
+    }
 }
 
 export interface UseNotificationsResult {
@@ -36,6 +38,7 @@ function getCurrentDay(): string {
 
 // ─── Request Permissions ──────────────────────────────────────────────────────
 async function requestNotificationPermissions(): Promise<boolean> {
+    const Notifications = getNotificationsModule();
     if (!Notifications) return false;
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -93,6 +96,7 @@ function getClassType(cls: ClassSlot): string {
 }
 
 async function scheduleClassNotification(cls: ClassSlot, dayOffset: number = 0): Promise<string[]> {
+    const Notifications = getNotificationsModule();
     if (!Notifications) return [];
     const scheduledIds: string[] = [];
     const subject = getSubjectName(cls);
@@ -189,7 +193,13 @@ export function useNotifications(): UseNotificationsResult {
 
     // Check permissions on mount
     useEffect(() => {
-        if (Platform.OS === 'web' || !Notifications) {
+        if (Platform.OS === 'web') {
+            setLoading(false);
+            return;
+        }
+
+        const Notifications = getNotificationsModule();
+        if (!Notifications) {
             setLoading(false);
             return;
         }
@@ -211,7 +221,10 @@ export function useNotifications(): UseNotificationsResult {
 
     // Setup notification listeners
     useEffect(() => {
-        if (Platform.OS === 'web' || !Notifications) return;
+        if (Platform.OS === 'web') return;
+
+        const Notifications = getNotificationsModule();
+        if (!Notifications) return;
 
         const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
             console.log('Notification tapped:', response.notification.request.content);
@@ -230,8 +243,11 @@ export function useNotifications(): UseNotificationsResult {
 
     // Schedule notifications for today's classes
     const scheduleNotifications = useCallback(async () => {
-        if (Platform.OS === 'web' || !Notifications) return;
+        if (Platform.OS === 'web') return;
         if (!hasProfile || !profile?.group) return;
+
+        const Notifications = getNotificationsModule();
+        if (!Notifications) return;
 
         const day = new Date().getDay();
         const isWeekend = day === 0 || day === 6;
@@ -242,7 +258,7 @@ export function useNotifications(): UseNotificationsResult {
             setError(null);
 
             // Cancel existing notifications first
-            await Notifications!.cancelAllScheduledNotificationsAsync();
+            await Notifications.cancelAllScheduledNotificationsAsync();
 
             // Fetch timetable
             const file = getTimetableFile();
@@ -273,6 +289,9 @@ export function useNotifications(): UseNotificationsResult {
     useEffect(() => {
         if (Platform.OS === 'web') return;
 
+        const Notifications = getNotificationsModule();
+        if (!Notifications) return;
+
         const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
             if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
                 // App has come to the foreground
@@ -288,7 +307,10 @@ export function useNotifications(): UseNotificationsResult {
 
     // Enable notifications
     const enableNotifications = useCallback(async (): Promise<boolean> => {
-        if (Platform.OS === 'web' || !Notifications) return false;
+        if (Platform.OS === 'web') return false;
+
+        const Notifications = getNotificationsModule();
+        if (!Notifications) return false;
 
         try {
             const granted = await requestNotificationPermissions();
@@ -308,7 +330,10 @@ export function useNotifications(): UseNotificationsResult {
 
     // Disable notifications
     const disableNotifications = useCallback(async (): Promise<void> => {
-        if (Platform.OS === 'web' || !Notifications) return;
+        if (Platform.OS === 'web') return;
+
+        const Notifications = getNotificationsModule();
+        if (!Notifications) return;
 
         await Notifications.cancelAllScheduledNotificationsAsync();
         setNotificationsEnabled(false);
