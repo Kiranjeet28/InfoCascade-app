@@ -73,7 +73,7 @@ async function requestNotificationPermissions(): Promise<boolean> {
 // ─── Schedule Notification ────────────────────────────────────────────────────
 function getEndTime(time: string): string {
     const [h, m] = time.split(':').map(Number);
-    const total = h * 60 + m + 50;
+    const total = h * 60 + m + 60;
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
