@@ -19,6 +19,21 @@ function getNotificationsModule() {
     }
 }
 
+// Type definitions for expo-notifications
+interface NotificationResponse {
+    notification: {
+        request: {
+            content: Record<string, any>;
+        };
+    };
+}
+
+interface Notification {
+    request: {
+        content: Record<string, any>;
+    };
+}
+
 export interface UseNotificationsResult {
     permissionGranted: boolean;
     notificationsEnabled: boolean;
@@ -226,12 +241,12 @@ export function useNotifications(): UseNotificationsResult {
         const Notifications = getNotificationsModule();
         if (!Notifications) return;
 
-        const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        const responseSubscription = Notifications.addNotificationResponseReceivedListener((response: NotificationResponse) => {
             console.log('Notification tapped:', response.notification.request.content);
             // Handle navigation when notification is tapped
         });
 
-        const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+        const receivedSubscription = Notifications.addNotificationReceivedListener((notification: Notification) => {
             console.log('Notification received:', notification.request.content);
         });
 

@@ -21,17 +21,19 @@ import { useNotificationPreferences } from '../../context/notification-preferenc
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { checkNotificationPermission, requestNotificationPermissionWithAlert } from '../../services/permission-service';
+import { ThemeMode } from '../../types';
 import { clearSession } from '../../utils/auth-cache';
 
 export default function SettingsScreen() {
     const router = useRouter();
-    const { colors, isDark } = useThemeColors();
+    const { colors, isDark, themeMode, setThemeMode } = useThemeColors();
     const { clearProfile } = useProfile();
     const { preferences, updatePreferences, loading: prefLoading } = useNotificationPreferences();
 
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [loadingNotif, setLoadingNotif] = useState(true);
     const [showReminderOptions, setShowReminderOptions] = useState(false);
+    const [showThemeOptions, setShowThemeOptions] = useState(false);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -228,7 +230,7 @@ export default function SettingsScreen() {
                                         </View>
                                         <Switch
                                             value={preferences.soundEnabled}
-                                            onValueChange={(value) =>
+                                            onValueChange={(value: boolean) =>
                                                 updatePreferences({ soundEnabled: value })
                                             }
                                             trackColor={{ false: colors.border, true: colors.accent + '60' }}
@@ -268,7 +270,7 @@ export default function SettingsScreen() {
                                         </View>
                                         <Switch
                                             value={preferences.vibrationEnabled}
-                                            onValueChange={(value) =>
+                                            onValueChange={(value: boolean) =>
                                                 updatePreferences({ vibrationEnabled: value })
                                             }
                                             trackColor={{ false: colors.border, true: colors.accent + '60' }}
@@ -372,7 +374,7 @@ export default function SettingsScreen() {
                                         </View>
                                         <Switch
                                             value={preferences.notifyOnClassStart}
-                                            onValueChange={(value) =>
+                                            onValueChange={(value: boolean) =>
                                                 updatePreferences({ notifyOnClassStart: value })
                                             }
                                             trackColor={{ false: colors.border, true: colors.accent + '60' }}
@@ -381,6 +383,91 @@ export default function SettingsScreen() {
                                     </View>
                                 </>
                             )}
+                        </View>
+                    </View>
+
+                    {/* Appearance Section */}
+                    <View style={cardStyle}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                            <AppIcon
+                                family="MaterialCommunityIcons"
+                                name={isDark ? 'moon-waning-crescent' : 'white-balance-sunny'}
+                                size={18}
+                                color={colors.textPrimary}
+                            />
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
+                                Appearance
+                            </Text>
+                        </View>
+
+                        <View
+                            style={{
+                                borderTopWidth: 1,
+                                borderTopColor: colors.border,
+                                paddingTop: 12,
+                            }}
+                        >
+                            <TouchableOpacity
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    paddingVertical: 12,
+                                }}
+                                onPress={() => setShowThemeOptions(true)}
+                                activeOpacity={0.7}
+                            >
+                                <View>
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            fontWeight: '600',
+                                            color: colors.textPrimary,
+                                            marginBottom: 4,
+                                        }}
+                                    >
+                                        Theme
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontSize: 12,
+                                            color: colors.textSecondary,
+                                        }}
+                                    >
+                                        Choose your preferred theme
+                                    </Text>
+                                </View>
+                                <View
+                                    style={{
+                                        backgroundColor: colors.primary + '20',
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: colors.primary + '40',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                    }}
+                                >
+                                    <AppIcon
+                                        family="MaterialCommunityIcons"
+                                        name={themeMode === 'system' ? 'auto-fix' : themeMode === 'dark' ? 'moon-waning-crescent' : 'white-balance-sunny'}
+                                        size={14}
+                                        color={colors.primary}
+                                    />
+                                    <Text
+                                        style={{
+                                            fontSize: 12,
+                                            fontWeight: '600',
+                                            color: colors.primary,
+                                            textTransform: 'capitalize',
+                                        }}
+                                    >
+                                        {themeMode}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -490,6 +577,135 @@ export default function SettingsScreen() {
                     </View>
                 </Animated.View>
             </ScrollView>
+
+            {/* Theme Options Modal */}
+            <Modal
+                visible={showThemeOptions}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowThemeOptions(false)}
+            >
+                <TouchableOpacity
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'flex-end',
+                    }}
+                    activeOpacity={1}
+                    onPress={() => setShowThemeOptions(false)}
+                >
+                    <View
+                        style={{
+                            backgroundColor: colors.surface,
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            padding: 24,
+                            maxHeight: '50%',
+                        }}
+                        onStartShouldSetResponder={() => true}
+                    >
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 20,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 18,
+                                    fontWeight: '700',
+                                    color: colors.textPrimary,
+                                }}
+                            >
+                                Choose Theme
+                            </Text>
+                            <TouchableOpacity onPress={() => setShowThemeOptions(false)}>
+                                <AppIcon
+                                    family="MaterialCommunityIcons"
+                                    name="close"
+                                    size={24}
+                                    color={colors.textSecondary}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 200 }}>
+                            {(['system', 'light', 'dark'] as ThemeMode[]).map((mode) => (
+                                <TouchableOpacity
+                                    key={mode}
+                                    style={{
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 12,
+                                        marginBottom: 8,
+                                        backgroundColor:
+                                            themeMode === mode
+                                                ? colors.primary + '20'
+                                                : colors.bg,
+                                        borderWidth: themeMode === mode ? 2 : 1,
+                                        borderColor:
+                                            themeMode === mode ? colors.primary : colors.border,
+                                    }}
+                                    onPress={() => {
+                                        setThemeMode(mode);
+                                        setShowThemeOptions(false);
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                        <View
+                                            style={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 10,
+                                                borderWidth: 2,
+                                                borderColor: colors.primary,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                backgroundColor:
+                                                    themeMode === mode ? colors.primary : 'transparent',
+                                            }}
+                                        >
+                                            {themeMode === mode && (
+                                                <View
+                                                    style={{
+                                                        width: 8,
+                                                        height: 8,
+                                                        borderRadius: 4,
+                                                        backgroundColor: colors.surface,
+                                                    }}
+                                                />
+                                            )}
+                                        </View>
+                                        <View>
+                                            <Text
+                                                style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '600',
+                                                    color: colors.textPrimary,
+                                                    textTransform: 'capitalize',
+                                                }}
+                                            >
+                                                {mode === 'system' ? '🔄 System' : mode === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: colors.textSecondary,
+                                                    marginTop: 2,
+                                                }}
+                                            >
+                                                {mode === 'system' ? 'Follow device settings' : mode === 'dark' ? 'Dark theme' : 'Light theme'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
 
             {/* Reminder Time Modal */}
             <Modal
