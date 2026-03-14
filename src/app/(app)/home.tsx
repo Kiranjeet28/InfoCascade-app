@@ -45,7 +45,10 @@ function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
 
 // ── Extract readable info from a ClassSlot ─────────────────────────────────
 function slotInfo(cls: ClassSlot) {
-    const subject = cls.data.subject ?? cls.data.entries?.[0]?.subject ?? 'Unknown';
+    const isProject = cls.data.subject === 'Minor Project' || cls.data.subject === 'Major Project';
+    const isMandatory = cls.data.OtherDepartment === true && !isProject;
+
+    const subject = cls.data.subject ?? cls.data.entries?.[0]?.subject ?? (isMandatory ? 'Mandatory Course' : 'Unknown');
     const room = cls.data.classRoom ?? cls.data.entries?.[0]?.classRoom ?? '';
     const teacher =
         (cls.data as any).teacherName ??
