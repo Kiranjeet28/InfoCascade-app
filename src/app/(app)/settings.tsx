@@ -18,7 +18,7 @@ import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
-import { checkNotificationPermission } from '../../services/permission-service';
+import { checkNotificationPermission, requestNotificationPermissionWithAlert } from '../../services/permission-service';
 import { clearSession } from '../../utils/auth-cache';
 
 export default function SettingsScreen() {
@@ -70,12 +70,12 @@ export default function SettingsScreen() {
         if (value && !notificationsEnabled) {
             // Request permissions when turning on
             try {
-                const Notifications = require('expo-notifications');
-                const { status } = await Notifications.requestPermissionsAsync();
-                setNotificationsEnabled(status === 'granted');
+                const granted = await requestNotificationPermissionWithAlert();
+                setNotificationsEnabled(granted);
             } catch (e) {
                 console.error('Error requesting notification permission:', e);
                 Alert.alert('Error', 'Unable to enable notifications');
+                setNotificationsEnabled(false);
             }
         } else {
             // Just toggle locally (can't disable system notifications programmatically)
