@@ -28,7 +28,7 @@ export function resolveApiBase(): string {
     if (Platform.OS === 'android') return 'http://10.0.2.2:5000';
     if (Platform.OS === 'ios') return 'http://localhost:5000';
     if (Platform.OS === 'web') return 'http://localhost:5000';
-    
+
     // Fallback
     return 'http://127.0.0.1:5000';
 }
