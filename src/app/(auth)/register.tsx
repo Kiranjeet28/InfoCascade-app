@@ -13,11 +13,29 @@ import SelectField from '../../components/ui/select-field';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
+import { requestAllPermissionsSequentially } from '../../services/permission-service';
 import { postJson, resolveApiBase } from '../../utils/api';
 import { saveSession } from '../../utils/auth-cache';
 import type { AvailabilityStatus } from '../../utils/availability';
 import { cancelPendingChecks, checkAvailabilityDebounced } from '../../utils/availability';
 import { fetchDepartments, fetchGroups } from '../../utils/departmentUtils';
+import { registerServiceWorker } from '../../utils/web-notifications';
+
+// ─── Password Validation Function ────────────────────────────────────────────
+const validatePassword = (pwd: string) => {
+    return {
+        hasAlphabet: /[a-zA-Z]/.test(pwd),
+        hasNumber: /[0-9]/.test(pwd),
+        hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+        isLongEnough: pwd.length >= 8,
+    };
+};
+
+const isPasswordStrong = (pwd: string): boolean => {
+    const checks = validatePassword(pwd);
+    return checks.hasAlphabet && checks.hasNumber && checks.hasSpecialChar && checks.isLongEnough;
+};
+
 function StepDot({ num, active, done }: { num: number; active: boolean; done: boolean }) {
     const { colors } = useThemeColors();
     return (
@@ -280,8 +298,15 @@ export default function RegisterScreen() {
             showMessage('Password is required', 'error');
             return false;
         }
-        if (password.length < 6) {
-            showMessage('Password must be at least 6 characters', 'error');
+        if (!isPasswordStrong(password)) {
+            const checks = validatePassword(password);
+            let errorMsg = 'Password must contain: ';
+            const missing = [];
+            if (!checks.hasAlphabet) missing.push('letters');
+            if (!checks.hasNumber) missing.push('numbers');
+            if (!checks.hasSpecialChar) missing.push('special characters (!@#$%^&*)');
+            if (!checks.isLongEnough) missing.push('at least 8 characters');
+            showMessage(errorMsg + missing.join(', '), 'error');
             return false;
         }
         if (!department.trim()) {
@@ -348,7 +373,14 @@ export default function RegisterScreen() {
                 await saveProfile({ name: nameFromResp, email, urn, crn, department, group });
 
                 showMessage('Registration successful!', 'success');
-                setTimeout(() => router.replace('/(app)/home'), 1200);
+                setTimeout(async () => {
+                    // Register service worker on web
+                    if (Platform.OS === 'web') {
+                        await registerServiceWorker();
+                    }
+                    await requestAllPermissionsSequentially();
+                    router.replace('/(app)/home');
+                }, 1200);
             }
             // Handle client/validation errors
             else if (res.status === 400) {
@@ -496,9 +528,9 @@ export default function RegisterScreen() {
                             )}
 
                             <TouchableOpacity
-                                style={[btn, (!isValidGNDECEmail(email) || loading || emailStatus === 'taken') && btnDisabled]}
+                                style={[btn, (!isValidGNDECEmail(email) || loading || emailStatus === 'checking' || emailStatus === 'taken' || emailStatus === 'error') && btnDisabled]}
                                 onPress={handleSendOTP}
-                                disabled={!isValidGNDECEmail(email) || loading || emailStatus === 'taken'}
+                                disabled={!isValidGNDECEmail(email) || loading || emailStatus === 'checking' || emailStatus === 'taken' || emailStatus === 'error'}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP</Text>
@@ -617,7 +649,44 @@ export default function RegisterScreen() {
                                 </View>
                             )}
 
-                            <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min 6 characters" icon={{ family: 'MaterialCommunityIcons', name: 'lock' }} secureTextEntry />
+                            <InputField label="Password" value={password} onChangeText={setPassword} placeholder="Min 8 characters (letter, number, special char)" icon={{ family: 'MaterialCommunityIcons', name: 'lock' }} secureTextEntry />
+
+                            {/* Password Strength Indicator */}
+                            {password && (
+                                <View style={{ marginBottom: 16, marginTop: -12, paddingHorizontal: 2, gap: 6 }}>
+                                    {(() => {
+                                        const checks = validatePassword(password);
+                                        return (
+                                            <>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: checks.hasAlphabet ? colors.accent : colors.border }} />
+                                                    <Text style={{ fontSize: 11, color: colors.textSecondary, fontWeight: '500' }}>
+                                                        {checks.hasAlphabet ? '✓' : '○'} Letters (A-Z, a-z)
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: checks.hasNumber ? colors.accent : colors.border }} />
+                                                    <Text style={{ fontSize: 11, color: colors.textSecondary, fontWeight: '500' }}>
+                                                        {checks.hasNumber ? '✓' : '○'} Numbers (0-9)
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: checks.hasSpecialChar ? colors.accent : colors.border }} />
+                                                    <Text style={{ fontSize: 11, color: colors.textSecondary, fontWeight: '500' }}>
+                                                        {checks.hasSpecialChar ? '✓' : '○'} Special chars (!@#$%^&*)
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: checks.isLongEnough ? colors.accent : colors.border }} />
+                                                    <Text style={{ fontSize: 11, color: colors.textSecondary, fontWeight: '500' }}>
+                                                        {checks.isLongEnough ? '✓' : '○'} At least 8 characters
+                                                    </Text>
+                                                </View>
+                                            </>
+                                        );
+                                    })()}
+                                </View>
+                            )}
 
                             <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                                 <TouchableOpacity
@@ -627,19 +696,34 @@ export default function RegisterScreen() {
                                     <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[btn, { flex: 1 }, (!name.trim() || !urn.trim() || !crn.trim() || password.length < 6) && btnDisabled]}
+                                    style={[btn, { flex: 1 }, (!name.trim() || !urn.trim() || !crn.trim() || !isPasswordStrong(password) || urnStatus === 'checking' || urnStatus === 'taken' || urnStatus === 'error' || crnStatus === 'checking' || crnStatus === 'taken' || crnStatus === 'error') && btnDisabled]}
                                     onPress={() => {
                                         if (!name.trim() || !urn.trim() || !crn.trim()) {
                                             Alert.alert('Missing', 'Please fill all fields');
                                             return;
                                         }
-                                        if (password.length < 6) {
-                                            Alert.alert('Weak Password', 'Password must be 6+ characters');
+                                        if (urnStatus === 'checking' || crnStatus === 'checking') {
+                                            Alert.alert('Validating', 'Please wait for URN and CRN validation to complete');
+                                            return;
+                                        }
+                                        if (urnStatus === 'taken' || urnStatus === 'error' || crnStatus === 'taken' || crnStatus === 'error') {
+                                            Alert.alert('Validation Error', 'Please fix URN and CRN validation issues');
+                                            return;
+                                        }
+                                        if (!isPasswordStrong(password)) {
+                                            const checks = validatePassword(password);
+                                            let errorMsg = 'Password must contain: ';
+                                            const missing = [];
+                                            if (!checks.hasAlphabet) missing.push('letters');
+                                            if (!checks.hasNumber) missing.push('numbers');
+                                            if (!checks.hasSpecialChar) missing.push('special characters');
+                                            if (!checks.isLongEnough) missing.push('8+ characters');
+                                            Alert.alert('Weak Password', errorMsg + missing.join(', '));
                                             return;
                                         }
                                         setStep(3);
                                     }}
-                                    disabled={!name.trim() || !urn.trim() || !crn.trim() || password.length < 6}
+                                    disabled={!name.trim() || !urn.trim() || !crn.trim() || !isPasswordStrong(password) || urnStatus === 'checking' || urnStatus === 'taken' || urnStatus === 'error' || crnStatus === 'checking' || crnStatus === 'taken' || crnStatus === 'error'}
                                 >
                                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Continue</Text>
                                 </TouchableOpacity>

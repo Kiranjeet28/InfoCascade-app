@@ -445,10 +445,10 @@ export default function HomeScreen() {
                                     <Text style={{ fontSize: 12, color: colors.textSecondary }}>Student</Text>
                                 </View>
                                 <TouchableOpacity
-                                    style={{ backgroundColor: '#6C63FF15', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: '#6C63FF30' }}
+                                    style={{ backgroundColor: '#6C63FF15', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: '#6C63FF30', justifyContent: 'center', alignItems: 'center' }}
                                     onPress={() => router.push('/(app)/profile')}
                                 >
-                                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.primary }}>Edit ✏️</Text>
+                                    <AppIcon family="MaterialCommunityIcons" name="pencil" size={18} color={colors.primary} />
                                 </TouchableOpacity>
                             </View>
 

@@ -8,6 +8,7 @@ import Badge from '../../components/ui/badge';
 import InputField from '../../components/ui/input-field';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
+import { requestAllPermissionsSequentially } from '../../services/permission-service';
 import { postJson, resolveApiBase } from '../../utils/api';
 import { getSession, saveSession } from '../../utils/auth-cache';
 
@@ -80,7 +81,16 @@ export default function LoginScreen() {
                 });
 
                 showMsg('Login successful!', 'success');
-                setTimeout(() => router.replace('/(app)/home'), 900);
+
+                // Request permissions after a short delay
+                setTimeout(async () => {
+                    // Register service worker on web
+                    if (Platform.OS === 'web') {
+                        await registerServiceWorker();
+                    }
+                    await requestAllPermissionsSequentially();
+                    router.replace('/(app)/home');
+                }, 900);
             } else {
                 const errMsg = data?.error || data?.message || `Server returned ${res.status}`;
                 showMsg(errMsg, 'error');
