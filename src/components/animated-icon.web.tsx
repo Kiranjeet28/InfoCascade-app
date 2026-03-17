@@ -1,8 +1,8 @@
+import { Colors } from '@/constants/theme';
 import { Image } from 'expo-image';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Keyframe, Easing } from 'react-native-reanimated';
+import { StyleSheet, useColorScheme, View } from 'react-native';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
-import classes from './animated-icon.module.css';
 const DURATION = 300;
 
 export function AnimatedSplashOverlay() {
@@ -55,14 +55,18 @@ const glowKeyframe = new Keyframe({
 });
 
 export function AnimatedIcon() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
+
   return (
     <View style={styles.iconContainer}>
       <Animated.View entering={glowKeyframe.duration(60 * 1000 * 4)} style={styles.glow}>
         <Image style={styles.glow} source={require('@/assets/images/logo-glow.png')} />
       </Animated.View>
 
-      <Animated.View style={styles.background} entering={keyframe.duration(DURATION)}>
-        <div className={classes.expoLogoBackground} />
+      <Animated.View style={[styles.background, { backgroundColor: themeColors.primary }]} entering={keyframe.duration(DURATION)}>
+        <div />
       </Animated.View>
 
       <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
@@ -104,5 +108,6 @@ const styles = StyleSheet.create({
     width: 128,
     height: 128,
     position: 'absolute',
+    borderRadius: 0,
   },
 });

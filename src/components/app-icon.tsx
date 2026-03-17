@@ -7,7 +7,7 @@ type IconFamily = 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome';
 export default function AppIcon({
   family = 'MaterialCommunityIcons',
   name,
-  size = 18,
+  size = 22,
   color,
 }: {
   family?: IconFamily;

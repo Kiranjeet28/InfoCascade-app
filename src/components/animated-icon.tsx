@@ -1,14 +1,25 @@
+import { Colors } from '@/constants/theme';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
 const DURATION = 600;
+const screenWidth = Dimensions.get('window').width;
+const isMobile = screenWidth < 768;
+
+// Responsive sizes for mobile and web
+const ICON_SIZE = isMobile ? 140 : 128;
+const ICON_IMAGE_SIZE = isMobile ? 82 : 76;
+const GLOW_SIZE = isMobile ? 220 : 201;
 
 export function AnimatedSplashOverlay() {
   const [visible, setVisible] = useState(true);
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
 
   if (!visible) return null;
 
@@ -39,7 +50,7 @@ export function AnimatedSplashOverlay() {
           scheduleOnRN(setVisible, false);
         }
       })}
-      style={styles.backgroundSolidColor}
+      style={[styles.backgroundSolidColor, { backgroundColor: themeColors.bg }]}
     />
   );
 }
@@ -81,13 +92,17 @@ const glowKeyframe = new Keyframe({
 });
 
 export function AnimatedIcon() {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+  const themeColors = isDark ? Colors.dark : Colors.light;
+
   return (
     <View style={styles.iconContainer}>
       <Animated.View entering={glowKeyframe.duration(60 * 1000 * 4)} style={styles.glow}>
         <Image style={styles.glow} source={require('@/assets/images/logo-glow.png')} />
       </Animated.View>
 
-      <Animated.View entering={keyframe.duration(DURATION)} style={styles.background} />
+      <Animated.View entering={keyframe.duration(DURATION)} style={[styles.background, { backgroundColor: themeColors.primary }]} />
       <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
         <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />
       </Animated.View>
@@ -101,32 +116,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   glow: {
-    width: 201,
-    height: 201,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
     position: 'absolute',
   },
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 128,
-    height: 128,
+    width: ICON_SIZE,
+    height: ICON_SIZE,
     zIndex: 100,
   },
   image: {
     position: 'absolute',
-    width: 76,
-    height: 71,
+    width: ICON_IMAGE_SIZE,
+    height: ICON_IMAGE_SIZE * 0.93,
   },
   background: {
-    borderRadius: 40,
-    experimental_backgroundImage: `linear-gradient(180deg, #3C9FFE, #0274DF)`,
-    width: 128,
-    height: 128,
+    borderRadius: 0,
+    width: ICON_SIZE,
+    height: ICON_SIZE,
     position: 'absolute',
   },
   backgroundSolidColor: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#208AEF',
     zIndex: 1000,
   },
 });

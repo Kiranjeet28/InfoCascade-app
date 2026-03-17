@@ -30,11 +30,11 @@ function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
                 onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
                 activeOpacity={1}
             >
-                <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: color + '20', justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: color + '20', justifyContent: 'center', alignItems: 'center' }}>
                     {typeof icon === 'string' ? (
-                        <Text style={{ fontSize: 20 }}>{icon}</Text>
+                        <Text style={{ fontSize: 24 }}>{icon}</Text>
                     ) : (
-                        <AppIcon family={icon.family ?? 'MaterialCommunityIcons'} name={icon.name} size={20} color={color} />
+                        <AppIcon family={icon.family ?? 'MaterialCommunityIcons'} name={icon.name} size={24} color={color} />
                     )}
                 </View>
                 <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary }}>{label}</Text>

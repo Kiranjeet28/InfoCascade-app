@@ -212,8 +212,8 @@ export default function TimetableScreen() {
         return (
             <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 }}>
                 <StatusBar style={isDark ? 'light' : 'dark'} />
-                <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center' }}>
-                    <AppIcon family="MaterialCommunityIcons" name={!hasProfile ? 'account' : 'alert-circle'} size={40} color={colors.textSecondary} />
+                <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center' }}>
+                    <AppIcon family="MaterialCommunityIcons" name={!hasProfile ? 'account' : 'alert-circle'} size={48} color={colors.textSecondary} />
                 </View>
                 <Text style={{ fontSize: 20, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' }}>
                     {!hasProfile ? 'No Profile Found' : 'Something went wrong'}

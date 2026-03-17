@@ -13,23 +13,23 @@ function ProfileTabIcon({ focused }: { focused: boolean }) {
     if (letter) {
         return (
             <View style={{
-                width: 24, height: 24, borderRadius: 12,
+                width: 28, height: 28, borderRadius: 14,
                 backgroundColor: focused ? colors.primary : colors.primary + '25',
                 borderWidth: 1.5,
                 borderColor: focused ? colors.primary : colors.primary + '60',
                 justifyContent: 'center', alignItems: 'center',
             }}>
-                <Text style={{ fontSize: 11, fontWeight: '800', color: focused ? '#fff' : colors.primary }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: focused ? '#fff' : colors.primary }}>
                     {letter}
                 </Text>
             </View>
         );
     }
-    return <AppIcon family="MaterialCommunityIcons" name="account" size={20} color={focused ? '#fff' : colors.primary} />;
+    return <AppIcon family="MaterialCommunityIcons" name="account" size={22} color={focused ? '#fff' : colors.primary} />;
 }
 
 function TabIcon({ name, family }: { name: string; family?: 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome' }) {
-    return <AppIcon name={name} family={family} size={20} />;
+    return <AppIcon name={name} family={family} size={24} />;
 }
 
 export default function AppLayout() {
@@ -66,10 +66,7 @@ export default function AppLayout() {
                     tabBarIcon: ({ focused }) => <ProfileTabIcon focused={focused} />,
                 }}
             />
-            <Tabs.Screen
-                name="settings"
-                options={{ title: 'Settings', tabBarIcon: () => <TabIcon name="settings" family="Ionicons" /> }}
-            />
+           
         </Tabs>
     );
 }
