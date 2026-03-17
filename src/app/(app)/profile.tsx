@@ -142,7 +142,7 @@ export default function ProfileScreen() {
                                 borderWidth: 1,
                                 borderColor: colors.primary + '30',
                             }}
-                            onPress={() => router.push('/(app)/settings')}
+                            onPress={() => router.push('/(settings)/settings')}
                             activeOpacity={0.7}
                         >
                             <AppIcon family="MaterialCommunityIcons" name="cog" size={20} color={colors.primary} />

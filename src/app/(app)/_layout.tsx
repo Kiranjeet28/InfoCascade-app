@@ -66,7 +66,6 @@ export default function AppLayout() {
                     tabBarIcon: ({ focused }) => <ProfileTabIcon focused={focused} />,
                 }}
             />
-           
         </Tabs>
     );
 }
