@@ -136,7 +136,7 @@ export default function RegisterScreen() {
         checkAvailabilityDebounced('email', email, (result: any) => {
             setEmailStatus(result.status);
             setEmailMsg(result.message || '');
-        }, 400);
+        }, 300); // Reduced from 400ms to 300ms for faster feedback
     }, [email]);
 
     // Check URN availability (debounced)
@@ -148,7 +148,7 @@ export default function RegisterScreen() {
         checkAvailabilityDebounced('urn', urn, (result: any) => {
             setUrnStatus(result.status);
             setUrnMsg(result.message || '');
-        }, 400);
+        }, 300); // Reduced from 400ms to 300ms for faster feedback
     }, [urn]);
 
     // Check CRN availability (debounced)
@@ -160,7 +160,7 @@ export default function RegisterScreen() {
         checkAvailabilityDebounced('crn', crn, (result: any) => {
             setCrnStatus(result.status);
             setCrnMsg(result.message || '');
-        }, 400);
+        }, 300); // Reduced from 400ms to 300ms for faster feedback
     }, [crn]);
 
     // Load departments

@@ -25,7 +25,7 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
     const emailKey = email.toLowerCase().trim();
     console.debug('[OTP] API_URL:', API_URL);
 
-    const TIMEOUT_MS = 15000;
+    const TIMEOUT_MS = 8000; // Reduced from 15s to 8s
     const MAX_RETRIES = 1;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {

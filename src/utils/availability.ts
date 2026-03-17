@@ -83,7 +83,7 @@ export function checkAvailabilityDebounced(
             console.log(`[Availability] Checking ${type}:`, value.trim());
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced from 8s to 5s
 
             const res = await fetch(url, {
                 method: 'GET',
@@ -138,12 +138,16 @@ export function checkAvailabilityDebounced(
         } catch (error: any) {
             console.error(`[Availability] ${type} check failed:`, error?.message);
 
+            let errorMessage = 'Unable to validate right now';
+            if (error?.name === 'AbortError') {
+                errorMessage = 'Request timed out. Check your internet connection.';
+            } else if (error?.message?.includes('NetworkError') || error?.message?.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your connection.';
+            }
+
             const result: AvailabilityResult = {
                 status: 'error',
-                message:
-                    error?.name === 'AbortError'
-                        ? 'Validation timed out. Please try again.'
-                        : 'Unable to validate right now',
+                message: errorMessage,
             };
 
             callback(result);
