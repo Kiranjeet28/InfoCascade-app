@@ -66,6 +66,10 @@ export default function AppLayout() {
                     tabBarIcon: ({ focused }) => <ProfileTabIcon focused={focused} />,
                 }}
             />
+            <Tabs.Screen
+                name="settings"
+                options={{ title: 'Settings', tabBarIcon: () => <TabIcon name="settings" family="Ionicons" /> }}
+            />
         </Tabs>
     );
 }
