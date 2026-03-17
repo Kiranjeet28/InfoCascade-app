@@ -8,6 +8,7 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import { WEEK_DAYS } from '../constants/theme';
 import { useProfile } from '../context/profile-context';
 import { ClassSlot, TimetableJson } from '../types';
+import { registerServiceWorker } from '../utils/web-notifications';
 
 // ─── Lazy load expo-notifications only when needed ─────────────────────────────
 function getNotificationsModule() {
@@ -17,6 +18,76 @@ function getNotificationsModule() {
     } catch {
         return null;
     }
+}
+
+// ─── Web Notification Helpers ─────────────────────────────────────────────────
+function canUseWebNotifications(): boolean {
+    return Platform.OS === 'web' && typeof window !== 'undefined' && 'Notification' in window;
+}
+
+async function requestWebNotificationPermission(): Promise<boolean> {
+    if (!canUseWebNotifications()) return false;
+
+    if (window.Notification.permission === 'granted') {
+        return true;
+    }
+
+    if (window.Notification.permission !== 'denied') {
+        const permission = await window.Notification.requestPermission();
+        return permission === 'granted';
+    }
+
+    return false;
+}
+
+interface ScheduledWebNotification {
+    id: string;
+    timeoutId: NodeJS.Timeout;
+}
+
+const webNotificationTimeouts = new Map<string, ScheduledWebNotification>();
+let webNotificationCounter = 0;
+
+async function scheduleWebNotification(subject: string, body: string, scheduledTime: Date): Promise<string> {
+    if (!canUseWebNotifications()) return '';
+
+    const now = new Date();
+    const delay = scheduledTime.getTime() - now.getTime();
+
+    if (delay <= 0) return '';
+
+    const id = `web-notif-${++webNotificationCounter}`;
+
+    const timeoutId = setTimeout(() => {
+        try {
+            new window.Notification(subject, {
+                body,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: `class-notification`,
+                requireInteraction: true,
+            });
+            webNotificationTimeouts.delete(id);
+        } catch (e) {
+            console.error('Error showing web notification:', e);
+        }
+    }, delay);
+
+    webNotificationTimeouts.set(id, { id, timeoutId });
+    return id;
+}
+
+function cancelWebNotification(id: string): void {
+    const scheduled = webNotificationTimeouts.get(id);
+    if (scheduled) {
+        clearTimeout(scheduled.timeoutId);
+        webNotificationTimeouts.delete(id);
+    }
+}
+
+function cancelAllWebNotifications(): void {
+    webNotificationTimeouts.forEach(({ timeoutId }) => clearTimeout(timeoutId));
+    webNotificationTimeouts.clear();
 }
 
 // Type definitions for expo-notifications
@@ -111,6 +182,57 @@ function getClassType(cls: ClassSlot): string {
 }
 
 async function scheduleClassNotification(cls: ClassSlot, dayOffset: number = 0): Promise<string[]> {
+    // Handle web notifications
+    if (canUseWebNotifications()) {
+        if (window.Notification.permission !== 'granted') return [];
+
+        const scheduledIds: string[] = [];
+        const subject = getSubjectName(cls);
+        const room = getRoomName(cls);
+        const classType = getClassType(cls);
+        const time = cls.timeOfClass;
+        const endTime = getEndTime(time);
+
+        const now = new Date();
+        const [hours, minutes] = time.split(':').map(Number);
+
+        const classDate = new Date(now);
+        classDate.setDate(classDate.getDate() + dayOffset);
+        classDate.setHours(hours, minutes, 0, 0);
+
+        const reminderDate = new Date(classDate);
+        reminderDate.setMinutes(reminderDate.getMinutes() - 10);
+
+        if (reminderDate > now) {
+            try {
+                const reminderId = await scheduleWebNotification(
+                    '⏰ Class in 10 minutes!',
+                    `${subject} starts at ${time}\n${classType} ${room ? `• Room: ${room}` : ''}`,
+                    reminderDate
+                );
+                if (reminderId) scheduledIds.push(reminderId);
+            } catch (e) {
+                console.error('Error scheduling reminder web notification:', e);
+            }
+        }
+
+        if (classDate > now) {
+            try {
+                const startId = await scheduleWebNotification(
+                    '🔔 Class Starting Now!',
+                    `${subject} (${time} - ${endTime})\n${classType} ${room ? `• Room: ${room}` : ''}`,
+                    classDate
+                );
+                if (startId) scheduledIds.push(startId);
+            } catch (e) {
+                console.error('Error scheduling start web notification:', e);
+            }
+        }
+
+        return scheduledIds;
+    }
+
+    // Handle native (iOS/Android) notifications
     const Notifications = getNotificationsModule();
     if (!Notifications) return [];
     const scheduledIds: string[] = [];
@@ -208,20 +330,21 @@ export function useNotifications(): UseNotificationsResult {
 
     // Check permissions on mount
     useEffect(() => {
-        if (Platform.OS === 'web') {
-            setLoading(false);
-            return;
-        }
-
-        const Notifications = getNotificationsModule();
-        if (!Notifications) {
-            setLoading(false);
-            return;
-        }
-
         (async () => {
             try {
-                const granted = await requestNotificationPermissions();
+                let granted = false;
+
+                if (Platform.OS === 'web') {
+                    // Register service worker for web
+                    await registerServiceWorker();
+                    granted = await requestWebNotificationPermission();
+                } else {
+                    const Notifications = getNotificationsModule();
+                    if (Notifications) {
+                        granted = await requestNotificationPermissions();
+                    }
+                }
+
                 setPermissionGranted(granted);
                 if (granted) {
                     setNotificationsEnabled(true);
@@ -258,11 +381,7 @@ export function useNotifications(): UseNotificationsResult {
 
     // Schedule notifications for today's classes
     const scheduleNotifications = useCallback(async () => {
-        if (Platform.OS === 'web') return;
         if (!hasProfile || !profile?.group) return;
-
-        const Notifications = getNotificationsModule();
-        if (!Notifications) return;
 
         const day = new Date().getDay();
         const isWeekend = day === 0 || day === 6;
@@ -273,7 +392,13 @@ export function useNotifications(): UseNotificationsResult {
             setError(null);
 
             // Cancel existing notifications first
-            await Notifications.cancelAllScheduledNotificationsAsync();
+            if (Platform.OS === 'web') {
+                cancelAllWebNotifications();
+            } else {
+                const Notifications = getNotificationsModule();
+                if (!Notifications) return;
+                await Notifications.cancelAllScheduledNotificationsAsync();
+            }
 
             // Fetch timetable
             const file = getTimetableFile();
@@ -322,13 +447,17 @@ export function useNotifications(): UseNotificationsResult {
 
     // Enable notifications
     const enableNotifications = useCallback(async (): Promise<boolean> => {
-        if (Platform.OS === 'web') return false;
-
-        const Notifications = getNotificationsModule();
-        if (!Notifications) return false;
-
         try {
-            const granted = await requestNotificationPermissions();
+            let granted = false;
+
+            if (Platform.OS === 'web') {
+                granted = await requestWebNotificationPermission();
+            } else {
+                const Notifications = getNotificationsModule();
+                if (!Notifications) return false;
+                granted = await requestNotificationPermissions();
+            }
+
             setPermissionGranted(granted);
 
             if (granted) {
@@ -345,12 +474,14 @@ export function useNotifications(): UseNotificationsResult {
 
     // Disable notifications
     const disableNotifications = useCallback(async (): Promise<void> => {
-        if (Platform.OS === 'web') return;
-
-        const Notifications = getNotificationsModule();
-        if (!Notifications) return;
-
-        await Notifications.cancelAllScheduledNotificationsAsync();
+        if (Platform.OS === 'web') {
+            cancelAllWebNotifications();
+        } else {
+            const Notifications = getNotificationsModule();
+            if (Notifications) {
+                await Notifications.cancelAllScheduledNotificationsAsync();
+            }
+        }
         setNotificationsEnabled(false);
         setScheduledCount(0);
     }, []);
