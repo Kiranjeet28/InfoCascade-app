@@ -67,10 +67,11 @@ export function useLiveClass(): LiveClassState {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const day = new Date().getDay();
-    const isWeekend = day === 0 || day === 6;
-
     const load = useCallback(async () => {
+        // Calculate isWeekend inside callback to avoid stale closure
+        const day = new Date().getDay();
+        const isWeekend = day === 0 || day === 6;
+
         if (profileLoading) return;
         if (!hasProfile || !profile?.group) {
             setLoading(false);
@@ -79,13 +80,19 @@ export function useLiveClass(): LiveClassState {
         }
         if (isWeekend) {
             setLoading(false);
+            setCurrent(null);
+            setNext(null);
             return;
         }
         try {
             setLoading(true);
             const file = getTimetableFile();
             const resp = await fetch(`/${file}`);
-            if (!resp.ok) throw new Error(`Failed to load timetable (${resp.status})`);
+            if (!resp.ok) {
+                const errorMsg = `Failed to load timetable (${resp.status})`;
+                console.error('[useLiveClass]', errorMsg);
+                throw new Error(errorMsg);
+            }
             const json: TimetableJson = await resp.json();
 
             if (json.timetable?.[profile.group]) {
@@ -94,15 +101,20 @@ export function useLiveClass(): LiveClassState {
                 setCurrent(result.current);
                 setNext(result.next);
                 setError(null);
+                console.log('[useLiveClass] Loaded:', { current: result.current?.data.subject, next: result.next?.data.subject });
             } else {
-                setError(`No timetable for group ${profile.group}`);
+                const errorMsg = `No timetable for group ${profile.group}`;
+                console.error('[useLiveClass]', errorMsg);
+                setError(errorMsg);
             }
         } catch (e) {
-            setError(String(e));
+            const errorMsg = String(e);
+            console.error('[useLiveClass] Error:', errorMsg);
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }
-    }, [profile, hasProfile, profileLoading, isWeekend]);
+    }, [profile, hasProfile, profileLoading, getTimetableFile]);
 
     // Initial load
     useEffect(() => { load(); }, [load]);
@@ -112,6 +124,9 @@ export function useLiveClass(): LiveClassState {
         const interval = setInterval(load, 60_000);
         return () => clearInterval(interval);
     }, [load]);
+
+    const day = new Date().getDay();
+    const isWeekend = day === 0 || day === 6;
 
     return { current, next, loading, error, isWeekend, refresh: load };
 }
