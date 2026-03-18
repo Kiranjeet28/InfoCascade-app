@@ -8,7 +8,7 @@ export interface SelectFieldProps {
     label: string;
     value: string;
     onValueChange: (value: string) => void;
-    items: Array<{ label: string; value: string }>;
+    items: { label: string; value: string }[];
     placeholder?: string;
     icon?: string | { family?: 'MaterialCommunityIcons' | 'Ionicons' | 'FontAwesome'; name: string };
     disabled?: boolean;

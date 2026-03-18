@@ -4,7 +4,11 @@ import { useColorScheme } from 'react-native';
 import { darkColors, lightColors } from '../constants/theme';
 import { ThemeMode } from '../types';
 
-type Colors = typeof darkColors & typeof lightColors;
+type Colors = ReturnType<typeof getColors>;
+
+function getColors(isDark: boolean) {
+    return isDark ? darkColors : lightColors;
+}
 
 interface ThemeContextType {
     themeMode: ThemeMode;
@@ -23,7 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const isDark =
         themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
 
-    const colors: Colors = isDark ? darkColors : lightColors;
+    const colors = getColors(isDark);
 
     return (
         <ThemeContext.Provider value={{ themeMode, colors, isDark, setThemeMode }}>

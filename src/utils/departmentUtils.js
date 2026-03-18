@@ -16,7 +16,7 @@ export async function fetchGroups(department) {
   }
 
   // Fallback: static require map (Metro-friendly — no dynamic require)
-  // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+   
   const groupsMap = {
     appliedscience: require('../../web/group/appliedscience.json'),
     bca: require('../../web/group/bca.json'),

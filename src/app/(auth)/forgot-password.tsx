@@ -299,7 +299,7 @@ export default function ForgotPasswordScreen() {
                             <OTPInput value={otp} onChange={setOtp} />
 
                             <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16, marginBottom: 20 }}>
-                                <Text style={{ fontSize: 13, color: colors.textSecondary }}>Didn't receive? </Text>
+                                <Text style={{ fontSize: 13, color: colors.textSecondary }}>Didn&apos;t receive? </Text>
                                 <TouchableOpacity onPress={handleResendOTP} disabled={countdown > 0}>
                                     <Text style={{ fontSize: 13, color: countdown > 0 ? colors.textMuted : colors.primary, fontWeight: '600' }}>
                                         {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}

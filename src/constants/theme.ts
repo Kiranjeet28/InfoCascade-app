@@ -51,6 +51,7 @@ export type ThemeColor = keyof (typeof lightColors);
 
 // ─── Spacing ──────────────────────────────────────────────────────────────────
 export const Spacing = {
+  half: 2,
   one: 4,
   two: 8,
   three: 12,

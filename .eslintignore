@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+.expo
+android
+ios
+src/utils/runAllTimetables.js
+src/utils/watchTimetables.js
+src/utils/appliedscience/scrapeTimetable.js
+src/utils/bca/scrapeTimetable.js
+src/utils/civil/scrapeTimetable.js
+src/utils/cse/scrapeTimetable.js
+src/utils/ece/scrapeTimetable.js
+src/utils/electrical/scrapeTimetable.js
+src/utils/it/scrapeTimetable.js
+src/utils/mechanical/scrapeTimetable.js
