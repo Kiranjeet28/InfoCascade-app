@@ -18,10 +18,13 @@ export async function hideCustomSplash(): Promise<void> {
 
 /**
  * Show the custom splash screen
+ * (Note: showAsync is not available in current expo-splash-screen version)
  */
 export async function showCustomSplash(): Promise<void> {
     try {
-        await SplashScreen.showAsync();
+        // Current version of expo-splash-screen doesn't provide showAsync
+        // This is a placeholder for future use
+        console.log('Show splash screen requested');
     } catch (error) {
         console.warn('Failed to show splash screen:', error);
     }

@@ -47,12 +47,7 @@ export function resolveApiBase(): string {
 
     // Fallback
     console.log('[API] Using ultimate fallback: 127.0.0.1:5000');
-    return {
-        apiUrl: resolveApiBase(),
-        platform: Platform.OS,
-        isDevelopment: !process.env.EXPO_PUBLIC_API_URL?.includes('https'),
-        envSet: !!process.env.EXPO_PUBLIC_API_URL,
-    };
+    return 'http://127.0.0.1:5000';
 }
 
 export function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, timeoutMs = 10000) {

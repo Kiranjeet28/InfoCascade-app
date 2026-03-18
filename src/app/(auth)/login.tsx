@@ -84,9 +84,15 @@ export default function LoginScreen() {
 
                 // Request permissions after a short delay
                 setTimeout(async () => {
-                    // Register service worker on web
-                    if (Platform.OS === 'web') {
-                        await registerServiceWorker();
+                    // Register service worker on web if available
+                    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                        try {
+                            await (navigator as any).serviceWorker.register('/service-worker.js').catch(() => {
+                                // Service worker registration failed, continue anyway
+                            });
+                        } catch (e) {
+                            console.warn('Service worker registration skipped:', e);
+                        }
                     }
                     await requestAllPermissionsSequentially();
                     router.replace('/(app)/home');

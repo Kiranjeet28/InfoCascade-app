@@ -1,8 +1,10 @@
 // ...existing code...
 import React, { createContext, useContext, useState } from 'react';
 import { useColorScheme } from 'react-native';
-import { darkColors, lightColors, Colors } from '../constants/theme';
+import { darkColors, lightColors } from '../constants/theme';
 import { ThemeMode } from '../types';
+
+type Colors = typeof darkColors & typeof lightColors;
 
 interface ThemeContextType {
     themeMode: ThemeMode;
@@ -21,7 +23,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const isDark =
         themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
 
-    const colors = (isDark ? darkColors : lightColors) as Colors;
+    const colors: Colors = isDark ? darkColors : lightColors;
 
     return (
         <ThemeContext.Provider value={{ themeMode, colors, isDark, setThemeMode }}>
