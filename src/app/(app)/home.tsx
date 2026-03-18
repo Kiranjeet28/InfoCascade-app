@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -222,7 +223,7 @@ export default function HomeScreen() {
     const { colors, isDark } = useThemeColors();
     const { profile, hasProfile, getDepartmentLabel, loading: profileLoading } = useProfile();
     const { showNotification } = useInAppNotifications();
-    const { current, next } = useLiveClass();
+    const { current, next, refresh: refreshLiveClass } = useLiveClass();
 
     // Notifications hook
     const {
@@ -246,6 +247,13 @@ export default function HomeScreen() {
             Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
         ]).start();
     }, []);
+
+    // Refresh "Next Class" data when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            refreshLiveClass();
+        }, [refreshLiveClass])
+    );
 
     // Fetch backend root info for status/debugging
     const fetchBackendInfo = useCallback(async () => {
