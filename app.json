@@ -8,7 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png",
+      "supportsTabletMode": true,
+      "requireFullScreen": true
     },
     "android": {
       "adaptiveIcon": {
@@ -54,7 +56,7 @@
           "color": "#6C63FF",
           "defaultChannel": "class-notifications",
           "sounds": [],
-          "enableBackgroundRemoteNotifications": false
+          "enableBackgroundRemoteNotifications": true
         }
       ]
     ],
