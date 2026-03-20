@@ -43,7 +43,7 @@ export default function SplashScreenComponent({ onFinish }: SplashScreenComponen
             {/* Centered Icon with Rounded Corners */}
             <View style={styles.iconWrapper}>
                 <Image
-                    source={require('../../assets/expo-icon-final.png')} // Using the icon from assets
+                    source={require('../../../assets/expo-icon-final.png')} // Using the icon from assets
                     style={styles.icon}
                     resizeMode="contain"
                 />

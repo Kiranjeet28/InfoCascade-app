@@ -1,7 +1,0 @@
-1. cse , bca ,as,it,civil, ece is working fine 
-2. modified required in script of mechnical 
-
-4. Frontend changes are required 
-  1. make the cache in it where it should be in the login and saved 
-  2. create acc and about  should not in layout 
-  3. make the icon in top on click on edit profile 
