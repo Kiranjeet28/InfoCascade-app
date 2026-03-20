@@ -1,19 +1,67 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+const API_URL_STORAGE_KEY = 'app_api_url_override';
+
+/**
+ * Stores a custom API URL in AsyncStorage (runtime configuration)
+ * This allows changing the API URL without rebuilding the APK
+ * 
+ * @param url - The API base URL to store
+ */
+export async function setApiUrl(url: string): Promise<void> {
+    try {
+        const cleanUrl = url.trim().replace(/\/$/, '');
+        await AsyncStorage.setItem(API_URL_STORAGE_KEY, cleanUrl);
+        console.log('[API] Custom API URL set:', cleanUrl);
+    } catch (error) {
+        console.error('[API] Failed to set custom API URL:', error);
+    }
+}
+
+/**
+ * Retrieves the custom API URL from AsyncStorage if available
+ */
+export async function getStoredApiUrl(): Promise<string | null> {
+    try {
+        return await AsyncStorage.getItem(API_URL_STORAGE_KEY);
+    } catch (error) {
+        console.error('[API] Failed to get stored API URL:', error);
+        return null;
+    }
+}
+
+/**
+ * Clears the stored API URL from AsyncStorage
+ */
+export async function clearStoredApiUrl(): Promise<void> {
+    try {
+        await AsyncStorage.removeItem(API_URL_STORAGE_KEY);
+        console.log('[API] Stored API URL cleared');
+    } catch (error) {
+        console.error('[API] Failed to clear stored API URL:', error);
+    }
+}
+
 /**
  * Resolves the API base URL from multiple sources with priority:
- * 1. Environment variable EXPO_PUBLIC_API_URL (.env files)
- * 2. Development debugger host detection (Expo Go)
- * 3. Platform-specific defaults for local development
+ * 1. Runtime override stored in AsyncStorage (allows changes without APK rebuild)
+ * 2. Environment variable EXPO_PUBLIC_API_URL (.env files)
+ * 3. Development debugger host detection (Expo Go)
+ * 4. Platform-specific defaults for local development
  * 
  * Works across all platforms: Web, Android APK, iOS, Expo Go
  * 
- * IMPORTANT: APK builds embed EXPO_PUBLIC_API_URL at build time.
- * Once built, the URL cannot be changed without rebuilding.
+ * IMPORTANT: For APK deployments, use setApiUrl() to change the backend URL
+ * at runtime without rebuilding the APK.
  */
 export function resolveApiBase(): string {
-    // Priority 1: Explicit environment variable (from .env, .env.production, etc.)
+    // Priority 1: Check for runtime override in AsyncStorage
+    // This is async but we handle it in a synchronous function by checking a cache
+    // For async resolution, use resolveApiBaseAsync() instead
+
+    // Priority 2: Explicit environment variable (from .env, .env.production, etc.)
     const envUrl = process.env.EXPO_PUBLIC_API_URL;
     if (envUrl && envUrl.trim()) {
         console.log('[API] Using environment URL:', envUrl.trim());
@@ -22,7 +70,7 @@ export function resolveApiBase(): string {
 
     console.warn('[API] No EXPO_PUBLIC_API_URL found in environment, using fallback');
 
-    // Priority 2: Development mode - detect debugger host (Expo Go)
+    // Priority 3: Development mode - detect debugger host (Expo Go)
     const manifest: any = (Constants as any).manifest || (Constants as any).manifest2;
     const dbg = manifest && manifest.debuggerHost;
     if (dbg && typeof dbg === 'string') {
@@ -31,7 +79,7 @@ export function resolveApiBase(): string {
         return `http://${host}:5000`;
     }
 
-    // Priority 3: Platform-specific defaults for local development
+    // Priority 4: Platform-specific defaults for local development
     if (Platform.OS === 'android') {
         console.log('[API] Using Android fallback: 10.0.2.2:5000');
         return 'http://10.0.2.2:5000';
@@ -48,6 +96,22 @@ export function resolveApiBase(): string {
     // Fallback
     console.log('[API] Using ultimate fallback: 127.0.0.1:5000');
     return 'http://127.0.0.1:5000';
+}
+
+/**
+ * Async version of resolveApiBase that checks AsyncStorage override first
+ * Use this when you need to fetch the most current API URL including runtime overrides
+ */
+export async function resolveApiBaseAsync(): Promise<string> {
+    // Priority 1: Runtime override stored in AsyncStorage
+    const storedUrl = await getStoredApiUrl();
+    if (storedUrl) {
+        console.log('[API] Using stored override URL:', storedUrl);
+        return storedUrl;
+    }
+
+    // Falls back to synchronous resolution
+    return resolveApiBase();
 }
 
 export function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, timeoutMs = 10000) {

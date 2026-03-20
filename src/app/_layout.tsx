@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import SplashScreenComponent from '../components/splash/splash-screen';
+import { AuthProvider } from '../context/auth-context';
 import { InAppNotificationProvider } from '../context/in-app-notification-context';
 import { NotificationPreferencesProvider } from '../context/notification-preferences-context';
 import { ProfileProvider } from '../context/profile-context';
@@ -48,13 +49,15 @@ function RootStack() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <ProfileProvider>
-        <NotificationPreferencesProvider>
-          <InAppNotificationProvider>
-            <RootStack />
-          </InAppNotificationProvider>
-        </NotificationPreferencesProvider>
-      </ProfileProvider>
+      <AuthProvider>
+        <ProfileProvider>
+          <NotificationPreferencesProvider>
+            <InAppNotificationProvider>
+              <RootStack />
+            </InAppNotificationProvider>
+          </NotificationPreferencesProvider>
+        </ProfileProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
