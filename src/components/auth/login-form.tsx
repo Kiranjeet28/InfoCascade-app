@@ -15,8 +15,6 @@ import { useThemeColors } from '../../context/theme-context';
 import * as authService from '../../services/auth-service';
 import {
     isPasswordStrong,
-    isValidEmail,
-    validateLoginForm,
 } from '../../utils/validators';
 
 export interface LoginFormProps {
@@ -37,6 +35,7 @@ export default function LoginForm({
     const [passwordError, setPasswordError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const emailInputRef = useRef<TextInput>(null);
 
@@ -82,27 +81,46 @@ export default function LoginForm({
 
     const handleLogin = async () => {
         try {
-            // Validate form
-            const errors = validateLoginForm(
-                auth.formData.email,
-                auth.formData.password
-            );
-
-            if (errors.email) {
-                setEmailError(errors.email);
+            // Validate email
+            if (!auth.formData.email || auth.formData.email.trim().length === 0) {
+                setEmailError('Email is required');
                 triggerShake();
                 return;
             }
-            if (errors.password) {
-                setPasswordError(errors.password);
+
+            // Basic email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(auth.formData.email)) {
+                setEmailError('Please enter a valid email address');
                 triggerShake();
+                return;
+            }
+
+            // Check if email exists in database
+            setIsCheckingEmail(true);
+            const emailCheckResult = await authService.checkEmailExists(
+                auth.formData.email
+            );
+
+            if (!emailCheckResult.exists) {
+                setEmailError('Email not found. Please sign up first.');
+                triggerShake();
+                setIsCheckingEmail(false);
+                return;
+            }
+
+            // Validate password
+            if (!isPasswordStrong(auth.formData.password)) {
+                setPasswordError('Password is required');
+                triggerShake();
+                setIsCheckingEmail(false);
                 return;
             }
 
             setIsLoading(true);
             auth.setLoading(true);
 
-            // Call login API
+            // Call login API with email and password
             const result = await authService.login(
                 auth.formData.email,
                 auth.formData.password
@@ -137,10 +155,12 @@ export default function LoginForm({
                 // Update attempt counter
                 if (result.attemptsRemaining !== undefined) {
                     auth.recordFailedAttempt(result.attemptsRemaining);
+                } else {
+                    auth.recordFailedAttempt(auth.attemptsRemaining - 1);
                 }
 
                 // If max attempts reached, route to OTP
-                if (attempts === 0) {
+                if (attempts === 0 || auth.attemptsRemaining === 0) {
                     auth.recordOTPRequired();
                     // Send OTP
                     const sendResult = await authService.sendOtp(
@@ -172,14 +192,17 @@ export default function LoginForm({
             triggerShake();
         } finally {
             setIsLoading(false);
+            setIsCheckingEmail(false);
             auth.setLoading(false);
         }
     };
 
     const canSubmit =
-        isValidEmail(auth.formData.email) &&
+        auth.formData.email &&
+        auth.formData.email.trim().length > 0 &&
         isPasswordStrong(auth.formData.password) &&
-        !isLoading;
+        !isLoading &&
+        !isCheckingEmail;
 
     const attemptsText =
         auth.attemptsRemaining > 0
@@ -218,7 +241,7 @@ export default function LoginForm({
                                 color: colors.textSecondary,
                             }}
                         >
-                            Sign in to continue to your account
+                            Sign in with your email to continue
                         </Text>
                     </View>
 
@@ -294,14 +317,14 @@ export default function LoginForm({
                         </Text>
                         <TextInput
                             ref={emailInputRef}
-                            placeholder="you@example.com"
+                            placeholder="Enter your email"
                             placeholderTextColor={colors.textMuted}
                             value={auth.formData.email}
                             onChangeText={handleEmailChange}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoCorrect={false}
-                            editable={!isLoading}
+                            editable={!isLoading && !isCheckingEmail}
                             style={{
                                 borderWidth: 1,
                                 borderColor:
@@ -324,6 +347,20 @@ export default function LoginForm({
                             >
                                 {emailError}
                             </Text>
+                        )}
+                        {isCheckingEmail && (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                <ActivityIndicator size={14} color={colors.primary} />
+                                <Text
+                                    style={{
+                                        fontSize: 12,
+                                        color: colors.primary,
+                                        marginLeft: 6,
+                                    }}
+                                >
+                                    Checking email...
+                                </Text>
+                            </View>
                         )}
                     </View>
 
@@ -368,7 +405,7 @@ export default function LoginForm({
                             value={auth.formData.password}
                             onChangeText={handlePasswordChange}
                             secureTextEntry={!showPassword}
-                            editable={!isLoading}
+                            editable={!isLoading && !isCheckingEmail}
                             style={{
                                 borderWidth: 1,
                                 borderColor:
@@ -412,7 +449,7 @@ export default function LoginForm({
                             marginBottom: 16,
                         }}
                     >
-                        {isLoading ? (
+                        {isLoading || isCheckingEmail ? (
                             <ActivityIndicator size={20} color="white" />
                         ) : null}
                         <Text
@@ -422,7 +459,7 @@ export default function LoginForm({
                                 color: 'white',
                             }}
                         >
-                            {isLoading ? 'Signing in...' : 'Sign In'}
+                            {isLoading ? 'Signing in...' : isCheckingEmail ? 'Checking email...' : 'Sign In'}
                         </Text>
                     </TouchableOpacity>
 

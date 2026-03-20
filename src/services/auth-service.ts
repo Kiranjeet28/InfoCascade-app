@@ -58,6 +58,12 @@ export interface TokenVerifyResponse {
     user?: AuthUser;
 }
 
+export interface EmailCheckResponse {
+    success: boolean;
+    exists: boolean;
+    message?: string;
+}
+
 // ─── API Endpoints ────────────────────────────────────────────────────────────
 
 /**
@@ -76,6 +82,39 @@ export async function signup(req: SignupRequest): Promise<SignupResponse> {
     } catch (err) {
         console.error('Signup error:', err);
         throw err;
+    }
+}
+
+/**
+ * Check if an email exists in the database
+ * Call this before attempting login to verify the email is registered
+ */
+export async function checkEmailExists(email: string): Promise<EmailCheckResponse> {
+    try {
+        const res = await fetchJson(`/api/auth/check-email/${encodeURIComponent(email)}`, {}, 10000);
+        const data = await res.json();
+
+        console.log('[Auth] Check email response:', { status: res.status, exists: data.exists });
+
+        if (!res.ok) {
+            return {
+                success: false,
+                exists: false,
+                message: data.message || 'Failed to check email',
+            };
+        }
+
+        return data as EmailCheckResponse;
+    } catch (err) {
+        console.error('[Auth] Check email error:', {
+            error: err instanceof Error ? err.message : String(err),
+            email,
+        });
+        return {
+            success: false,
+            exists: false,
+            message: 'Failed to check email. Please try again.',
+        };
     }
 }
 
