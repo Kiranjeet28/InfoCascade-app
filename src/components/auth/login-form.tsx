@@ -30,12 +30,12 @@ export default function LoginForm({
 }: LoginFormProps) {
     const { colors } = useThemeColors();
     const auth = useAuth();
+    const emailAvailability = useEmailAvailability(auth.formData.email, 300);
 
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const emailInputRef = useRef<TextInput>(null);
 
@@ -88,24 +88,29 @@ export default function LoginForm({
                 return;
             }
 
-            // Basic email format validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(auth.formData.email)) {
-                setEmailError('Please enter a valid email address');
+            // Check email availability status from hook
+            if (emailAvailability.status === 'error') {
+                setEmailError(emailAvailability.message || 'Invalid email address');
                 triggerShake();
                 return;
             }
 
-            // Check if email exists in database
-            setIsCheckingEmail(true);
-            const emailCheckResult = await authService.checkEmailExists(
-                auth.formData.email
-            );
-
-            if (!emailCheckResult.exists) {
+            if (emailAvailability.status === 'taken') {
+                // Email exists in database, continue with login
+            } else if (emailAvailability.status === 'checking') {
+                // Still checking, wait a moment
+                setEmailError('Checking email...');
+                triggerShake();
+                return;
+            } else if (emailAvailability.status === 'available') {
+                // Email doesn't exist
                 setEmailError('Email not found. Please sign up first.');
                 triggerShake();
-                setIsCheckingEmail(false);
+                return;
+            } else if (emailAvailability.status === 'idle') {
+                // Email hasn't been checked yet
+                setEmailError('Please wait while we verify your email...');
+                triggerShake();
                 return;
             }
 
@@ -113,7 +118,6 @@ export default function LoginForm({
             if (!isPasswordStrong(auth.formData.password)) {
                 setPasswordError('Password is required');
                 triggerShake();
-                setIsCheckingEmail(false);
                 return;
             }
 
@@ -192,7 +196,6 @@ export default function LoginForm({
             triggerShake();
         } finally {
             setIsLoading(false);
-            setIsCheckingEmail(false);
             auth.setLoading(false);
         }
     };
@@ -202,7 +205,7 @@ export default function LoginForm({
         auth.formData.email.trim().length > 0 &&
         isPasswordStrong(auth.formData.password) &&
         !isLoading &&
-        !isCheckingEmail;
+        emailAvailability.status === 'taken'; // Email must exist (status 'taken' means it exists)
 
     const attemptsText =
         auth.attemptsRemaining > 0
@@ -324,11 +327,15 @@ export default function LoginForm({
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoCorrect={false}
-                            editable={!isLoading && !isCheckingEmail}
+                            editable={!isLoading}
                             style={{
                                 borderWidth: 1,
                                 borderColor:
-                                    emailError ? colors.error : colors.border,
+                                    emailError || emailAvailability.status === 'error' || emailAvailability.status === 'available'
+                                        ? colors.error
+                                        : emailAvailability.status === 'taken'
+                                            ? colors.accent
+                                            : colors.border,
                                 borderRadius: 8,
                                 paddingHorizontal: 12,
                                 paddingVertical: 12,
@@ -348,17 +355,24 @@ export default function LoginForm({
                                 {emailError}
                             </Text>
                         )}
-                        {isCheckingEmail && (
+                        {!emailError && emailAvailability.message && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                <ActivityIndicator size={14} color={colors.primary} />
+                                {emailAvailability.isChecking && (
+                                    <ActivityIndicator size={14} color={colors.primary} />
+                                )}
                                 <Text
                                     style={{
                                         fontSize: 12,
-                                        color: colors.primary,
-                                        marginLeft: 6,
+                                        color:
+                                            emailAvailability.status === 'taken'
+                                                ? colors.accent
+                                                : emailAvailability.status === 'error'
+                                                    ? colors.error
+                                                    : colors.textSecondary,
+                                        marginLeft: emailAvailability.isChecking ? 6 : 0,
                                     }}
                                 >
-                                    Checking email...
+                                    {emailAvailability.message}
                                 </Text>
                             </View>
                         )}
@@ -449,7 +463,7 @@ export default function LoginForm({
                             marginBottom: 16,
                         }}
                     >
-                        {isLoading || isCheckingEmail ? (
+                        {isLoading ? (
                             <ActivityIndicator size={20} color="white" />
                         ) : null}
                         <Text
@@ -459,7 +473,7 @@ export default function LoginForm({
                                 color: 'white',
                             }}
                         >
-                            {isLoading ? 'Signing in...' : isCheckingEmail ? 'Checking email...' : 'Sign In'}
+                            {isLoading ? 'Signing in...' : 'Sign In'}
                         </Text>
                     </TouchableOpacity>
 

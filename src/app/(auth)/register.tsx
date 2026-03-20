@@ -12,6 +12,7 @@ import InputField from '../../components/ui/input-field';
 import SelectField from '../../components/ui/select-field';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
+import { useEmailAvailability } from '../../hooks/use-email-availability';
 import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
 import { requestAllPermissionsSequentially } from '../../services/permission-service';
 import { postJson, resolveApiBase } from '../../utils/api';
@@ -108,9 +109,10 @@ export default function RegisterScreen() {
     const [countdown, setCountdown] = useState(0);
     const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-    // Availability check states
-    const [emailStatus, setEmailStatus] = useState<AvailabilityStatus>('idle');
-    const [emailMsg, setEmailMsg] = useState<string>('');
+    // Email availability check using reusable hook
+    const emailAvailability = useEmailAvailability(email, 300);
+
+    // Availability check states for URN and CRN
     const [urnStatus, setUrnStatus] = useState<AvailabilityStatus>('idle');
     const [urnMsg, setUrnMsg] = useState<string>('');
     const [crnStatus, setCrnStatus] = useState<AvailabilityStatus>('idle');
@@ -127,17 +129,6 @@ export default function RegisterScreen() {
         return () => cancelPendingChecks(); // Cleanup on unmount
     }, []);
 
-    // Check email availability (debounced)
-    useEffect(() => {
-        if (!email.trim() || !isValidGNDECEmail(email)) {
-            setEmailStatus('idle');
-            return;
-        }
-        checkAvailabilityDebounced('email', email, (result: any) => {
-            setEmailStatus(result.status);
-            setEmailMsg(result.message || '');
-        }, 300); // Reduced from 400ms to 300ms for faster feedback
-    }, [email]);
 
     // Check URN availability (debounced)
     useEffect(() => {
@@ -250,15 +241,15 @@ export default function RegisterScreen() {
             showMessage('Email must end with @gmail.com', 'error');
             return false;
         }
-        if (emailStatus === 'checking') {
+        if (emailAvailability.isChecking) {
             showMessage('Please wait for email validation to complete', 'error');
             return false;
         }
-        if (emailStatus === 'taken') {
+        if (emailAvailability.status === 'taken') {
             showMessage('This email is already registered', 'error');
             return false;
         }
-        if (emailStatus === 'error') {
+        if (emailAvailability.status === 'error') {
             showMessage('Unable to validate email. Please try again.', 'error');
             return false;
         }
@@ -503,34 +494,34 @@ export default function RegisterScreen() {
                             {/* Email Availability Status */}
                             {email.trim() && isValidGNDECEmail(email) && (
                                 <View style={{ marginBottom: 16, paddingHorizontal: 2 }}>
-                                    {emailStatus === 'checking' && (
+                                    {emailAvailability.isChecking && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                             <ActivityIndicator size="small" color={colors.primary} />
                                             <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>Checking...</Text>
                                         </View>
                                     )}
-                                    {emailStatus === 'available' && (
+                                    {emailAvailability.status === 'available' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{emailMsg || 'Available'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.accent, fontWeight: '500' }}>{emailAvailability.message || 'Available'}</Text>
                                         </View>
                                     )}
-                                    {emailStatus === 'taken' && (
+                                    {emailAvailability.status === 'taken' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{emailMsg || 'Already registered'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '500' }}>{emailAvailability.message || 'Already registered'}</Text>
                                         </View>
                                     )}
-                                    {emailStatus === 'error' && (
+                                    {emailAvailability.status === 'error' && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                            <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{emailMsg || 'Unable to validate'}</Text>
+                                            <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '500' }}>{emailAvailability.message || 'Unable to validate'}</Text>
                                         </View>
                                     )}
                                 </View>
                             )}
 
                             <TouchableOpacity
-                                style={[btn, (!isValidGNDECEmail(email) || loading || emailStatus === 'checking' || emailStatus === 'taken' || emailStatus === 'error') && btnDisabled]}
+                                style={[btn, (!isValidGNDECEmail(email) || loading || emailAvailability.isChecking || emailAvailability.status === 'taken' || emailAvailability.status === 'error') && btnDisabled]}
                                 onPress={handleSendOTP}
-                                disabled={!isValidGNDECEmail(email) || loading || emailStatus === 'checking' || emailStatus === 'taken' || emailStatus === 'error'}
+                                disabled={!isValidGNDECEmail(email) || loading || emailAvailability.isChecking || emailAvailability.status === 'taken' || emailAvailability.status === 'error'}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP</Text>
