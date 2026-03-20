@@ -2,6 +2,8 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
+import LoginForm from '../../components/auth/login-form';
+import OTPVerification from '../../components/auth/otp-verification';
 import BgBlobs from '../../components/layout/bg-blobs';
 import { useAuth } from '../../context/auth-context';
 import { useThemeColors } from '../../context/theme-context';
