@@ -6,7 +6,7 @@
   "build": {
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://your-api.com"
+        "EXPO_PUBLIC_API_URL": "https://infocascade-backend.onrender.com"
       },
       "android": {
         "buildType": "apk"
@@ -14,7 +14,7 @@
     },
     "preview": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://your-api.com"
+        "EXPO_PUBLIC_API_URL": "https://infocascade-backend.onrender.com"
       },
       "android": {
         "buildType": "apk"
