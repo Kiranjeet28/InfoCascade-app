@@ -201,7 +201,13 @@ export default function ForgotPasswordScreen() {
                 showMessage(data.message || 'Password updated successfully!', 'success');
                 setTimeout(() => router.replace('/(auth)/login'), 1500);
             } else {
-                showMessage(data.error || data.message || `Error ${res.status}`, 'error');
+                // Handle specific error codes
+                if (res.status === 403 && data.code === 'STUDENT_EMAIL_NOT_VERIFIED') {
+                    showMessage('Email verification expired. Please start over.', 'error');
+                    setTimeout(() => setStep(0), 1500);
+                } else {
+                    showMessage(data.error || data.message || `Error ${res.status}`, 'error');
+                }
             }
         } catch (e: any) {
             const base = resolveApiBase();
