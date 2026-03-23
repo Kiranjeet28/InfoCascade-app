@@ -154,7 +154,6 @@ export default function LoginForm({
             } else if (result.code === 'INVALID_PASSWORD') {
                 // Wrong password - show attempts remaining
                 const attemptsRemaining = result.attemptsRemaining || 0;
-                const maxAttempts = result.maxAttempts || 3;
 
                 let errorMsg = 'Invalid password. Please try again.';
                 if (attemptsRemaining > 0) {

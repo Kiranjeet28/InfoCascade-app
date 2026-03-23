@@ -36,7 +36,9 @@ export default function LoginScreen() {
             <BgBlobs />
 
             <LoginForm
-                onLoginSuccess={() => { }}
+                onLoginSuccess={() => {
+                    router.replace('/');
+                }}
                 onSwitchToSignup={() => {
                     router.push('/(auth)/register');
                 }}
