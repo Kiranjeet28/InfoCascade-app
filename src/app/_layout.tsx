@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from '../components/error-boundary';
 import SplashScreenComponent from '../components/splash/splash-screen';
 import { AuthProvider } from '../context/auth-context';
@@ -26,7 +26,7 @@ function RootStack() {
   }, []);
 
   // Hide splash screen after theme is applied and navigate based on auth state
-  const initializeApp = async () => {
+  const initializeApp = useCallback(async () => {
     try {
       console.log('[App] Starting initialization...');
 
@@ -123,7 +123,7 @@ function RootStack() {
         }
       }, 1500);
     }
-  }; // Regular async function, not useCallback
+  }, [router, routerReady]); // useCallback with proper dependencies
 
   useEffect(() => {
     if (routerReady) {
