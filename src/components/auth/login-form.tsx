@@ -30,14 +30,15 @@ export default function LoginForm({
 }: LoginFormProps) {
     const { colors } = useThemeColors();
     const auth = useAuth();
-    const emailCheck = useAuthEmailExists(auth.formData.email, 400);
-
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const emailInputRef = useRef<TextInput>(null);
+
+    // Only run email check when not loading (to prevent infinite loops during login)
+    const emailCheck = useAuthEmailExists(isLoading || auth.loading ? '' : auth.formData.email, 400);
 
     // Auto-focus email input on mount
     useEffect(() => {
@@ -46,26 +47,10 @@ export default function LoginForm({
 
     const triggerShake = () => {
         Animated.sequence([
-            Animated.timing(shakeAnim, {
-                toValue: -10,
-                duration: 50,
-                useNativeDriver: true,
-            }),
-            Animated.timing(shakeAnim, {
-                toValue: 10,
-                duration: 50,
-                useNativeDriver: true,
-            }),
-            Animated.timing(shakeAnim, {
-                toValue: -10,
-                duration: 50,
-                useNativeDriver: true,
-            }),
-            Animated.timing(shakeAnim, {
-                toValue: 0,
-                duration: 50,
-                useNativeDriver: true,
-            }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
         ]).start();
     };
 
@@ -83,37 +68,33 @@ export default function LoginForm({
 
     /** When student DB says the email exists but auth login fails, avoid "sign up first" vs "account found". */
     const loginFailureMessage = (err: unknown, fallback: string): string => {
-        let msg = authService.mapErrorToUserMessage(err, fallback);
+        const msg = authService.mapErrorToUserMessage(err, fallback);
         const lower = msg.toLowerCase();
         const looksLikeMissingUser =
             lower.includes('user not found') ||
             lower.includes('user does not exist') ||
             lower.includes('account not found');
         if (emailCheck.status === 'taken' && looksLikeMissingUser) {
-            return 'Couldn’t sign in with this email. Check your password, or finish registration if you haven’t set one yet.';
+            return "Couldn't sign in with this email. Check your password, or finish registration if you haven't set one yet.";
         }
         return msg;
     };
 
     const handleLogin = async () => {
         try {
-            // Validate email
             if (!auth.formData.email || auth.formData.email.trim().length === 0) {
                 setEmailError('Email is required');
                 triggerShake();
                 return;
             }
 
-            // Auth email check (same backend as /api/auth/login)
             if (emailCheck.status === 'error') {
                 setEmailError(emailCheck.message || 'Invalid email address');
                 triggerShake();
                 return;
             }
 
-            if (emailCheck.status === 'taken') {
-                // Account exists — continue with login
-            } else if (emailCheck.status === 'checking') {
+            if (emailCheck.status === 'checking') {
                 setEmailError('Checking email...');
                 triggerShake();
                 return;
@@ -124,6 +105,8 @@ export default function LoginForm({
             } else if (emailCheck.status === 'idle') {
                 setEmailError('Please wait while we verify your email...');
                 triggerShake();
+                return;
+            } else if (emailCheck.status !== 'taken') {
                 return;
             }
 
@@ -137,7 +120,6 @@ export default function LoginForm({
             setIsLoading(true);
             auth.setLoading(true);
 
-            // Call login API with email and password
             const result = await authService.login(
                 auth.formData.email,
                 auth.formData.password
@@ -148,41 +130,35 @@ export default function LoginForm({
             if (result.success && result.token && result.user) {
                 console.log('[LoginForm] Login successful, calling setAuthData');
                 await auth.setAuthData(result.user, result.token);
-                // Clear form data to stop email check hook
-                auth.setFormData({ email: '', password: '' });
+                // auth.isAuthenticated is now true.
+                // Parent LoginScreen checks this and renders null immediately,
+                // unmounting this component and stopping the email hook dead.
+                // onLoginSuccess calls router.replace as the navigation trigger.
                 console.log('[LoginForm] setAuthData complete, calling onLoginSuccess');
                 onLoginSuccess?.();
             } else if (result.code === 'OTP_VERIFICATION_REQUIRED') {
-                auth.setError(
-                    'Too many sign-in attempts. Wait a bit, then try again or use Forgot password.'
-                );
+                auth.setError('Too many sign-in attempts. Wait a bit, then try again or use Forgot password.');
                 triggerShake();
             } else if (result.code === 'INVALID_PASSWORD') {
-                // Wrong password - show attempts remaining
                 const attemptsRemaining = result.attemptsRemaining || 0;
-
                 let errorMsg = 'Invalid password. Please try again.';
                 if (attemptsRemaining > 0) {
                     errorMsg += ` You have ${attemptsRemaining} attempt(s) remaining.`;
                 }
-
                 if (result.attemptsRemaining !== undefined) {
                     auth.recordFailedAttempt(result.attemptsRemaining);
                 } else {
                     auth.recordFailedAttempt(auth.attemptsRemaining - 1);
                 }
-
                 auth.setError(errorMsg);
                 triggerShake();
             } else if (result.code === 'USER_NOT_FOUND') {
                 const error = emailCheck.status !== 'taken'
                     ? 'Email not found. Please sign up first.'
                     : 'Account issue. Please try again or reset password.';
-
                 auth.setError(error);
                 triggerShake();
             } else {
-                // Other error
                 const error = authService.mapErrorToUserMessage(
                     result.code || 'LOGIN_FAILED',
                     result.message || 'Login failed'
@@ -191,10 +167,7 @@ export default function LoginForm({
                 triggerShake();
             }
         } catch (err) {
-            const errorMsg = loginFailureMessage(
-                err,
-                'Login failed. Please try again.'
-            );
+            const errorMsg = loginFailureMessage(err, 'Login failed. Please try again.');
             auth.setError(errorMsg);
             triggerShake();
         } finally {
@@ -214,6 +187,13 @@ export default function LoginForm({
         auth.attemptsRemaining > 0
             ? `Attempt ${auth.totalAttempts - auth.attemptsRemaining + 1} of ${auth.totalAttempts} • ${auth.attemptsRemaining} remaining`
             : '';
+
+    const emailBorderColor =
+        emailError || emailCheck.status === 'error' || emailCheck.status === 'available'
+            ? colors.error
+            : emailCheck.status === 'taken'
+                ? colors.accent
+                : colors.border;
 
     return (
         <KeyboardAvoidingView
@@ -241,12 +221,7 @@ export default function LoginForm({
                         >
                             Welcome Back
                         </Text>
-                        <Text
-                            style={{
-                                fontSize: 14,
-                                color: colors.textSecondary,
-                            }}
-                        >
+                        <Text style={{ fontSize: 14, color: colors.textSecondary }}>
                             Sign in with your Gmail and password
                         </Text>
                     </View>
@@ -264,12 +239,7 @@ export default function LoginForm({
                                 marginBottom: 16,
                             }}
                         >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    color: colors.error,
-                                }}
-                            >
+                            <Text style={{ fontSize: 14, color: colors.error }}>
                                 {auth.error}
                             </Text>
                         </View>
@@ -285,9 +255,7 @@ export default function LoginForm({
                                         : colors.warning + '20',
                                 borderLeftWidth: 4,
                                 borderLeftColor:
-                                    auth.attemptsRemaining === 1
-                                        ? colors.error
-                                        : colors.warning,
+                                    auth.attemptsRemaining === 1 ? colors.error : colors.warning,
                                 paddingVertical: 12,
                                 paddingHorizontal: 12,
                                 borderRadius: 8,
@@ -298,9 +266,7 @@ export default function LoginForm({
                                 style={{
                                     fontSize: 13,
                                     color:
-                                        auth.attemptsRemaining === 1
-                                            ? colors.error
-                                            : colors.warning,
+                                        auth.attemptsRemaining === 1 ? colors.error : colors.warning,
                                     fontWeight: '600',
                                 }}
                             >
@@ -333,12 +299,7 @@ export default function LoginForm({
                             editable={!isLoading}
                             style={{
                                 borderWidth: 1,
-                                borderColor:
-                                    emailError || emailCheck.status === 'error' || emailCheck.status === 'available'
-                                        ? colors.error
-                                        : emailCheck.status === 'taken'
-                                            ? colors.accent
-                                            : colors.border,
+                                borderColor: emailBorderColor,
                                 borderRadius: 8,
                                 paddingHorizontal: 12,
                                 paddingVertical: 12,
@@ -348,13 +309,7 @@ export default function LoginForm({
                             }}
                         />
                         {emailError && (
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    color: colors.error,
-                                    marginTop: 6,
-                                }}
-                            >
+                            <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>
                                 {emailError}
                             </Text>
                         )}
@@ -401,17 +356,10 @@ export default function LoginForm({
                                 Password
                             </Text>
                             <TouchableOpacity
-                                onPress={() =>
-                                    setShowPassword(!showPassword)
-                                }
+                                onPress={() => setShowPassword(!showPassword)}
                                 disabled={isLoading}
                             >
-                                <Text
-                                    style={{
-                                        fontSize: 12,
-                                        color: colors.primary,
-                                    }}
-                                >
+                                <Text style={{ fontSize: 12, color: colors.primary }}>
                                     {showPassword ? 'Hide' : 'Show'}
                                 </Text>
                             </TouchableOpacity>
@@ -425,8 +373,7 @@ export default function LoginForm({
                             editable={!isLoading && !emailCheck.isChecking}
                             style={{
                                 borderWidth: 1,
-                                borderColor:
-                                    passwordError ? colors.error : colors.border,
+                                borderColor: passwordError ? colors.error : colors.border,
                                 borderRadius: 8,
                                 paddingHorizontal: 12,
                                 paddingVertical: 12,
@@ -436,13 +383,7 @@ export default function LoginForm({
                             }}
                         />
                         {passwordError && (
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    color: colors.error,
-                                    marginTop: 6,
-                                }}
-                            >
+                            <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>
                                 {passwordError}
                             </Text>
                         )}
@@ -455,9 +396,7 @@ export default function LoginForm({
                         activeOpacity={0.8}
                         style={{
                             height: 44,
-                            backgroundColor: canSubmit
-                                ? colors.primary
-                                : colors.primary + '50',
+                            backgroundColor: canSubmit ? colors.primary : colors.primary + '50',
                             borderRadius: 8,
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -466,16 +405,8 @@ export default function LoginForm({
                             marginBottom: 16,
                         }}
                     >
-                        {isLoading ? (
-                            <ActivityIndicator size={20} color="white" />
-                        ) : null}
-                        <Text
-                            style={{
-                                fontSize: 16,
-                                fontWeight: '600',
-                                color: 'white',
-                            }}
-                        >
+                        {isLoading ? <ActivityIndicator size={20} color="white" /> : null}
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: 'white' }}>
                             {isLoading ? 'Signing in...' : 'Sign In'}
                         </Text>
                     </TouchableOpacity>
@@ -489,29 +420,13 @@ export default function LoginForm({
                             marginBottom: 24,
                         }}
                     >
-                        <TouchableOpacity
-                            onPress={onSwitchToForgotPassword}
-                            disabled={isLoading}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    color: colors.primary,
-                                }}
-                            >
+                        <TouchableOpacity onPress={onSwitchToForgotPassword} disabled={isLoading}>
+                            <Text style={{ fontSize: 14, color: colors.primary }}>
                                 Forgot password?
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={onSwitchToSignup}
-                            disabled={isLoading}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    color: colors.primary,
-                                }}
-                            >
+                        <TouchableOpacity onPress={onSwitchToSignup} disabled={isLoading}>
+                            <Text style={{ fontSize: 14, color: colors.primary }}>
                                 Create account
                             </Text>
                         </TouchableOpacity>

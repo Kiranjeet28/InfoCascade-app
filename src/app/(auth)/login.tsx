@@ -12,18 +12,19 @@ export default function LoginScreen() {
     const { colors, isDark } = useThemeColors();
     const auth = useAuth();
 
-    // Navigate to home when authenticated
     useEffect(() => {
-        console.log('[LoginScreen] Auth state:', { isAuthenticated: auth.isAuthenticated, user: auth.user?.email });
-
         if (auth.isAuthenticated && auth.user) {
-            console.log('[LoginScreen] Redirecting to home...');
-            setTimeout(async () => {
-                console.log('[LoginScreen] Calling router.replace to /(app)/home');
-                router.replace('/(app)/home');
-            }, 500);
+            router.replace('/(app)/home');
         }
-    }, [auth.isAuthenticated, auth.user]);
+    }, [auth.isAuthenticated, auth.user, router]);
+
+    // If already authenticated, render nothing at all.
+    // This prevents LoginForm (and its useAuthEmailExists hook) from
+    // mounting and reacting to cached formData while the navigation
+    // transition is in progress — which is what caused the border blink.
+    if (auth.isAuthenticated) {
+        return null;
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.bg, overflow: 'hidden' }}>
@@ -31,16 +32,8 @@ export default function LoginScreen() {
             <BgBlobs />
 
             <LoginForm
-                onLoginSuccess={async () => {
-                    try {
-                        console.log('[LoginForm Callback] onLoginSuccess called');
-                        console.log('[LoginForm Callback] Navigating to home directly');
-                        // Skip permission requests during navigation - they'll be requested in home screen if needed
-                        // Just navigate immediately
-                        router.replace('/(app)/home');
-                    } catch (err) {
-                        console.error('[LoginForm Callback] Navigation error:', err);
-                    }
+                onLoginSuccess={() => {
+                    router.replace('/(app)/home');
                 }}
                 onSwitchToSignup={() => {
                     router.push('/(auth)/register');

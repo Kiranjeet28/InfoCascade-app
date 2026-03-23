@@ -82,7 +82,7 @@ export function resolveApiBase(): string {
     // Priority 4: Platform-specific defaults for local development
     if (Platform.OS === 'android') {
         console.log('[API] Using Android fallback: 10.0.2.2:5000');
-        return 'http://10.0.2.2:5000';
+        return 'https://infocascade-backend.onrender.com';
     }
     if (Platform.OS === 'ios') {
         console.log('[API] Using iOS fallback: localhost:5000');
