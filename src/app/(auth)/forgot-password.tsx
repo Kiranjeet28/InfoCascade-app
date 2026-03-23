@@ -10,8 +10,9 @@ import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
 import InputField from '../../components/ui/input-field';
 import { useThemeColors } from '../../context/theme-context';
-import { isValidGNDECEmail, resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
+import { resendOTP, sendOTP, verifyOTP } from '../../services/otp-service';
 import { postJson, resolveApiBase } from '../../utils/api';
+import { getPasswordError, isPasswordStrong, isValidGmail } from '../../utils/validators';
 
 // ─── Step Dot ─────────────────────────────────────────────────────────────────
 function StepDot({ num, active, done }: { num: number; active: boolean; done: boolean }) {
@@ -68,9 +69,8 @@ export default function ForgotPasswordScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
 
-    // Steps: 0 = Enter identifier + email, 1 = Verify OTP, 2 = Set new password
+    // Steps: 0 = Email, 1 = Verify OTP, 2 = Set new password
     const [step, setStep] = useState(0);
-    const [identifier, setIdentifier] = useState(''); // URN / CRN / email
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -78,6 +78,8 @@ export default function ForgotPasswordScreen() {
     const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [msg, setMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+    const [emailError, setEmailError] = useState('');
+    const emailInputRef = useRef<TextInput>(null);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(30)).current;
@@ -88,6 +90,13 @@ export default function ForgotPasswordScreen() {
             Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
         ]).start();
     }, []);
+
+    // Auto-focus email input on mount
+    useEffect(() => {
+        if (step === 0) {
+            setTimeout(() => emailInputRef.current?.focus(), 300);
+        }
+    }, [step]);
 
     // Countdown for OTP resend
     useEffect(() => {
@@ -102,16 +111,23 @@ export default function ForgotPasswordScreen() {
         setTimeout(() => setMsg(null), 3500);
     }, []);
 
-    // ── Step 0 → Send OTP ───────────────────────────────────────────────────
+    const handleEmailChange = (text: string) => {
+        setEmail(text);
+        if (emailError) setEmailError('');
+    };
+
+    // ── Step 0 → Send OTP (Email only) ───────────────────────────────────────
     const handleSendOTP = async () => {
-        if (!identifier.trim()) {
-            showMessage('Enter your URN, CRN, or email', 'error');
+        if (!email.trim()) {
+            setEmailError('Gmail address is required');
             return;
         }
-        if (!isValidGNDECEmail(email)) {
-            showMessage('Enter a valid Gmail address (@gmail.com)', 'error');
+
+        if (!isValidGmail(email)) {
+            setEmailError('Please enter a valid Gmail address (@gmail.com)');
             return;
         }
+
         setLoading(true);
         const result = await sendOTP(email);
         setLoading(false);
@@ -158,18 +174,26 @@ export default function ForgotPasswordScreen() {
 
     // ── Step 2 → Reset password ─────────────────────────────────────────────
     const handleResetPassword = async () => {
-        if (newPassword.length < 6) {
-            showMessage('Password must be at least 6 characters', 'error');
+        const passwordErr = getPasswordError(newPassword);
+        if (passwordErr) {
+            showMessage(passwordErr, 'error');
             return;
         }
+
         if (newPassword !== confirmPassword) {
             showMessage('Passwords do not match', 'error');
             return;
         }
+
+        if (!isPasswordStrong(newPassword)) {
+            showMessage('Password must have uppercase, lowercase, numbers and special characters', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await postJson('/api/students/forgetpassword', {
-                identifier: identifier.trim(),
+                identifier: email.trim(),
                 newPassword,
             }, 12000);
             const data = await res.json().catch(() => ({}));
@@ -248,36 +272,52 @@ export default function ForgotPasswordScreen() {
                         ))}
                     </View>
 
-                    {/* ── Step 0: Identifier + Email ──────────────────────────────── */}
+                    {/* ── Step 0: Email Only ──────────────────────────────────────── */}
                     {step === 0 && (
                         <View style={card}>
                             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
-                                Identify Yourself
+                                Reset Password
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
-                                Enter your URN, CRN, or email and your Gmail for OTP
+                                Enter your Gmail address to receive OTP
                             </Text>
 
-                            <InputField
-                                label="URN / CRN / Email"
-                                value={identifier}
-                                onChangeText={setIdentifier}
-                                placeholder="e.g. 12345678 or yourname@gmail.com"
-                                icon="school"
-                            />
-                            <InputField
-                                label="Gmail Address (for OTP)"
-                                value={email}
-                                onChangeText={setEmail}
-                                placeholder="yourname@gmail.com"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
+                            <View style={{ marginBottom: 16 }}>
+                                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
+                                    Gmail Address
+                                </Text>
+                                <TextInput
+                                    ref={emailInputRef}
+                                    placeholder="yourname@gmail.com"
+                                    placeholderTextColor={colors.textMuted}
+                                    value={email}
+                                    onChangeText={handleEmailChange}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    editable={!loading}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: emailError ? colors.error : colors.border,
+                                        borderRadius: 8,
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 12,
+                                        fontSize: 14,
+                                        color: colors.textPrimary,
+                                        backgroundColor: colors.surface,
+                                    }}
+                                />
+                                {emailError && (
+                                    <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>
+                                        {emailError}
+                                    </Text>
+                                )}
+                            </View>
 
                             <TouchableOpacity
-                                style={[btn, (!identifier.trim() || !isValidGNDECEmail(email) || loading) && btnDisabled]}
+                                style={[btn, (!email.trim() || !isValidGmail(email) || loading) && btnDisabled]}
                                 onPress={handleSendOTP}
-                                disabled={!identifier.trim() || !isValidGNDECEmail(email) || loading}
+                                disabled={!email.trim() || !isValidGmail(email) || loading}
                             >
                                 {loading ? <ActivityIndicator color="#fff" /> : (
                                     <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Send OTP</Text>
@@ -334,17 +374,70 @@ export default function ForgotPasswordScreen() {
                                 Set New Password
                             </Text>
                             <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 16 }}>
-                                Choose a strong password (min 6 characters)
+                                Create a strong password with all character types
                             </Text>
 
                             <InputField
                                 label="New Password"
                                 value={newPassword}
                                 onChangeText={setNewPassword}
-                                placeholder="Min 6 characters"
+                                placeholder="Min 8 chars: uppercase, lowercase, numbers, special chars"
                                 icon={{ family: 'MaterialCommunityIcons', name: 'lock' }}
                                 secureTextEntry
                             />
+
+                            {/* Password Strength Indicator */}
+                            {newPassword && (
+                                <View style={{ marginBottom: 16, padding: 12, backgroundColor: colors.surface + '50', borderRadius: 10 }}>
+                                    {/* Dynamic password requirements based on entered password */}
+                                    {(() => {
+                                        const checks = {
+                                            hasAlphabet: /[a-zA-Z]/.test(newPassword),
+                                            hasNumber: /[0-9]/.test(newPassword),
+                                            hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword),
+                                            isLongEnough: newPassword.length >= 8,
+                                        };
+                                        return (
+                                            <View style={{ gap: 8 }}>
+                                                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary }}>Password Requirements:</Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontSize: 14, color: checks.isLongEnough ? colors.accent : colors.textMuted }}>
+                                                        {checks.isLongEnough ? '✓' : '✗'}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: checks.isLongEnough ? colors.accent : colors.textMuted }}>
+                                                        Minimum 8 characters
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontSize: 14, color: checks.hasAlphabet ? colors.accent : colors.textMuted }}>
+                                                        {checks.hasAlphabet ? '✓' : '✗'}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: checks.hasAlphabet ? colors.accent : colors.textMuted }}>
+                                                        Uppercase and lowercase letters
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontSize: 14, color: checks.hasNumber ? colors.accent : colors.textMuted }}>
+                                                        {checks.hasNumber ? '✓' : '✗'}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: checks.hasNumber ? colors.accent : colors.textMuted }}>
+                                                        At least one number
+                                                    </Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                    <Text style={{ fontSize: 14, color: checks.hasSpecialChar ? colors.accent : colors.textMuted }}>
+                                                        {checks.hasSpecialChar ? '✓' : '✗'}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: checks.hasSpecialChar ? colors.accent : colors.textMuted }}>
+                                                        Special character (!@#$%^&*)
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        );
+                                    })()}
+                                </View>
+                            )}
+
                             <InputField
                                 label="Confirm Password"
                                 value={confirmPassword}
@@ -362,9 +455,9 @@ export default function ForgotPasswordScreen() {
                                     <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>Back</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[btn, { flex: 1 }, (loading || newPassword.length < 6 || newPassword !== confirmPassword) && btnDisabled]}
+                                    style={[btn, { flex: 1 }, (loading || newPassword.length < 8 || newPassword !== confirmPassword) && btnDisabled]}
                                     onPress={handleResetPassword}
-                                    disabled={loading || newPassword.length < 6 || newPassword !== confirmPassword}
+                                    disabled={loading || newPassword.length < 8 || newPassword !== confirmPassword}
                                 >
                                     {loading ? <ActivityIndicator color="#fff" /> : (
                                         <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Reset Password</Text>

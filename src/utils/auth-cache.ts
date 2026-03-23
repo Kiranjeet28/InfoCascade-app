@@ -41,8 +41,9 @@ export async function clearSession(): Promise<void> {
 
 // ─── New JWT-based authentication (for email/password login) ──────────────────
 
-const JWT_TOKEN_KEY = 'auth_jwt_token';
-const JWT_USER_KEY = 'auth_jwt_user';
+// Must match auth-context.tsx (email/password login) so getJwtToken() sees tokens after sign-in
+const JWT_TOKEN_KEY = 'auth_token';
+const JWT_USER_KEY = 'auth_user';
 const JWT_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export interface JwtUser {
@@ -88,7 +89,15 @@ export async function hasValidJwtToken(ttlMs = JWT_TOKEN_TTL_MS): Promise<boolea
  */
 export async function getJwtToken(): Promise<string | null> {
     try {
-        return await AsyncStorage.getItem(JWT_TOKEN_KEY);
+        let token = await AsyncStorage.getItem(JWT_TOKEN_KEY);
+        if (!token) {
+            token = await AsyncStorage.getItem('auth_jwt_token');
+            if (token) {
+                await AsyncStorage.setItem(JWT_TOKEN_KEY, token);
+                await AsyncStorage.removeItem('auth_jwt_token');
+            }
+        }
+        return token;
     } catch {
         return null;
     }
@@ -99,7 +108,14 @@ export async function getJwtToken(): Promise<string | null> {
  */
 export async function getJwtUser(): Promise<JwtUser | null> {
     try {
-        const raw = await AsyncStorage.getItem(JWT_USER_KEY);
+        let raw = await AsyncStorage.getItem(JWT_USER_KEY);
+        if (!raw) {
+            raw = await AsyncStorage.getItem('auth_jwt_user');
+            if (raw) {
+                await AsyncStorage.setItem(JWT_USER_KEY, raw);
+                await AsyncStorage.removeItem('auth_jwt_user');
+            }
+        }
         if (!raw) return null;
         const parsed = JSON.parse(raw) as StoredJwtAuth;
         return parsed.user;
@@ -116,6 +132,8 @@ export async function clearJwtAuth(): Promise<void> {
         await Promise.all([
             AsyncStorage.removeItem(JWT_TOKEN_KEY),
             AsyncStorage.removeItem(JWT_USER_KEY),
+            AsyncStorage.removeItem('auth_jwt_token'),
+            AsyncStorage.removeItem('auth_jwt_user'),
         ]);
     } catch {
         // Ignore errors

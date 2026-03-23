@@ -136,6 +136,13 @@ export default function RegisterScreen() {
             setUrnStatus('idle');
             return;
         }
+        // Validate URN format first: must be exactly 7 digits
+        if (!/^\d{7}$/.test(urn.trim())) {
+            setUrnStatus('error');
+            setUrnMsg('URN must be exactly 7 digits');
+            return;
+        }
+        // Format is valid, check availability
         checkAvailabilityDebounced('urn', urn, (result: any) => {
             setUrnStatus(result.status);
             setUrnMsg(result.message || '');
@@ -148,6 +155,13 @@ export default function RegisterScreen() {
             setCrnStatus('idle');
             return;
         }
+        // Validate CRN format first: must be exactly 7 digits
+        if (!/^\d{7}$/.test(crn.trim())) {
+            setCrnStatus('error');
+            setCrnMsg('CRN must be exactly 7 digits');
+            return;
+        }
+        // Format is valid, check availability
         checkAvailabilityDebounced('crn', crn, (result: any) => {
             setCrnStatus(result.status);
             setCrnMsg(result.message || '');
@@ -582,7 +596,7 @@ export default function RegisterScreen() {
                             </Text>
 
                             <InputField label="Full Name" value={name} onChangeText={setName} placeholder="Your full name" icon={{ family: 'MaterialCommunityIcons', name: 'account' }} autoCapitalize="words" />
-                            <InputField label="URN (University Roll)" value={urn} onChangeText={setUrn} placeholder="e.g. 12345678" icon={{ family: 'MaterialCommunityIcons', name: 'identifier' }} keyboardType="numeric" />
+                            <InputField label="URN (University Roll) - 7 digits only" value={urn} onChangeText={(text) => setUrn(text.replace(/[^0-9]/g, '').slice(0, 7))} placeholder="e.g. 1234567" icon={{ family: 'MaterialCommunityIcons', name: 'identifier' }} keyboardType="numeric" />
 
                             {/* URN Availability Status */}
                             {urn.trim() && (
@@ -611,7 +625,7 @@ export default function RegisterScreen() {
                                 </View>
                             )}
 
-                            <InputField label="CRN (Class Roll)" value={crn} onChangeText={setCrn} placeholder="e.g. 1234" icon={{ family: 'MaterialCommunityIcons', name: 'note-outline' }} keyboardType="numeric" />
+                            <InputField label="CRN (Class Roll) - 7 digits only" value={crn} onChangeText={(text) => setCrn(text.replace(/[^0-9]/g, '').slice(0, 7))} placeholder="e.g. 1234567" icon={{ family: 'MaterialCommunityIcons', name: 'note-outline' }} keyboardType="numeric" />
 
                             {/* CRN Availability Status */}
                             {crn.trim() && (

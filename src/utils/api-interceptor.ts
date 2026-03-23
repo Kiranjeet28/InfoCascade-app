@@ -7,16 +7,26 @@ import { getJwtToken } from './auth-cache';
  * Call this function before making API requests
  */
 export async function setupAuthHeaders(): Promise<HeadersInit> {
-    const token = await getJwtToken();
-    const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-    };
+    try {
+        const token = await getJwtToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+        };
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log('[API] Auth header set with token');
+        } else {
+            console.log('[API] No token available, proceeding without auth header');
+        }
+
+        return headers;
+    } catch (error) {
+        console.error('[API] Error setting up auth headers:', error);
+        return {
+            'Content-Type': 'application/json',
+        };
     }
-
-    return headers;
 }
 
 /**
@@ -27,17 +37,33 @@ export async function fetchWithAuth(
     init: RequestInit = {},
     timeoutMs = 10000
 ): Promise<Response> {
-    const authHeaders = await setupAuthHeaders();
-    const mergedHeaders = { ...authHeaders, ...init.headers };
+    try {
+        const authHeaders = await setupAuthHeaders();
+        const mergedHeaders = { ...authHeaders, ...init.headers };
 
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            console.warn('[API] Request timeout after', timeoutMs, 'ms');
+        }, timeoutMs);
 
-    return fetch(input, {
-        ...init,
-        headers: mergedHeaders,
-        signal: controller.signal,
-    }).finally(() => clearTimeout(id));
+        try {
+            const response = await fetch(input, {
+                ...init,
+                headers: mergedHeaders,
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            console.error('[API] Fetch error:', fetchError);
+            throw fetchError;
+        }
+    } catch (error) {
+        console.error('[API] Error in fetchWithAuth:', error);
+        throw error;
+    }
 }
 
 /**

@@ -2,17 +2,18 @@
 // Handles OTP send & verify via backend endpoints
 // Backend generates, stores (Redis) and verifies OTPs — frontend never sees the code
 
-import { fetchWithTimeout, resolveApiBase } from '../utils/api';
+import { fetchWithTimeout, resolveApiBaseAsync } from '../utils/api';
+import { isValidGmail } from '../utils/validators';
 
-// Derive API base at runtime (keeps behavior consistent with other helpers)
-const API_URL = resolveApiBase();
+async function getOtpApiBase(): Promise<string> {
+    return (await resolveApiBaseAsync()).replace(/\/$/, '');
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Validate Gmail email format
+// Validate Gmail email format (delegates to validators utility)
 export function isValidGNDECEmail(email: string): boolean {
-    const emailLower = email.toLowerCase().trim();
-    return emailLower.endsWith('@gmail.com');
+    return isValidGmail(email);
 }
 
 // ─── Send OTP (POST /api/otp/send) ───────────────────────────────────────────
@@ -23,14 +24,15 @@ export async function sendOTP(email: string): Promise<{ success: boolean; messag
     }
 
     const emailKey = email.toLowerCase().trim();
-    console.debug('[OTP] API_URL:', API_URL);
+    const base = await getOtpApiBase();
+    console.debug('[OTP] API base:', base);
 
     const TIMEOUT_MS = 8000; // Reduced from 15s to 8s
     const MAX_RETRIES = 1;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
-            const res = await fetchWithTimeout(`${API_URL}/api/otp/send`, {
+            const res = await fetchWithTimeout(`${base}/api/otp/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: emailKey }),
@@ -70,7 +72,8 @@ export async function verifyOTP(email: string, otp: string): Promise<{ success: 
     }
 
     try {
-        const res = await fetchWithTimeout(`${API_URL}/api/otp/verify`, {
+        const base = await getOtpApiBase();
+        const res = await fetchWithTimeout(`${base}/api/otp/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: emailKey, otp: otpTrimmed }),
@@ -102,7 +105,8 @@ export async function resendOTP(email: string): Promise<{ success: boolean; mess
     const emailKey = email.toLowerCase().trim();
 
     try {
-        const res = await fetchWithTimeout(`${API_URL}/api/otp/resend`, {
+        const base = await getOtpApiBase();
+        const res = await fetchWithTimeout(`${base}/api/otp/resend`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: emailKey }),

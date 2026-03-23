@@ -3,7 +3,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import LoginForm from '../../components/auth/login-form';
-import OTPVerification from '../../components/auth/otp-verification';
 import BgBlobs from '../../components/layout/bg-blobs';
 import { useAuth } from '../../context/auth-context';
 import { useThemeColors } from '../../context/theme-context';
@@ -17,14 +16,10 @@ export default function LoginScreen() {
     // Navigate to home when authenticated
     useEffect(() => {
         if (auth.isAuthenticated && auth.user) {
-            // Request permissions after a short delay
             setTimeout(async () => {
-                // Register service worker on web if available
                 if (Platform.OS === 'web' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
                     try {
-                        await (navigator as any).serviceWorker.register('/service-worker.js').catch(() => {
-                            // Service worker registration failed, continue anyway
-                        });
+                        await (navigator as any).serviceWorker.register('/service-worker.js').catch(() => { });
                     } catch (e) {
                         console.warn('Service worker registration skipped:', e);
                     }
@@ -40,28 +35,15 @@ export default function LoginScreen() {
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <BgBlobs />
 
-            {auth.page === 1 ? (
-                <LoginForm
-                    onLoginSuccess={() => {
-                        // Auth state will handle navigation
-                    }}
-                    onSwitchToSignup={() => {
-                        router.push('/(auth)/register');
-                    }}
-                    onSwitchToForgotPassword={() => {
-                        router.push('/(auth)/forgot-password');
-                    }}
-                />
-            ) : (
-                <OTPVerification
-                    onVerifySuccess={() => {
-                        // Auth state will handle navigation
-                    }}
-                    onBackToLogin={() => {
-                        // Keep on login page but show login form
-                    }}
-                />
-            )}
+            <LoginForm
+                onLoginSuccess={() => { }}
+                onSwitchToSignup={() => {
+                    router.push('/(auth)/register');
+                }}
+                onSwitchToForgotPassword={() => {
+                    router.push('/(auth)/forgot-password');
+                }}
+            />
         </View>
     );
 }

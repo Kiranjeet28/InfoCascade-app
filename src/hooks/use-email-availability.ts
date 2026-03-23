@@ -9,9 +9,11 @@ export interface UseEmailCheckResult {
 }
 
 /**
- * Custom hook for checking email availability with debouncing
- * Reusable across signup, login, and other forms
- * 
+ * Student registration: checks `/api/students/check-availability` (email free vs taken).
+ * Used by the register flow and other student URN/CRN checks — not for email/password login.
+ *
+ * For the login screen, use `useAuthEmailExists` instead (`/api/auth/check-email`).
+ *
  * @param email - Email to check
  * @param debounceMs - Debounce delay in milliseconds (default: 300ms)
  * @returns Object with status, message, and isChecking flag

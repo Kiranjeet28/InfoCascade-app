@@ -1,4 +1,5 @@
-import { fetchJson, postJson } from '@/utils/api';
+import { fetchJson, fetchJsonAsync, postJsonAsync } from '@/utils/api';
+import { mapApiErrorCode } from '@/utils/validators';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ export interface LoginResponse {
     user?: AuthUser;
     page?: number;
     attemptsRemaining?: number;
+    maxAttempts?: number;
     failedAttempts?: number;
     warning?: string;
     requireOTP?: boolean;
@@ -64,6 +66,11 @@ export interface EmailCheckResponse {
     message?: string;
 }
 
+/** Trim + lowercase so send-OTP and verify-OTP hit the same key the server uses. */
+export function normalizeAuthEmail(email: string): string {
+    return email.trim().toLowerCase();
+}
+
 // ─── API Endpoints ────────────────────────────────────────────────────────────
 
 /**
@@ -71,7 +78,7 @@ export interface EmailCheckResponse {
  */
 export async function signup(req: SignupRequest): Promise<SignupResponse> {
     try {
-        const res = await postJson('/api/auth/signup', req, 12000);
+        const res = await postJsonAsync('/api/auth/signup', req, 12000);
         const data = await res.json();
 
         if (!res.ok) {
@@ -85,30 +92,106 @@ export async function signup(req: SignupRequest): Promise<SignupResponse> {
     }
 }
 
+function isAuthCheckEmailRouteMissing(res: Response, body: Record<string, unknown>): boolean {
+    if (res.status !== 404) return false;
+    const code = String(body?.code ?? '');
+    const msg = String(body?.message ?? '').toLowerCase();
+    return code === 'ROUTE_NOT_FOUND' || msg.includes('route not found');
+}
+
 /**
- * Check if an email exists in the database
- * Call this before attempting login to verify the email is registered
+ * When `/api/auth/check-email` is not deployed, use the same student availability
+ * endpoint as registration (GN email rules apply).
  */
-export async function checkEmailExists(email: string): Promise<EmailCheckResponse> {
-    try {
-        const res = await fetchJson(`/api/auth/check-email/${encodeURIComponent(email)}`, {}, 10000);
-        const data = await res.json();
+async function checkEmailExistsStudentsFallback(trimmed: string): Promise<EmailCheckResponse> {
+    const path = `/api/students/check-availability?type=email&value=${encodeURIComponent(trimmed)}`;
+    const res = await fetchJsonAsync(path, {}, 10000);
+    const data = (await res.json().catch(() => ({}))) as {
+        available?: boolean;
+        reason?: string;
+        message?: string;
+    };
 
-        console.log('[Auth] Check email response:', { status: res.status, exists: data.exists });
+    console.log('[Auth] Check email (students fallback) response:', { status: res.status, data });
 
-        if (!res.ok) {
+    if (!res.ok) {
+        return {
+            success: false,
+            exists: false,
+            message: data.message || 'Failed to check email',
+        };
+    }
+
+    if (data.available === true) {
+        return {
+            success: true,
+            exists: false,
+            message: 'No account for this email. Create one first.',
+        };
+    }
+
+    if (data.available === false) {
+        const reason = (data.reason || data.message || '').trim();
+        if (
+            reason &&
+            /must be|valid.*@|invalid|format|gmail/i.test(reason) &&
+            !/already|registered|taken/i.test(reason)
+        ) {
             return {
                 success: false,
                 exists: false,
-                message: data.message || 'Failed to check email',
+                message: reason,
             };
         }
+        return {
+            success: true,
+            exists: true,
+            message: 'Account found. Enter your password.',
+        };
+    }
 
-        return data as EmailCheckResponse;
+    return {
+        success: false,
+        exists: false,
+        message: 'Unable to verify email.',
+    };
+}
+
+/**
+ * Check if an email exists for login. Prefers `/api/auth/check-email/:email` when the
+ * backend implements it; otherwise falls back to `/api/students/check-availability`
+ * (avoids "Route not found" on servers that only expose the student API).
+ */
+export async function checkEmailExists(email: string): Promise<EmailCheckResponse> {
+    const trimmed = normalizeAuthEmail(email);
+    try {
+        const res = await fetchJsonAsync(
+            `/api/auth/check-email/${encodeURIComponent(trimmed)}`,
+            {},
+            10000
+        );
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+
+        console.log('[Auth] Check email response:', { status: res.status, exists: data.exists });
+
+        if (res.ok) {
+            return data as EmailCheckResponse;
+        }
+
+        if (isAuthCheckEmailRouteMissing(res, data)) {
+            console.warn('[Auth] /api/auth/check-email not available, using students check-availability');
+            return checkEmailExistsStudentsFallback(trimmed);
+        }
+
+        return {
+            success: false,
+            exists: false,
+            message: (data.message as string) || 'Failed to check email',
+        };
     } catch (err) {
         console.error('[Auth] Check email error:', {
             error: err instanceof Error ? err.message : String(err),
-            email,
+            email: trimmed,
         });
         return {
             success: false,
@@ -127,7 +210,7 @@ export async function checkEmailExists(email: string): Promise<EmailCheckRespons
  */
 export async function login(email: string, password: string): Promise<LoginResponse> {
     try {
-        const res = await postJson('/api/auth/login', { email, password }, 12000);
+        const res = await postJsonAsync('/api/auth/login', { email, password }, 12000);
         const data = await res.json();
 
         console.log('[Auth] Login response:', { status: res.status, success: data.success, code: data.code });
@@ -181,7 +264,11 @@ export async function login(email: string, password: string): Promise<LoginRespo
  */
 export async function checkOtpRequirement(email: string): Promise<{ requireOTP: boolean; page: 1 | 2 }> {
     try {
-        const res = await fetchJson(`/api/auth/check-otp-requirement/${encodeURIComponent(email)}`, {}, 10000);
+        const res = await fetchJsonAsync(
+            `/api/auth/check-otp-requirement/${encodeURIComponent(normalizeAuthEmail(email))}`,
+            {},
+            10000
+        );
         const data = await res.json();
 
         if (res.ok) {
@@ -205,8 +292,9 @@ export async function checkOtpRequirement(email: string): Promise<{ requireOTP: 
  */
 export async function sendOtp(email: string): Promise<OTPSendResponse> {
     try {
-        console.log('[Auth] Sending OTP to:', email);
-        const res = await postJson('/api/otp/send', { email }, 10000);
+        const emailNorm = normalizeAuthEmail(email);
+        console.log('[Auth] Sending OTP to:', emailNorm);
+        const res = await postJsonAsync('/api/otp/send', { email: emailNorm }, 10000);
         const data = await res.json();
 
         console.log('[Auth] Send OTP response:', { status: res.status, success: data.success });
@@ -227,21 +315,67 @@ export async function sendOtp(email: string): Promise<OTPSendResponse> {
 
 /**
  * Verify OTP code for login
- * Called on Page 2 when user submits the 6-digit code
+ * Called on Page 2 when user submits the 6-digit code.
+ * Returns structured failures (401/400) instead of throwing so callers can read `code`
+ * (many backends send USER_NOT_FOUND or INVALID_OTP on the same status).
  */
 export async function verifyOtp(email: string, otp: string): Promise<OTPVerifyResponse> {
     try {
-        console.log('[Auth] Verifying OTP for:', email);
-        const res = await postJson('/api/auth/login-otp', { email, otp }, 12000);
-        const data = await res.json();
+        const emailNorm = normalizeAuthEmail(email);
+        const otpDigits = String(otp).replace(/\D/g, '').slice(0, 6);
+        console.log('[Auth] Verifying OTP for:', emailNorm);
+        const res = await postJsonAsync(
+            '/api/auth/login-otp',
+            { email: emailNorm, otp: otpDigits },
+            12000
+        );
+        const data = (await res.json().catch(() => ({}))) as Record<string, any>;
 
-        console.log('[Auth] Verify OTP response:', { status: res.status, success: data.success });
+        console.log('[Auth] Verify OTP response:', {
+            status: res.status,
+            success: data.success,
+            code: data.code,
+        });
 
-        if (!res.ok) {
-            throw new Error(data.message || 'Invalid OTP');
+        if (res.ok && data.success && data.token && data.user) {
+            return {
+                success: true,
+                code: data.code || 'OTP_SUCCESS',
+                token: data.token,
+                user: data.user,
+                page: data.page,
+            };
         }
 
-        return data as OTPVerifyResponse;
+        if (res.ok && !data.success) {
+            return {
+                success: false,
+                code: data.code || 'INVALID_OTP',
+                message: data.message,
+            };
+        }
+
+        if (res.status === 401 || res.status === 400) {
+            return {
+                success: false,
+                code: data.code || 'INVALID_OTP',
+                message: data.message,
+            };
+        }
+
+        if (res.status === 404) {
+            return {
+                success: false,
+                code: data.code || 'ROUTE_NOT_FOUND',
+                message: data.message || 'Verification service unavailable.',
+            };
+        }
+
+        return {
+            success: false,
+            code: data.code || 'VERIFY_FAILED',
+            message: data.message || 'Verification failed.',
+        };
     } catch (err) {
         console.error('Verify OTP error:', err);
         throw err;
@@ -275,7 +409,7 @@ export async function verifyToken(token: string): Promise<TokenVerifyResponse> {
  */
 export async function logout(email: string): Promise<{ success: boolean; message: string }> {
     try {
-        const res = await postJson('/api/auth/logout', { email }, 10000);
+        const res = await postJsonAsync('/api/auth/logout', { email: normalizeAuthEmail(email) }, 10000);
         const data = await res.json();
 
         if (!res.ok) {
@@ -292,6 +426,11 @@ export async function logout(email: string): Promise<{ success: boolean; message
 // ─── Error Mapping ────────────────────────────────────────────────────────────
 
 export function mapErrorToUserMessage(error: unknown, defaultMessage: string = 'An error occurred'): string {
+    if (typeof error === 'string' && error.trim()) {
+        const { userMessage, code } = mapApiErrorCode(error.trim());
+        if (code !== 'UNKNOWN_ERROR') return userMessage;
+    }
+
     if (error instanceof Error) {
         const msg = error.message.toLowerCase();
 
@@ -308,5 +447,26 @@ export function mapErrorToUserMessage(error: unknown, defaultMessage: string = '
         return error.message;
     }
 
+    return defaultMessage;
+}
+
+/**
+ * OTP verify / resend: used when the request throws (network, etc.).
+ * API error codes are handled via verifyOtp() return value, not here.
+ */
+export function mapOtpFlowErrorToUserMessage(
+    error: unknown,
+    defaultMessage: string = 'Something went wrong. Please try again.'
+): string {
+    if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('timeout') || msg.includes('abort')) {
+            return 'Request timed out. Check your connection and try again.';
+        }
+        if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+            return 'Network error. Please check your connection.';
+        }
+        if (error.message.length > 0 && error.message.length < 200) return error.message;
+    }
     return defaultMessage;
 }

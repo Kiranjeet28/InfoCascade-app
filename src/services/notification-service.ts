@@ -14,16 +14,21 @@ export interface NotificationPreferencesForService {
 }
 
 // Configure notification behavior (only on native platforms)
-if (Platform.OS !== 'web') {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: true,
-            shouldShowBanner: true,
-            shouldShowList: true,
-        }),
-    });
+try {
+    if (Platform.OS !== 'web') {
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowAlert: true,
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+                shouldShowBanner: true,
+                shouldShowList: true,
+            }),
+        });
+        console.log('[NotificationService] Notification handler configured');
+    }
+} catch (error) {
+    console.warn('[NotificationService] Failed to configure notification handler:', error);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,36 +41,63 @@ export interface ScheduledNotification {
 
 // ─── Permission Handling ──────────────────────────────────────────────────────
 export async function requestNotificationPermissions(): Promise<boolean> {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    try {
+        console.log('[NotificationService] Requesting notification permissions...');
 
-    if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-    }
+        if (Platform.OS === 'web') {
+            console.log('[NotificationService] Skipping notifications on web platform');
+            return false;
+        }
 
-    if (finalStatus !== 'granted') {
-        console.log('Notification permissions not granted');
+        let finalStatus: string;
+
+        try {
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            finalStatus = existingStatus;
+            console.log('[NotificationService] Existing permission status:', existingStatus);
+
+            if (existingStatus !== 'granted') {
+                console.log('[NotificationService] Requesting new permissions...');
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+                console.log('[NotificationService] Permission request result:', status);
+            }
+        } catch (permErr) {
+            console.warn('[NotificationService] Error checking/requesting permissions:', permErr);
+            return false;
+        }
+
+        if (finalStatus !== 'granted') {
+            console.log('[NotificationService] Notification permissions not granted');
+            return false;
+        }
+
+        if (Platform.OS === 'android') {
+            try {
+                await Notifications.setNotificationChannelAsync('class-notifications', {
+                    name: 'Class Notifications',
+                    description: 'Notifications for upcoming classes',
+                    importance: Notifications.AndroidImportance.HIGH,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: '#6C63FF',
+                    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+                    enableVibrate: true,
+                    enableLights: true,
+                    showBadge: true,
+                    bypassDnd: true,
+                });
+                console.log('[NotificationService] Android notification channel created');
+            } catch (channelErr) {
+                console.warn('[NotificationService] Error setting up Android notification channel:', channelErr);
+            }
+        }
+
+        console.log('[NotificationService] Notifications successfully configured');
+        return true;
+    } catch (error) {
+        console.error('[NotificationService] Unexpected error in requestNotificationPermissions:', error);
         return false;
     }
-
-    // Android-specific: Set up notification channel for high priority
-    if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('class-notifications', {
-            name: 'Class Notifications',
-            description: 'Notifications for upcoming classes',
-            importance: Notifications.AndroidImportance.HIGH,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#6C63FF',
-            lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-            enableVibrate: true,
-            enableLights: true,
-            showBadge: true,
-            bypassDnd: true,
-        });
-    }
-
-    return true;
 }
 
 // ─── Helper Functions ─────────────────────────────────────────────────────────

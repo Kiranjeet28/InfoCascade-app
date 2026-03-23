@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { clearJwtAuth } from '../utils/auth-cache';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,44 +20,30 @@ export interface AuthContextType {
     // Login attempt tracking
     attemptsRemaining: number;
     totalAttempts: number;
-    requiresOTP: boolean;
 
-    // UI state
-    page: 1 | 2; // 1: Login, 2: OTP
     error: string;
-
-    // OTP state
-    otpSent: boolean;
-    otpResendCountdown: number;
 
     // Form data
     formData: {
         email: string;
         password: string;
-        otp: string;
     };
 
     // Actions
     setFormData: (data: Partial<AuthContextType['formData']>) => void;
     setEmail: (email: string) => void;
     setPassword: (password: string) => void;
-    setOtp: (otp: string) => void;
     setError: (error: string) => void;
-    setPage: (page: 1 | 2) => void;
     setLoading: (loading: boolean) => void;
-    setOtpSent: (sent: boolean) => void;
-    setOtpResendCountdown: (countdown: number) => void;
 
     // Login attempt tracking
     recordFailedAttempt: (attemptsRemaining: number) => void;
-    recordOTPRequired: () => void;
     resetAttempts: () => void;
 
     // Auth actions
     setAuthData: (user: AuthUser, token: string) => Promise<void>;
     logout: () => Promise<void>;
     clearError: () => void;
-    backToLoginPage: () => void;
 }
 
 // ─── Default Context ──────────────────────────────────────────────────────────
@@ -68,28 +55,18 @@ const defaultContext: AuthContextType = {
     loading: false,
     attemptsRemaining: 3,
     totalAttempts: 0,
-    requiresOTP: false,
-    page: 1,
     error: '',
-    otpSent: false,
-    otpResendCountdown: 0,
-    formData: { email: '', password: '', otp: '' },
+    formData: { email: '', password: '' },
     setFormData: () => { },
     setEmail: () => { },
     setPassword: () => { },
-    setOtp: () => { },
     setError: () => { },
-    setPage: () => { },
     setLoading: () => { },
-    setOtpSent: () => { },
-    setOtpResendCountdown: () => { },
     recordFailedAttempt: () => { },
-    recordOTPRequired: () => { },
     resetAttempts: () => { },
     setAuthData: async () => { },
     logout: async () => { },
     clearError: () => { },
-    backToLoginPage: () => { },
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -115,18 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const [attemptsRemaining, setAttemptsRemaining] = useState(3);
     const [totalAttempts, setTotalAttempts] = useState(0);
-    const [requiresOTP, setRequiresOTP] = useState(false);
 
-    const [page, setPage] = useState<1 | 2>(1);
     const [error, setError] = useState('');
-
-    const [otpSent, setOtpSent] = useState(false);
-    const [otpResendCountdown, setOtpResendCountdown] = useState(0);
 
     const [formData, setFormDataState] = useState({
         email: '',
         password: '',
-        otp: '',
     });
 
     const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -135,18 +106,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         async function checkCachedAuth() {
             try {
-                const storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-                const storedUser = await AsyncStorage.getItem(AUTH_USER_KEY);
+                console.log('[AuthProvider] Checking cached auth...');
+
+                let storedToken = null;
+                let storedUser = null;
+
+                try {
+                    storedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+                } catch (err) {
+                    console.warn('[AuthProvider] Error reading token:', err);
+                }
+
+                try {
+                    storedUser = await AsyncStorage.getItem(AUTH_USER_KEY);
+                } catch (err) {
+                    console.warn('[AuthProvider] Error reading user:', err);
+                }
 
                 if (storedToken && storedUser) {
-                    const parsed = JSON.parse(storedUser) as StoredAuth;
-                    // Note: In production, you'd verify the token here via API
-                    setToken(storedToken);
-                    setUser(parsed.user);
-                    setIsAuthenticated(true);
+                    try {
+                        const parsed = JSON.parse(storedUser) as StoredAuth;
+                        if (parsed?.user?.id && parsed?.user?.email) {
+                            console.log('[AuthProvider] Cached auth valid, restoring session');
+                            setToken(storedToken);
+                            setUser(parsed.user);
+                            setIsAuthenticated(true);
+                        } else {
+                            console.warn('[AuthProvider] Cached auth invalid format, clearing');
+                            await Promise.all([
+                                AsyncStorage.removeItem(AUTH_TOKEN_KEY),
+                                AsyncStorage.removeItem(AUTH_USER_KEY),
+                            ]);
+                        }
+                    } catch (parseErr) {
+                        console.warn('[AuthProvider] Error parsing stored user:', parseErr);
+                        await Promise.all([
+                            AsyncStorage.removeItem(AUTH_TOKEN_KEY),
+                            AsyncStorage.removeItem(AUTH_USER_KEY),
+                        ]).catch(err => console.warn('[AuthProvider] Error clearing corrupted data:', err));
+                    }
                 }
             } catch (err) {
-                console.error('Error checking cached auth:', err);
+                console.error('[AuthProvider] Unexpected error checking cached auth:', err);
             } finally {
                 setInitialCheckDone(true);
             }
@@ -154,17 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         checkCachedAuth();
     }, []);
-
-    // ── Resend countdown timer ─────────────────────────────────────────────
-    useEffect(() => {
-        if (otpResendCountdown <= 0) return;
-
-        const timer = setTimeout(() => {
-            setOtpResendCountdown(otpResendCountdown - 1);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [otpResendCountdown]);
 
     // ── Helper functions ───────────────────────────────────────────────────
 
@@ -174,12 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const setAuthData = async (authUser: AuthUser, authToken: string) => {
         try {
-            // Save to state
             setUser(authUser);
             setToken(authToken);
             setIsAuthenticated(true);
 
-            // Save to AsyncStorage
             const stored: StoredAuth = {
                 token: authToken,
                 user: authUser,
@@ -190,7 +178,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(stored)),
             ]);
 
-            // Reset auth form
             resetAttempts();
             clearError();
         } catch (err) {
@@ -203,15 +190,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsAuthenticated(false);
             setUser(null);
             setToken(null);
-            setFormDataState({ email: '', password: '', otp: '' });
+            setFormDataState({ email: '', password: '' });
             resetAttempts();
-            setPage(1);
             setError('');
 
-            await Promise.all([
-                AsyncStorage.removeItem(AUTH_TOKEN_KEY),
-                AsyncStorage.removeItem(AUTH_USER_KEY),
-            ]);
+            await clearJwtAuth();
         } catch (err) {
             console.error('Error during logout:', err);
         }
@@ -224,31 +207,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAttemptsRemaining(attemptsRemaining);
     };
 
-    const recordOTPRequired = () => {
-        setRequiresOTP(true);
-        setPage(2);
-        setOtpSent(true);
-    };
-
     const resetAttempts = () => {
         setAttemptsRemaining(3);
         setTotalAttempts(0);
-        setRequiresOTP(false);
-        setOtpSent(false);
-        setOtpResendCountdown(0);
-        setPage(1);
-    };
-
-    const backToLoginPage = () => {
-        setPage(1);
-        setOtp('');
-        setError('');
-        setOtpSent(false);
-        // Keep email for retry
-    };
-
-    const setOtp = (otp: string) => {
-        setFormDataState((prev) => ({ ...prev, otp }));
     };
 
     const setEmail = (email: string) => {
@@ -266,32 +227,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         attemptsRemaining,
         totalAttempts,
-        requiresOTP,
-        page,
         error,
-        otpSent,
-        otpResendCountdown,
         formData,
         setFormData,
         setEmail,
         setPassword,
-        setOtp,
         setError,
-        setPage,
         setLoading,
-        setOtpSent,
-        setOtpResendCountdown,
         recordFailedAttempt,
-        recordOTPRequired,
         resetAttempts,
         setAuthData,
         logout,
         clearError,
-        backToLoginPage,
     };
 
     if (!initialCheckDone) {
-        return null; // Or a splash screen
+        return null;
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

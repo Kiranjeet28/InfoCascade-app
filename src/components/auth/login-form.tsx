@@ -12,10 +12,10 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/auth-context';
 import { useThemeColors } from '../../context/theme-context';
+import { useAuthEmailExists } from '../../hooks/use-auth-email-exists';
 import * as authService from '../../services/auth-service';
-import {
-    isPasswordStrong,
-} from '../../utils/validators';
+import { isValidGNDECEmail } from '../../services/otp-service';
+
 
 export interface LoginFormProps {
     onLoginSuccess?: () => void;
@@ -30,7 +30,7 @@ export default function LoginForm({
 }: LoginFormProps) {
     const { colors } = useThemeColors();
     const auth = useAuth();
-    const emailAvailability = useEmailAvailability(auth.formData.email, 300);
+    const emailCheck = useAuthEmailExists(auth.formData.email, 400);
 
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -72,11 +72,27 @@ export default function LoginForm({
     const handleEmailChange = (text: string) => {
         auth.setEmail(text);
         if (emailError) setEmailError('');
+        auth.clearError();
     };
 
     const handlePasswordChange = (text: string) => {
         auth.setPassword(text);
         if (passwordError) setPasswordError('');
+        auth.clearError();
+    };
+
+    /** When student DB says the email exists but auth login fails, avoid "sign up first" vs "account found". */
+    const loginFailureMessage = (err: unknown, fallback: string): string => {
+        let msg = authService.mapErrorToUserMessage(err, fallback);
+        const lower = msg.toLowerCase();
+        const looksLikeMissingUser =
+            lower.includes('user not found') ||
+            lower.includes('user does not exist') ||
+            lower.includes('account not found');
+        if (emailCheck.status === 'taken' && looksLikeMissingUser) {
+            return 'Couldn’t sign in with this email. Check your password, or finish registration if you haven’t set one yet.';
+        }
+        return msg;
     };
 
     const handleLogin = async () => {
@@ -88,39 +104,36 @@ export default function LoginForm({
                 return;
             }
 
-            // Check email availability status from hook
-            if (emailAvailability.status === 'error') {
-                setEmailError(emailAvailability.message || 'Invalid email address');
+            // Auth email check (same backend as /api/auth/login)
+            if (emailCheck.status === 'error') {
+                setEmailError(emailCheck.message || 'Invalid email address');
                 triggerShake();
                 return;
             }
 
-            if (emailAvailability.status === 'taken') {
-                // Email exists in database, continue with login
-            } else if (emailAvailability.status === 'checking') {
-                // Still checking, wait a moment
+            if (emailCheck.status === 'taken') {
+                // Account exists — continue with login
+            } else if (emailCheck.status === 'checking') {
                 setEmailError('Checking email...');
                 triggerShake();
                 return;
-            } else if (emailAvailability.status === 'available') {
-                // Email doesn't exist
+            } else if (emailCheck.status === 'available') {
                 setEmailError('Email not found. Please sign up first.');
                 triggerShake();
                 return;
-            } else if (emailAvailability.status === 'idle') {
-                // Email hasn't been checked yet
+            } else if (emailCheck.status === 'idle') {
                 setEmailError('Please wait while we verify your email...');
                 triggerShake();
                 return;
             }
 
-            // Validate password
-            if (!isPasswordStrong(auth.formData.password)) {
+            if (!auth.formData.password || auth.formData.password.trim().length === 0) {
                 setPasswordError('Password is required');
                 triggerShake();
                 return;
             }
 
+            auth.clearError();
             setIsLoading(true);
             auth.setLoading(true);
 
@@ -131,64 +144,49 @@ export default function LoginForm({
             );
 
             if (result.success && result.token && result.user) {
-                // Login successful
                 auth.setAuthData(result.user, result.token);
                 onLoginSuccess?.();
             } else if (result.code === 'OTP_VERIFICATION_REQUIRED') {
-                // OTP required - send OTP and switch to page 2
-                auth.recordOTPRequired();
-
-                // Send OTP
-                const sendResult = await authService.sendOtp(
-                    auth.formData.email
+                auth.setError(
+                    'Too many sign-in attempts. Wait a bit, then try again or use Forgot password.'
                 );
-                if (sendResult.success) {
-                    auth.setOtpSent(true);
+                triggerShake();
+            } else if (result.code === 'INVALID_PASSWORD') {
+                // Wrong password - show attempts remaining
+                const attemptsRemaining = result.attemptsRemaining || 0;
+                const maxAttempts = result.maxAttempts || 3;
+
+                let errorMsg = 'Invalid password. Please try again.';
+                if (attemptsRemaining > 0) {
+                    errorMsg += ` You have ${attemptsRemaining} attempt(s) remaining.`;
                 }
-            } else if (
-                result.code === 'INVALID_PASSWORD' ||
-                result.code === 'USER_NOT_FOUND'
-            ) {
-                // Wrong credentials or user not found
-                const attempts = result.attemptsRemaining || auth.attemptsRemaining;
-                const error = authService.mapErrorToUserMessage(
-                    result.code,
-                    'Login failed'
-                );
 
-                // Update attempt counter
                 if (result.attemptsRemaining !== undefined) {
                     auth.recordFailedAttempt(result.attemptsRemaining);
                 } else {
                     auth.recordFailedAttempt(auth.attemptsRemaining - 1);
                 }
 
-                // If max attempts reached, route to OTP
-                if (attempts === 0 || auth.attemptsRemaining === 0) {
-                    auth.recordOTPRequired();
-                    // Send OTP
-                    const sendResult = await authService.sendOtp(
-                        auth.formData.email
-                    );
-                    if (sendResult.success) {
-                        auth.setOtpSent(true);
-                    }
-                } else {
-                    // Show error message
-                    auth.setError(error);
-                    triggerShake();
-                }
+                auth.setError(errorMsg);
+                triggerShake();
+            } else if (result.code === 'USER_NOT_FOUND') {
+                const error = emailCheck.status !== 'taken'
+                    ? 'Email not found. Please sign up first.'
+                    : 'Account issue. Please try again or reset password.';
+
+                auth.setError(error);
+                triggerShake();
             } else {
                 // Other error
                 const error = authService.mapErrorToUserMessage(
                     result.code || 'LOGIN_FAILED',
-                    'Login failed'
+                    result.message || 'Login failed'
                 );
                 auth.setError(error);
                 triggerShake();
             }
         } catch (err) {
-            const errorMsg = authService.mapErrorToUserMessage(
+            const errorMsg = loginFailureMessage(
                 err,
                 'Login failed. Please try again.'
             );
@@ -201,11 +199,11 @@ export default function LoginForm({
     };
 
     const canSubmit =
-        auth.formData.email &&
         auth.formData.email.trim().length > 0 &&
-        isPasswordStrong(auth.formData.password) &&
+        auth.formData.password.trim().length > 0 &&
+        isValidGNDECEmail(auth.formData.email) &&
         !isLoading &&
-        emailAvailability.status === 'taken'; // Email must exist (status 'taken' means it exists)
+        emailCheck.status === 'taken';
 
     const attemptsText =
         auth.attemptsRemaining > 0
@@ -244,7 +242,7 @@ export default function LoginForm({
                                 color: colors.textSecondary,
                             }}
                         >
-                            Sign in with your email to continue
+                            Sign in with your Gmail and password
                         </Text>
                     </View>
 
@@ -320,7 +318,7 @@ export default function LoginForm({
                         </Text>
                         <TextInput
                             ref={emailInputRef}
-                            placeholder="Enter your email"
+                            placeholder="yourname@gmail.com"
                             placeholderTextColor={colors.textMuted}
                             value={auth.formData.email}
                             onChangeText={handleEmailChange}
@@ -331,9 +329,9 @@ export default function LoginForm({
                             style={{
                                 borderWidth: 1,
                                 borderColor:
-                                    emailError || emailAvailability.status === 'error' || emailAvailability.status === 'available'
+                                    emailError || emailCheck.status === 'error' || emailCheck.status === 'available'
                                         ? colors.error
-                                        : emailAvailability.status === 'taken'
+                                        : emailCheck.status === 'taken'
                                             ? colors.accent
                                             : colors.border,
                                 borderRadius: 8,
@@ -355,24 +353,24 @@ export default function LoginForm({
                                 {emailError}
                             </Text>
                         )}
-                        {!emailError && emailAvailability.message && (
+                        {!emailError && emailCheck.message && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                {emailAvailability.isChecking && (
+                                {emailCheck.isChecking && (
                                     <ActivityIndicator size={14} color={colors.primary} />
                                 )}
                                 <Text
                                     style={{
                                         fontSize: 12,
                                         color:
-                                            emailAvailability.status === 'taken'
+                                            emailCheck.status === 'taken'
                                                 ? colors.accent
-                                                : emailAvailability.status === 'error'
+                                                : emailCheck.status === 'error'
                                                     ? colors.error
                                                     : colors.textSecondary,
-                                        marginLeft: emailAvailability.isChecking ? 6 : 0,
+                                        marginLeft: emailCheck.isChecking ? 6 : 0,
                                     }}
                                 >
-                                    {emailAvailability.message}
+                                    {emailCheck.message}
                                 </Text>
                             </View>
                         )}
@@ -419,7 +417,7 @@ export default function LoginForm({
                             value={auth.formData.password}
                             onChangeText={handlePasswordChange}
                             secureTextEntry={!showPassword}
-                            editable={!isLoading && !isCheckingEmail}
+                            editable={!isLoading && !emailCheck.isChecking}
                             style={{
                                 borderWidth: 1,
                                 borderColor:

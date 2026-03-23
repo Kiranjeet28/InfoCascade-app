@@ -1,5 +1,18 @@
-// ─── Email Validation ─────────────────────────────────────────────────────────
+// ─── Email Validation (Gmail) ─────────────────────────────────────────────────────────
 
+const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+export function isValidGmail(email: string): boolean {
+    return GMAIL_REGEX.test(email.trim());
+}
+
+export function getGmailError(email: string): string | null {
+    if (!email.trim()) return 'Gmail address is required';
+    if (!isValidGmail(email)) return 'Please enter a valid Gmail address (must end with @gmail.com)';
+    return null;
+}
+
+// Legacy email validation (kept for backwards compatibility)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmail(email: string): boolean {
@@ -9,6 +22,28 @@ export function isValidEmail(email: string): boolean {
 export function getEmailError(email: string): string | null {
     if (!email.trim()) return 'Email is required';
     if (!isValidEmail(email)) return 'Please enter a valid email address';
+    return null;
+}
+
+// ─── URN/CRN Validation ───────────────────────────────────────────────────────
+
+export function isValidURN(urn: string): boolean {
+    return /^\d{7}$/.test(urn.trim());
+}
+
+export function isValidCRN(crn: string): boolean {
+    return /^\d{7}$/.test(crn.trim());
+}
+
+export function getURNError(urn: string): string | null {
+    if (!urn.trim()) return 'URN is required';
+    if (!isValidURN(urn)) return 'URN must be exactly 7 digits';
+    return null;
+}
+
+export function getCRNError(crn: string): string | null {
+    if (!crn.trim()) return 'CRN is required';
+    if (!isValidCRN(crn)) return 'CRN must be exactly 7 digits';
     return null;
 }
 
@@ -41,8 +76,8 @@ export function getPasswordError(password: string, skipStrengthCheck = false): s
 
     if (!skipStrengthCheck) {
         const checks = validatePassword(password);
-        if (!checks.hasAlphabet) return 'Password must contain letters';
-        if (!checks.hasNumber) return 'Password must contain numbers';
+        if (!checks.hasAlphabet) return 'Password must contain both uppercase and lowercase letters';
+        if (!checks.hasNumber) return 'Password must contain at least one number';
         if (!checks.hasSpecialChar) return 'Password must contain special characters (!@#$%^&*)';
     }
 

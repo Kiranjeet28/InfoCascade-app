@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ErrorBoundary } from '../components/error-boundary';
 import SplashScreenComponent from '../components/splash/splash-screen';
 import { AuthProvider } from '../context/auth-context';
 import { InAppNotificationProvider } from '../context/in-app-notification-context';
@@ -14,44 +15,110 @@ import { hideCustomSplash } from '../utils/custom-splash';
 function RootStack() {
   const { isDark } = useThemeColors();
   const [splashVisible, setSplashVisible] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
+  const [routerReady, setRouterReady] = useState(false);
+
+  // Ensure router is ready before navigation
+  useEffect(() => {
+    const timer = setTimeout(() => setRouterReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Hide splash screen after theme is applied and navigate based on auth state
-  useEffect(() => {
-    const initializeApp = async () => {
+  const initializeApp = useCallback(async () => {
+    try {
+      console.log('[App] Starting initialization...');
+
+      let session = null;
+      let profileRaw = null;
+
       try {
-        // Check auth state during splash screen
-        const [session, profileRaw] = await Promise.all([
-          getSession(),
-          AsyncStorage.getItem('studentProfile'),
+        [session, profileRaw] = await Promise.all([
+          getSession().catch(err => {
+            console.error('[App] Error getting session:', err);
+            return null;
+          }),
+          AsyncStorage.getItem('studentProfile').catch(err => {
+            console.error('[App] Error getting profile:', err);
+            return null;
+          }),
         ]);
+      } catch (error) {
+        console.error('[App] Error during parallel async checks:', error);
+      }
 
-        // Hide splash after initialization
-        setTimeout(() => {
+      console.log('[App] Auth state: session=' + !!session?.token + ', hasProfile=' + !!profileRaw);
+
+      setTimeout(() => {
+        try {
           setSplashVisible(false);
-          hideCustomSplash();
+          try {
+            hideCustomSplash();
+          } catch (splashErr) {
+            console.warn('[App] Failed to hide custom splash:', splashErr);
+          }
 
-          // Navigate based on auth state after splash is hidden
+          if (!routerReady) {
+            console.log('[App] Router not ready yet, waiting...');
+            const waitTimer = setInterval(() => {
+              if (routerReady) {
+                clearInterval(waitTimer);
+                performNavigation();
+              }
+            }, 50);
+            return;
+          }
+
+          performNavigation();
+        } catch (error) {
+          console.error('[App] Error during splash hide:', error);
+          setInitError('Failed to hide splash screen');
+        }
+      }, 1500);
+
+      function performNavigation() {
+        try {
           if (session?.token && profileRaw) {
-            // User is logged in, go directly to home
+            console.log('[App] Navigating to home (authenticated)');
             router.replace('/(app)/home');
           } else {
-            // User not logged in, go to login
+            console.log('[App] Navigating to login (unauthenticated)');
             router.replace('/(auth)/login');
           }
-        }, 1500); // Show splash for 1.5 seconds
-      } catch (error) {
-        console.error('Failed to initialize app:', error);
-        setTimeout(() => {
-          setSplashVisible(false);
-          hideCustomSplash();
-          router.replace('/(auth)/login');
-        }, 1500);
+        } catch (navError) {
+          console.error('[App] Navigation error:', navError);
+          setInitError('Navigation failed');
+        }
       }
-    };
+    } catch (error) {
+      console.error('[App] Failed to initialize app:', error);
+      setInitError(error instanceof Error ? error.message : 'Unknown error');
 
-    initializeApp();
-  }, [router]);
+      setTimeout(() => {
+        try {
+          setSplashVisible(false);
+          try {
+            hideCustomSplash();
+          } catch (splashErr) {
+            console.warn('[App] Failed to hide splash on error:', splashErr);
+          }
+
+          if (routerReady) {
+            router.replace('/(auth)/login');
+          }
+        } catch (fallbackError) {
+          console.error('[App] Fallback error handling failed:', fallbackError);
+        }
+      }, 1500);
+    }
+  }, [router, routerReady]);
+
+  useEffect(() => {
+    if (routerReady) {
+      initializeApp();
+    }
+  }, [routerReady, initializeApp]);
 
   return (
     <>
@@ -60,16 +127,17 @@ function RootStack() {
       ) : (
         <>
           <StatusBar style={isDark ? 'light' : 'dark'} />
-          <Stack screenOptions={{ headerShown: false }}>
-            {/* Splash / landing */}
-            <Stack.Screen name="index" />
-            {/* Auth screens (login, register) — no tab bar */}
-            <Stack.Screen name="(auth)" />
-            {/* Main app with tab bar (home, timetable, profile) */}
-            <Stack.Screen name="(app)" />
-            {/* Standalone screens pushed on top — no tab bar */}
-
-          </Stack>
+          {initError ? (
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
+            </Stack>
+          ) : (
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(app)" />
+            </Stack>
+          )}
         </>
       )}
     </>
@@ -78,16 +146,18 @@ function RootStack() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ProfileProvider>
-          <NotificationPreferencesProvider>
-            <InAppNotificationProvider>
-              <RootStack />
-            </InAppNotificationProvider>
-          </NotificationPreferencesProvider>
-        </ProfileProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <NotificationPreferencesProvider>
+              <InAppNotificationProvider>
+                <RootStack />
+              </InAppNotificationProvider>
+            </NotificationPreferencesProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

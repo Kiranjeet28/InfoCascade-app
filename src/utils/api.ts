@@ -115,29 +115,109 @@ export async function resolveApiBaseAsync(): Promise<string> {
 }
 
 export function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, timeoutMs = 10000) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
-    return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(id));
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            console.warn('[API] Request timeout after', timeoutMs, 'ms for:', input);
+        }, timeoutMs);
+
+        return fetch(input, { ...init, signal: controller.signal })
+            .then(response => {
+                clearTimeout(timeoutId);
+                return response;
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                console.error('[API] Fetch error:', error);
+                throw error;
+            });
+    } catch (error) {
+        console.error('[API] Error in fetchWithTimeout:', error);
+        throw error;
+    }
 }
 
 export async function postJson(path: string, body: any, timeoutMs = 12000) {
-    const base = resolveApiBase().replace(/\/$/, ''); // Remove trailing slash if exists
-    const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
-    const url = `${base}${pathWithSlash}`;
-    const res = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    }, timeoutMs);
-    return res;
+    try {
+        const base = resolveApiBase().replace(/\/$/, '');
+        const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+        const url = `${base}${pathWithSlash}`;
+
+        console.log('[API] POST request to:', url);
+
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        }, timeoutMs);
+
+        console.log('[API] POST response status:', res.status);
+        return res;
+    } catch (error) {
+        console.error('[API] Error in postJson:', error);
+        throw error;
+    }
+}
+
+/** POST with AsyncStorage API URL override applied. */
+export async function postJsonAsync(path: string, body: any, timeoutMs = 12000) {
+    try {
+        const base = (await resolveApiBaseAsync()).replace(/\/$/, '');
+        const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+        const url = `${base}${pathWithSlash}`;
+
+        console.log('[API] POST request (async base) to:', url);
+
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        }, timeoutMs);
+
+        console.log('[API] POST response status:', res.status);
+        return res;
+    } catch (error) {
+        console.error('[API] Error in postJsonAsync:', error);
+        throw error;
+    }
 }
 
 export async function fetchJson(path: string, init: RequestInit = {}, timeoutMs = 12000) {
-    const base = resolveApiBase().replace(/\/$/, ''); // Remove trailing slash if exists
-    const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
-    const url = `${base}${pathWithSlash}`;
-    const res = await fetchWithTimeout(url, init, timeoutMs);
-    return res;
+    try {
+        const base = resolveApiBase().replace(/\/$/, '');
+        const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+        const url = `${base}${pathWithSlash}`;
+
+        console.log('[API] GET request to:', url);
+
+        const res = await fetchWithTimeout(url, init, timeoutMs);
+
+        console.log('[API] GET response status:', res.status);
+        return res;
+    } catch (error) {
+        console.error('[API] Error in fetchJson:', error);
+        throw error;
+    }
 }
 
-export default { resolveApiBase, fetchWithTimeout, postJson, fetchJson };
+/** GET with AsyncStorage API URL override applied (use for auth and any call that must respect runtime base URL). */
+export async function fetchJsonAsync(path: string, init: RequestInit = {}, timeoutMs = 12000) {
+    try {
+        const base = (await resolveApiBaseAsync()).replace(/\/$/, '');
+        const pathWithSlash = path.startsWith('/') ? path : `/${path}`;
+        const url = `${base}${pathWithSlash}`;
+
+        console.log('[API] GET request (async base) to:', url);
+
+        const res = await fetchWithTimeout(url, init, timeoutMs);
+
+        console.log('[API] GET response status:', res.status);
+        return res;
+    } catch (error) {
+        console.error('[API] Error in fetchJsonAsync:', error);
+        throw error;
+    }
+}
+
+export default { resolveApiBase, fetchWithTimeout, postJson, postJsonAsync, fetchJson };
