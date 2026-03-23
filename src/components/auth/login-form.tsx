@@ -90,7 +90,7 @@ export default function LoginForm({
             lower.includes('user does not exist') ||
             lower.includes('account not found');
         if (emailCheck.status === 'taken' && looksLikeMissingUser) {
-            return 'Couldn’t sign in with this email. Check your password, or finish registration if you haven’t set one yet.';
+            return 'Couldn\'t sign in with this email.Check your password, or finish registration if you haven\'t set one yet.';
         }
         return msg;
     };
@@ -104,29 +104,7 @@ export default function LoginForm({
                 return;
             }
 
-            // Auth email check (same backend as /api/auth/login)
-            if (emailCheck.status === 'error') {
-                setEmailError(emailCheck.message || 'Invalid email address');
-                triggerShake();
-                return;
-            }
-
-            if (emailCheck.status === 'taken') {
-                // Account exists — continue with login
-            } else if (emailCheck.status === 'checking') {
-                setEmailError('Checking email...');
-                triggerShake();
-                return;
-            } else if (emailCheck.status === 'available') {
-                setEmailError('Email not found. Please sign up first.');
-                triggerShake();
-                return;
-            } else if (emailCheck.status === 'idle') {
-                setEmailError('Please wait while we verify your email...');
-                triggerShake();
-                return;
-            }
-
+            // Basic validation - let backend handle detailed checks
             if (!auth.formData.password || auth.formData.password.trim().length === 0) {
                 setPasswordError('Password is required');
                 triggerShake();
@@ -154,7 +132,6 @@ export default function LoginForm({
             } else if (result.code === 'INVALID_PASSWORD') {
                 // Wrong password - show attempts remaining
                 const attemptsRemaining = result.attemptsRemaining || 0;
-                const maxAttempts = result.maxAttempts || 3;
 
                 let errorMsg = 'Invalid password. Please try again.';
                 if (attemptsRemaining > 0) {
@@ -202,8 +179,7 @@ export default function LoginForm({
         auth.formData.email.trim().length > 0 &&
         auth.formData.password.trim().length > 0 &&
         isValidGNDECEmail(auth.formData.email) &&
-        !isLoading &&
-        emailCheck.status === 'taken';
+        !isLoading;
 
     const attemptsText =
         auth.attemptsRemaining > 0
@@ -247,7 +223,7 @@ export default function LoginForm({
                     </View>
 
                     {/* Error Message */}
-                    {auth.error && (
+                    {auth.error ? (
                         <View
                             style={{
                                 backgroundColor: colors.error + '20',
@@ -268,10 +244,10 @@ export default function LoginForm({
                                 {auth.error}
                             </Text>
                         </View>
-                    )}
+                    ) : null}
 
                     {/* Attempt Counter */}
-                    {auth.attemptsRemaining > 0 && (
+                    {auth.attemptsRemaining > 0 ? (
                         <View
                             style={{
                                 backgroundColor:
@@ -302,7 +278,7 @@ export default function LoginForm({
                                 {attemptsText}
                             </Text>
                         </View>
-                    )}
+                    ) : null}
 
                     {/* Email Input */}
                     <View style={{ marginBottom: 16 }}>
@@ -342,7 +318,7 @@ export default function LoginForm({
                                 backgroundColor: colors.surface,
                             }}
                         />
-                        {emailError && (
+                        {emailError ? (
                             <Text
                                 style={{
                                     fontSize: 12,
@@ -352,12 +328,12 @@ export default function LoginForm({
                             >
                                 {emailError}
                             </Text>
-                        )}
-                        {!emailError && emailCheck.message && (
+                        ) : null}
+                        {!emailError && emailCheck.message ? (
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                                {emailCheck.isChecking && (
+                                {emailCheck.isChecking ? (
                                     <ActivityIndicator size={14} color={colors.primary} />
-                                )}
+                                ) : null}
                                 <Text
                                     style={{
                                         fontSize: 12,
@@ -373,7 +349,7 @@ export default function LoginForm({
                                     {emailCheck.message}
                                 </Text>
                             </View>
-                        )}
+                        ) : null}
                     </View>
 
                     {/* Password Input */}
@@ -396,9 +372,7 @@ export default function LoginForm({
                                 Password
                             </Text>
                             <TouchableOpacity
-                                onPress={() =>
-                                    setShowPassword(!showPassword)
-                                }
+                                onPress={() => setShowPassword(!showPassword)}
                                 disabled={isLoading}
                             >
                                 <Text
@@ -430,7 +404,7 @@ export default function LoginForm({
                                 backgroundColor: colors.surface,
                             }}
                         />
-                        {passwordError && (
+                        {passwordError ? (
                             <Text
                                 style={{
                                     fontSize: 12,
@@ -440,7 +414,7 @@ export default function LoginForm({
                             >
                                 {passwordError}
                             </Text>
-                        )}
+                        ) : null}
                     </View>
 
                     {/* Login Button */}
