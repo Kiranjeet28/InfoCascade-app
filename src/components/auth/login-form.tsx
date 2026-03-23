@@ -148,6 +148,8 @@ export default function LoginForm({
             if (result.success && result.token && result.user) {
                 console.log('[LoginForm] Login successful, calling setAuthData');
                 await auth.setAuthData(result.user, result.token);
+                // Clear form data to stop email check hook
+                auth.setFormData({ email: '', password: '' });
                 console.log('[LoginForm] setAuthData complete, calling onLoginSuccess');
                 onLoginSuccess?.();
             } else if (result.code === 'OTP_VERIFICATION_REQUIRED') {

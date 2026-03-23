@@ -9,7 +9,7 @@ import { InAppNotificationProvider } from '../context/in-app-notification-contex
 import { NotificationPreferencesProvider } from '../context/notification-preferences-context';
 import { ProfileProvider } from '../context/profile-context';
 import { ThemeProvider, useThemeColors } from '../context/theme-context';
-import { getSession } from '../utils/auth-cache';
+import { getJwtToken, getSession } from '../utils/auth-cache';
 import { hideCustomSplash } from '../utils/custom-splash';
 
 function RootStack() {
@@ -32,9 +32,10 @@ function RootStack() {
 
       let session: any = null;
       let profileRaw: any = null;
+      let jwtToken: any = null;
 
       try {
-        [session, profileRaw] = await Promise.all([
+        [session, profileRaw, jwtToken] = await Promise.all([
           getSession().catch(err => {
             console.error('[App] Error getting session:', err);
             return null;
@@ -43,12 +44,16 @@ function RootStack() {
             console.error('[App] Error getting profile:', err);
             return null;
           }),
+          getJwtToken().catch(err => {
+            console.error('[App] Error getting JWT token:', err);
+            return null;
+          }),
         ]);
       } catch (error) {
         console.error('[App] Error during parallel async checks:', error);
       }
 
-      console.log('[App] Auth state: session=' + !!session?.token + ', hasProfile=' + !!profileRaw);
+      console.log('[App] Auth state: session=' + !!session?.token + ', hasProfile=' + !!profileRaw + ', jwtToken=' + !!jwtToken);
 
       setTimeout(() => {
         try {
@@ -79,7 +84,13 @@ function RootStack() {
 
       function performNavigation() {
         try {
-          if (session?.token && profileRaw) {
+          // Check for both old session-based auth AND new JWT auth
+          const hasOldAuth = session?.token && profileRaw;
+          const hasJwtAuth = jwtToken !== null;
+
+          console.log('[App] Navigation decision:', { hasOldAuth, hasJwtAuth, token: !!jwtToken });
+
+          if (hasOldAuth || hasJwtAuth) {
             console.log('[App] Navigating to home (authenticated)');
             router.replace('/(app)/home');
           } else {
