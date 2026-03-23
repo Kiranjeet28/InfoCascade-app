@@ -210,7 +210,7 @@ export async function checkEmailExists(email: string): Promise<EmailCheckRespons
  */
 export async function login(email: string, password: string): Promise<LoginResponse> {
     try {
-        const res = await postJsonAsync('/api/auth/login', { email, password }, 12000);
+        const res = await postJsonAsync('/api/students/sign', { identifier: email, password }, 12000);
         const data = await res.json();
 
         console.log('[Auth] Login response:', { status: res.status, success: data.success, code: data.code });
@@ -325,7 +325,7 @@ export async function verifyOtp(email: string, otp: string): Promise<OTPVerifyRe
         const otpDigits = String(otp).replace(/\D/g, '').slice(0, 6);
         console.log('[Auth] Verifying OTP for:', emailNorm);
         const res = await postJsonAsync(
-            '/api/auth/login-otp',
+            '/api/otp/verify',
             { email: emailNorm, otp: otpDigits },
             12000
         );
