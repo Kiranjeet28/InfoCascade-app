@@ -115,27 +115,32 @@ export async function resolveApiBaseAsync(): Promise<string> {
 }
 
 export function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, timeoutMs = 10000) {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-            controller.abort();
-            console.warn('[API] Request timeout after', timeoutMs, 'ms for:', input);
-        }, timeoutMs);
+    const controller = new AbortController();
+    let timeoutTriggered = false;
 
-        return fetch(input, { ...init, signal: controller.signal })
-            .then(response => {
-                clearTimeout(timeoutId);
-                return response;
-            })
-            .catch(error => {
-                clearTimeout(timeoutId);
-                console.error('[API] Fetch error:', error);
-                throw error;
-            });
-    } catch (error) {
-        console.error('[API] Error in fetchWithTimeout:', error);
-        throw error;
-    }
+    const timeoutId = setTimeout(() => {
+        timeoutTriggered = true;
+        controller.abort();
+        console.warn('[API] Request timeout after', timeoutMs, 'ms for:', input);
+    }, timeoutMs);
+
+    return fetch(input, { ...init, signal: controller.signal })
+        .then(response => {
+            clearTimeout(timeoutId);
+            return response;
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            // Provide better error message for timeout vs other abort scenarios
+            if (error.name === 'AbortError' && timeoutTriggered) {
+                const timeoutError = new Error(`Request timeout after ${timeoutMs}ms`);
+                timeoutError.name = 'TimeoutError';
+                console.error('[API] Request timeout:', timeoutError.message);
+                throw timeoutError;
+            }
+            console.error('[API] Fetch error:', error);
+            throw error;
+        });
 }
 
 export async function postJson(path: string, body: any, timeoutMs = 12000) {

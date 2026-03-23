@@ -211,12 +211,11 @@ export default function ForgotPasswordScreen() {
             }
         } catch (e: any) {
             const base = resolveApiBase();
-            showMessage(
-                e?.name === 'AbortError'
-                    ? 'Request timed out'
-                    : `Server error (${base})`,
-                'error',
-            );
+            if (e?.name === 'TimeoutError' || e?.name === 'AbortError') {
+                showMessage('Request timed out. Please try again.', 'error');
+            } else {
+                showMessage(`Server error (${base})`, 'error');
+            }
         } finally {
             setLoading(false);
         }
