@@ -78,14 +78,22 @@ export function normalizeAuthEmail(email: string): string {
  */
 export async function signup(req: SignupRequest): Promise<SignupResponse> {
     try {
-        const res = await postJsonAsync('/api/auth/signup', req, 12000);
+        const res = await postJsonAsync('/api/students/register', req, 12000);
         const data = await res.json();
 
         if (!res.ok) {
             throw new Error(data.message || 'Signup failed');
         }
 
-        return data as SignupResponse;
+        return {
+            success: data.success,
+            token: data.token,
+            user: {
+                id: data.student?._id || data.user?.id,
+                name: data.student?.name || data.user?.name,
+                email: data.student?.email || data.user?.email,
+            },
+        } as SignupResponse;
     } catch (err) {
         console.error('Signup error:', err);
         throw err;
@@ -175,7 +183,7 @@ export async function checkEmailExists(email: string): Promise<EmailCheckRespons
         console.log('[Auth] Check email response:', { status: res.status, exists: data.exists });
 
         if (res.ok) {
-            return data as EmailCheckResponse;
+            return data as unknown as EmailCheckResponse;
         }
 
         if (isAuthCheckEmailRouteMissing(res, data)) {
@@ -217,11 +225,17 @@ export async function login(email: string, password: string): Promise<LoginRespo
 
         // Handle different response codes
         if (res.ok && data.success) {
+            // Backend returns 'student' object, map it to 'user'
+            const user = data.student || data.user;
             return {
                 success: true,
                 code: data.code || 'LOGIN_SUCCESS',
                 token: data.token,
-                user: data.user,
+                user: user ? {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                } : undefined,
                 page: 1,
             };
         }
@@ -337,12 +351,18 @@ export async function verifyOtp(email: string, otp: string): Promise<OTPVerifyRe
             code: data.code,
         });
 
-        if (res.ok && data.success && data.token && data.user) {
+        // Backend returns 'student' object, map it to 'user'
+        const userObj = data.student || data.user;
+        if (res.ok && data.success && data.token && userObj) {
             return {
                 success: true,
                 code: data.code || 'OTP_SUCCESS',
                 token: data.token,
-                user: data.user,
+                user: {
+                    id: userObj._id,
+                    name: userObj.name,
+                    email: userObj.email,
+                },
                 page: data.page,
             };
         }
