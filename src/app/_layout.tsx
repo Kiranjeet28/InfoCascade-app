@@ -30,8 +30,8 @@ function RootStack() {
     try {
       console.log('[App] Starting initialization...');
 
-      let session = null;
-      let profileRaw = null;
+      let session: any = null;
+      let profileRaw: any = null;
 
       try {
         [session, profileRaw] = await Promise.all([

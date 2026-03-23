@@ -1,12 +1,11 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import LoginForm from '../../components/auth/login-form';
 import BgBlobs from '../../components/layout/bg-blobs';
 import { useAuth } from '../../context/auth-context';
 import { useThemeColors } from '../../context/theme-context';
-import { requestAllPermissionsSequentially } from '../../services/permission-service';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -20,17 +19,9 @@ export default function LoginScreen() {
         if (auth.isAuthenticated && auth.user) {
             console.log('[LoginScreen] Redirecting to home...');
             setTimeout(async () => {
-                if (Platform.OS === 'web' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                    try {
-                        await (navigator as any).serviceWorker.register('/service-worker.js').catch(() => { });
-                    } catch (e) {
-                        console.warn('Service worker registration skipped:', e);
-                    }
-                }
-                await requestAllPermissionsSequentially();
                 console.log('[LoginScreen] Calling router.replace to /(app)/home');
                 router.replace('/(app)/home');
-            }, 900);
+            }, 500);
         }
     }, [auth.isAuthenticated, auth.user]);
 
@@ -41,18 +32,15 @@ export default function LoginScreen() {
 
             <LoginForm
                 onLoginSuccess={async () => {
-                    console.log('[LoginForm Callback] onLoginSuccess called');
-                    // Direct navigation - don't wait for useEffect
-                    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                        try {
-                            await (navigator as any).serviceWorker.register('/service-worker.js').catch(() => { });
-                        } catch (e) {
-                            console.warn('Service worker registration skipped:', e);
-                        }
+                    try {
+                        console.log('[LoginForm Callback] onLoginSuccess called');
+                        console.log('[LoginForm Callback] Navigating to home directly');
+                        // Skip permission requests during navigation - they'll be requested in home screen if needed
+                        // Just navigate immediately
+                        router.replace('/(app)/home');
+                    } catch (err) {
+                        console.error('[LoginForm Callback] Navigation error:', err);
                     }
-                    await requestAllPermissionsSequentially();
-                    console.log('[LoginForm Callback] Navigating to home');
-                    router.replace('/(app)/home');
                 }}
                 onSwitchToSignup={() => {
                     router.push('/(auth)/register');
