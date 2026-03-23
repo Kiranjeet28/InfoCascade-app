@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from '../components/error-boundary';
 import SplashScreenComponent from '../components/splash/splash-screen';
-import { AuthProvider } from '../context/auth-context';
+import { AuthProvider, useAuth } from '../context/auth-context';
 import { InAppNotificationProvider } from '../context/in-app-notification-context';
 import { NotificationPreferencesProvider } from '../context/notification-preferences-context';
 import { ProfileProvider } from '../context/profile-context';
@@ -18,12 +18,28 @@ function RootStack() {
   const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
   const [routerReady, setRouterReady] = useState(false);
+  const auth = useAuth();
 
   // Ensure router is ready before navigation
   useEffect(() => {
     const timer = setTimeout(() => setRouterReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Listen for auth state changes and navigate accordingly
+  useEffect(() => {
+    if (!routerReady) return;
+
+    if (splashVisible) return; // Don't navigate while splash is showing
+
+    if (auth.isAuthenticated && auth.user) {
+      console.log('[App] Auth state changed to authenticated, navigating to home');
+      router.replace('/(app)/home');
+    } else if (!auth.isAuthenticated && !splashVisible) {
+      console.log('[App] Auth state changed to unauthenticated, navigating to login');
+      router.replace('/(auth)/login');
+    }
+  }, [auth.isAuthenticated, auth.user, routerReady, splashVisible, router]);
 
   // Hide splash screen after theme is applied and navigate based on auth state
   const initializeApp = useCallback(async () => {
@@ -123,7 +139,7 @@ function RootStack() {
         }
       }, 1500);
     }
-  }, [router, routerReady, setSplashVisible, setInitError]);
+  }, [router, routerReady]);
 
   useEffect(() => {
     if (routerReady) {

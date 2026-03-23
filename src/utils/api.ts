@@ -86,16 +86,16 @@ export function resolveApiBase(): string {
     }
     if (Platform.OS === 'ios') {
         console.log('[API] Using iOS fallback: localhost:5000');
-        return 'http://localhost:5000';
+        return 'https://infocascade-backend.onrender.com';
     }
     if (Platform.OS === 'web') {
         console.log('[API] Using Web fallback: localhost:5000');
-        return 'http://localhost:5000';
+        return 'https://infocascade-backend.onrender.com';
     }
 
     // Fallback
     console.log('[API] Using ultimate fallback: 127.0.0.1:5000');
-    return 'http://127.0.0.1:5000';
+    return 'https://infocascade-backend.onrender.com';
 }
 
 /**

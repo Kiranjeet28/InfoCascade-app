@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { View } from 'react-native';
 import LoginForm from '../../components/auth/login-form';
 import BgBlobs from '../../components/layout/bg-blobs';
@@ -12,16 +11,7 @@ export default function LoginScreen() {
     const { colors, isDark } = useThemeColors();
     const auth = useAuth();
 
-    useEffect(() => {
-        if (auth.isAuthenticated && auth.user) {
-            router.replace('/(app)/home');
-        }
-    }, [auth.isAuthenticated, auth.user, router]);
-
-    // If already authenticated, render nothing at all.
-    // This prevents LoginForm (and its useAuthEmailExists hook) from
-    // mounting and reacting to cached formData while the navigation
-    // transition is in progress — which is what caused the border blink.
+    // If already authenticated, render nothing and let root layout handle navigation
     if (auth.isAuthenticated) {
         return null;
     }
@@ -33,7 +23,8 @@ export default function LoginScreen() {
 
             <LoginForm
                 onLoginSuccess={() => {
-                    router.replace('/(app)/home');
+                    // Auth context listener in root layout will trigger navigation
+                    // when it detects isAuthenticated changed to true
                 }}
                 onSwitchToSignup={() => {
                     router.push('/(auth)/register');

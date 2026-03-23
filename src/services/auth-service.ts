@@ -218,10 +218,19 @@ export async function checkEmailExists(email: string): Promise<EmailCheckRespons
  */
 export async function login(email: string, password: string): Promise<LoginResponse> {
     try {
-        const res = await postJsonAsync('/api/students/sign', { identifier: email, password }, 12000);
-        const data = await res.json();
+        console.log('[Auth] Starting login for email:', email);
+        let res = await postJsonAsync('/api/students/sign', { identifier: email, password }, 12000);
+        let data = await res.json();
 
-        console.log('[Auth] Login response:', { status: res.status, success: data.success, code: data.code });
+        console.log('[Auth] Login response:', { status: res.status, success: data.success, code: data.code, dataKeys: Object.keys(data) });
+
+        // If endpoint not found, try alternative endpoint
+        if (res.status === 404) {
+            console.warn('[Auth] /api/students/sign returned 404, trying /api/auth/login');
+            res = await postJsonAsync('/api/auth/login', { email, password }, 12000);
+            data = await res.json();
+            console.log('[Auth] Login response (fallback):', { status: res.status, success: data.success, code: data.code });
+        }
 
         // Handle different response codes
         if (res.ok && data.success) {
@@ -238,6 +247,11 @@ export async function login(email: string, password: string): Promise<LoginRespo
                 } : undefined,
                 page: 1,
             };
+        }
+
+        if (res.status === 404) {
+            console.error('[Auth] Login endpoint not found (404). Available endpoints not found on backend.');
+            throw new Error('Login service not available. Please check if backend is properly configured.');
         }
 
         if (res.status === 401) {
@@ -262,11 +276,12 @@ export async function login(email: string, password: string): Promise<LoginRespo
         }
 
         // Other errors (e.g., user not found)
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || `Login failed with status ${res.status}`);
     } catch (err) {
         console.error('[Auth] Login error:', {
             error: err instanceof Error ? err.message : String(err),
             email,
+            stack: err instanceof Error ? err.stack : undefined,
         });
         throw err;
     }

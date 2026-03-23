@@ -1,6 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { PropsWithChildren, useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
@@ -32,7 +32,9 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
       {isOpen && (
         <Animated.View entering={FadeIn.duration(200)}>
           <ThemedView type="surface" style={styles.content}>
-            {children}
+            <View>
+              {children}
+            </View>
           </ThemedView>
         </Animated.View>
       )}
