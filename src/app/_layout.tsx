@@ -123,7 +123,7 @@ function RootStack() {
         }
       }, 1500);
     }
-  }, [router, routerReady]); // useCallback with proper dependencies
+  }, [router, routerReady, setSplashVisible, setInitError]);
 
   useEffect(() => {
     if (routerReady) {
