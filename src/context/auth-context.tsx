@@ -164,9 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const setAuthData = async (authUser: AuthUser, authToken: string) => {
         try {
+            console.log('[AuthContext] Setting auth data for user:', authUser.email);
             setUser(authUser);
             setToken(authToken);
             setIsAuthenticated(true);
+            console.log('[AuthContext] Auth data set. isAuthenticated:', true);
 
             const stored: StoredAuth = {
                 token: authToken,
@@ -177,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 AsyncStorage.setItem(AUTH_TOKEN_KEY, authToken),
                 AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(stored)),
             ]);
+            console.log('[AuthContext] Auth data persisted to storage');
 
             resetAttempts();
             clearError();

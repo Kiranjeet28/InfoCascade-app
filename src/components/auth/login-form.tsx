@@ -143,8 +143,12 @@ export default function LoginForm({
                 auth.formData.password
             );
 
+            console.log('[LoginForm] Login result:', { success: result.success, hasToken: !!result.token, hasUser: !!result.user, code: result.code });
+
             if (result.success && result.token && result.user) {
-                auth.setAuthData(result.user, result.token);
+                console.log('[LoginForm] Login successful, calling setAuthData');
+                await auth.setAuthData(result.user, result.token);
+                console.log('[LoginForm] setAuthData complete, calling onLoginSuccess');
                 onLoginSuccess?.();
             } else if (result.code === 'OTP_VERIFICATION_REQUIRED') {
                 auth.setError(
