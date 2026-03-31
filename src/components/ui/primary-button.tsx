@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { TouchableOpacity, Text, Animated, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Animated, Text, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '../../context/theme-context';
 
 interface PrimaryButtonProps {
@@ -44,10 +44,7 @@ export default function PrimaryButton({
                     isPrimary
                         ? {
                             backgroundColor: colors.primary,
-                            shadowColor: '#6C63FF',
-                            shadowOffset: { width: 0, height: 6 },
-                            shadowOpacity: 0.35,
-                            shadowRadius: 12,
+                            boxShadow: '0px 6px 12px rgba(108,99,255,0.35)',
                             elevation: 6,
                         }
                         : {

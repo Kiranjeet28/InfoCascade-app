@@ -324,7 +324,7 @@ export default function TimetableScreen() {
                     <View style={{
                         backgroundColor: colors.surface, borderRadius: 22, padding: 20, marginBottom: 32,
                         borderWidth: 1, borderColor: colors.border,
-                        shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 16, elevation: 4,
+                        boxShadow: '0px 4px 16px rgba(0,0,0,0.07)', elevation: 4,
                     }}>
                         {/* Day header */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>

@@ -108,10 +108,7 @@ function NotificationToast({
                     flexDirection: 'row',
                     alignItems: 'flex-start',
                     gap: 12,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
+                    boxShadow: '0px 4px 8px rgba(0,0,0,0.3)',
                     elevation: 8,
                 }}
             >
@@ -171,8 +168,8 @@ export function InAppNotificationProvider({ children }: { children: React.ReactN
                     left: 16,
                     right: 16,
                     zIndex: 9999,
+                    pointerEvents: 'box-none',
                 }}
-                pointerEvents="box-none"
             >
                 {notifications.map(notification => (
                     <NotificationToast

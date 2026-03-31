@@ -334,7 +334,7 @@ export default function ProfileScreen() {
                         style={[
                             {
                                 backgroundColor: colors.primary, borderRadius: 16, paddingVertical: 18, alignItems: 'center',
-                                shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8,
+                                boxShadow: '0px 8px 16px rgba(108,99,255,0.35)', elevation: 8,
                             },
                             (saving || !name.trim() || !selectedGroup) && { opacity: 0.5 },
                         ]}

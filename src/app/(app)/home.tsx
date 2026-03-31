@@ -490,7 +490,7 @@ export default function HomeScreen() {
                                 </View>
 
                                 <TouchableOpacity
-                                    style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
+                                    style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', boxShadow: '0px 4px 10px rgba(108,99,255,0.3)', elevation: 5 }}
                                     onPress={() => router.push('/(app)/timetable')}
                                 >
                                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>View My Timetable</Text>
@@ -506,7 +506,7 @@ export default function HomeScreen() {
                                     Set your department, year, and group to unlock your personalized timetable.
                                 </Text>
                                 <TouchableOpacity
-                                    style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 }}
+                                    style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, boxShadow: '0px 4px 10px rgba(108,99,255,0.3)', elevation: 5 }}
                                     onPress={() => router.push('/(app)/profile')}
                                 >
                                     <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>Set Up Profile</Text>

@@ -76,10 +76,7 @@ function getStyles(isDark: boolean) {
             alignItems: 'center',
             overflow: 'hidden',
             // Shadow for depth
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
+            boxShadow: '0px 4px 8px rgba(0,0,0,0.15)',
             elevation: 5, // Android shadow
         },
         icon: {

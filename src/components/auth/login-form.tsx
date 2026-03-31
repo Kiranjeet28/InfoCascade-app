@@ -206,8 +206,7 @@ export default function LoginForm({
                     justifyContent: 'center',
                     paddingHorizontal: 20,
                 }}
-                showsVerticalScrollIndicator={false}
-            >
+                showsVerticalScrollIndicator={false}>
                 <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
                     {/* Header */}
                     <View style={{ marginBottom: 32 }}>

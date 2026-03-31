@@ -71,8 +71,7 @@ export default function Header({ title = 'InfoCascade', showNav = true }: Header
                             style={{
                                 paddingVertical: 8, paddingHorizontal: 16, borderRadius: 10,
                                 backgroundColor: colors.primary,
-                                shadowColor: '#6C63FF', shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.35, shadowRadius: 8, elevation: 5,
+                                boxShadow: '0px 4px 8px rgba(108,99,255,0.35)', elevation: 5,
                             }}
                             onPress={() => router.push('/register')}
                             onPressIn={() => press(scaleReg)}
