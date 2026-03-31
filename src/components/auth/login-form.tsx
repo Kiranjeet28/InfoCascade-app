@@ -47,10 +47,10 @@ export default function LoginForm({
 
     const triggerShake = () => {
         Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: false }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: false }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: false }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: false }),
         ]).start();
     };
 

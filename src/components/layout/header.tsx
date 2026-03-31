@@ -16,9 +16,9 @@ export default function Header({ title = 'InfoCascade', showNav = true }: Header
     const scaleReg = useRef(new Animated.Value(1)).current;
 
     const press = (anim: Animated.Value) =>
-        Animated.spring(anim, { toValue: 0.93, useNativeDriver: true }).start();
+        Animated.spring(anim, { toValue: 0.93, useNativeDriver: false }).start();
     const release = (anim: Animated.Value) =>
-        Animated.spring(anim, { toValue: 1, useNativeDriver: true }).start();
+        Animated.spring(anim, { toValue: 1, useNativeDriver: false }).start();
 
     return (
         <View

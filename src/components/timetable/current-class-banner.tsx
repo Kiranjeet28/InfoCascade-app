@@ -74,16 +74,16 @@ export default function LiveClassBanner({ current, next, onTap }: Props) {
     useEffect(() => {
         // Entrance
         Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-            Animated.spring(slideAnim, { toValue: 0, tension: 70, friction: 10, useNativeDriver: true }),
+            Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
+            Animated.spring(slideAnim, { toValue: 0, tension: 70, friction: 10, useNativeDriver: false }),
         ]).start();
 
         // Live dot pulse
         if (current) {
             Animated.loop(
                 Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.8, duration: 800, useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+                    Animated.timing(pulseAnim, { toValue: 1.8, duration: 800, useNativeDriver: false }),
+                    Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: false }),
                 ])
             ).start();
         }

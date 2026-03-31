@@ -27,8 +27,8 @@ function QuickAction({ icon, label, color, onPress }: QuickActionProps) {
             <TouchableOpacity
                 style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: color + '30' }}
                 onPress={onPress}
-                onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.93, useNativeDriver: true }).start()}
-                onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start()}
+                onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.93, useNativeDriver: false }).start()}
+                onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: false }).start()}
                 activeOpacity={1}
             >
                 <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: color + '20', justifyContent: 'center', alignItems: 'center' }}>
@@ -72,8 +72,8 @@ function CurrentClassCard({ cls, onPress }: { cls: ClassSlot; onPress: () => voi
     useEffect(() => {
         const anim = Animated.loop(
             Animated.sequence([
-                Animated.timing(pulseAnim, { toValue: 1.6, duration: 900, useNativeDriver: true }),
-                Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1.6, duration: 900, useNativeDriver: false }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: false }),
             ])
         );
         anim.start();
@@ -252,8 +252,8 @@ export default function HomeScreen() {
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-            Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+            Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: false }),
+            Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: false }),
         ]).start();
     }, []);
 

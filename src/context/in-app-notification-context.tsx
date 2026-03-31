@@ -55,7 +55,7 @@ function NotificationToast({
             Animated.timing(opacityAnim, {
                 toValue: 1,
                 duration: 200,
-                useNativeDriver: true,
+                useNativeDriver: false,
             }),
         ]).start();
 
@@ -72,12 +72,12 @@ function NotificationToast({
             Animated.timing(slideAnim, {
                 toValue: -100,
                 duration: 200,
-                useNativeDriver: true,
+                useNativeDriver: false,
             }),
             Animated.timing(opacityAnim, {
                 toValue: 0,
                 duration: 200,
-                useNativeDriver: true,
+                useNativeDriver: false,
             }),
         ]).start(() => onDismiss());
     };

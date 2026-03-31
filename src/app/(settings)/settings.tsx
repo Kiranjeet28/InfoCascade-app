@@ -40,8 +40,8 @@ export default function SettingsScreen() {
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-            Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+            Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: false }),
+            Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 9, useNativeDriver: false }),
         ]).start();
     }, []);
 

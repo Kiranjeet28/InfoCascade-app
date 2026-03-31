@@ -140,6 +140,38 @@ export function ApiConfigScreen({ onClose }: Props) {
         }
     };
 
+    // Test root endpoint ("/")
+    const handleTestRootEndpoint = async () => {
+        const urlToTest = customUrl || currentUrl;
+        if (!urlToTest) {
+            Alert.alert('Error', 'No URL to test');
+            return;
+        }
+        try {
+            setSaving(true);
+            const response = await fetch(`${urlToTest}/`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const data = await response.json();
+            if (response.ok && data && data.message) {
+                Alert.alert('Success', `Root endpoint: ${data.message}`);
+            } else {
+                Alert.alert(
+                    'Server Error',
+                    `Status ${response.status}. Response: ${JSON.stringify(data)}`
+                );
+            }
+        } catch (error: any) {
+            Alert.alert(
+                'Connection Failed',
+                `Cannot reach ${urlToTest}/\n\nError: ${error.message}`
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const styles = StyleSheet.create({
         container: {
             padding: 20,
@@ -295,6 +327,7 @@ export function ApiConfigScreen({ onClose }: Props) {
                 </Text>
 
                 {/* Action Buttons */}
+
                 <TouchableOpacity
                     style={[styles.button, styles.primaryButton]}
                     onPress={handleTestConnection}
@@ -304,9 +337,20 @@ export function ApiConfigScreen({ onClose }: Props) {
                     {saving ? (
                         <ActivityIndicator size={20} color="white" />
                     ) : (
-                        <>
-                            <Text style={styles.buttonText}>🔗 Test Connection</Text>
-                        </>
+                        <Text style={styles.buttonText}>🔗 Test /api/auth/verify</Text>
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.button, styles.secondaryButton]}
+                    onPress={handleTestRootEndpoint}
+                    disabled={saving}
+                    activeOpacity={0.8}
+                >
+                    {saving ? (
+                        <ActivityIndicator size={20} color={styles.secondaryButtonText.color} />
+                    ) : (
+                        <Text style={[styles.buttonText, styles.secondaryButtonText]}>🌐 Test Root Endpoint (/)</Text>
                     )}
                 </TouchableOpacity>
 

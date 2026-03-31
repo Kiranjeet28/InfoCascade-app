@@ -124,8 +124,8 @@ export default function TimetableScreen() {
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-            Animated.spring(headerAnim, { toValue: 0, tension: 70, friction: 10, useNativeDriver: true }),
+            Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
+            Animated.spring(headerAnim, { toValue: 0, tension: 70, friction: 10, useNativeDriver: false }),
         ]).start();
     }, []);
 
