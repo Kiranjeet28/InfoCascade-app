@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ErrorBoundary } from '../components/error-boundary';
 import SplashScreenComponent from '../components/splash/splash-screen';
 import { AuthProvider, useAuth } from '../context/auth-context';
@@ -19,6 +19,7 @@ function RootStack() {
   const router = useRouter();
   const [routerReady, setRouterReady] = useState(false);
   const auth = useAuth();
+  const navigationDoneRef = useRef(false); // Prevent navigation loops
 
   // Ensure router is ready before navigation
   useEffect(() => {
@@ -26,32 +27,34 @@ function RootStack() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Listen for auth state changes and navigate accordingly
+  // Listen for auth state changes and navigate accordingly during initial load
+  // (After splash screen hides and app initializes)
   useEffect(() => {
-    if (!routerReady) return;
+    if (!routerReady || splashVisible) return;
+    if (!auth.isInitialized) return; // Wait for auth context to check cache
+    if (navigationDoneRef.current) return; // Already navigated, don't do it again
 
-    if (splashVisible) return; // Don't navigate while splash is showing
-
-    if (auth.isAuthenticated && auth.user) {
-      console.log('[App] Auth state changed to authenticated, navigating to home');
-      router.replace('/(app)/home');
-    } else if (!auth.isAuthenticated && !splashVisible) {
-      console.log('[App] Auth state changed to unauthenticated, navigating to login');
+    // Only perform initial navigation after splash completes
+    // Subsequent navigation is handled by screen-level useEffects (e.g., LoginScreen)
+    if (auth.isAuthenticated && auth.user && auth.token) {
+      console.log('[App] Initial auth detected, navigating to profile');
+      navigationDoneRef.current = true;
+      router.replace('/(app)/profile');
+    } else if (!auth.isAuthenticated) {
+      console.log('[App] No auth detected, navigating to login');
+      navigationDoneRef.current = true;
       router.replace('/(auth)/login');
     }
-  }, [auth.isAuthenticated, auth.user, routerReady, splashVisible, router]);
+  }, [routerReady, splashVisible, auth.isInitialized, auth.isAuthenticated, auth.user, auth.token, router]);
 
-  // Hide splash screen after theme is applied and navigate based on auth state
+  // Hide splash screen after theme is applied - NO NAVIGATION HERE, let useEffect handle it
   const initializeApp = useCallback(async () => {
     try {
       console.log('[App] Starting initialization...');
 
-      let session: any = null;
-      let profileRaw: any = null;
-      let jwtToken: any = null;
-
       try {
-        [session, profileRaw, jwtToken] = await Promise.all([
+        // Check cache in parallel
+        await Promise.all([
           getSession().catch(err => {
             console.error('[App] Error getting session:', err);
             return null;
@@ -69,55 +72,22 @@ function RootStack() {
         console.error('[App] Error during parallel async checks:', error);
       }
 
-      console.log('[App] Auth state: session=' + !!session?.token + ', hasProfile=' + !!profileRaw + ', jwtToken=' + !!jwtToken);
-
+      // Just hide the splash - auth state will trigger navigation
       setTimeout(() => {
         try {
+          console.log('[App] Hiding splash screen');
           setSplashVisible(false);
           try {
             hideCustomSplash();
           } catch (splashErr) {
             console.warn('[App] Failed to hide custom splash:', splashErr);
           }
-
-          if (!routerReady) {
-            console.log('[App] Router not ready yet, waiting...');
-            const waitTimer = setInterval(() => {
-              if (routerReady) {
-                clearInterval(waitTimer);
-                performNavigation();
-              }
-            }, 50);
-            return;
-          }
-
-          performNavigation();
         } catch (error) {
           console.error('[App] Error during splash hide:', error);
           setInitError('Failed to hide splash screen');
+          setSplashVisible(false);
         }
       }, 1500);
-
-      function performNavigation() {
-        try {
-          // Check for both old session-based auth AND new JWT auth
-          const hasOldAuth = session?.token && profileRaw;
-          const hasJwtAuth = jwtToken !== null;
-
-          console.log('[App] Navigation decision:', { hasOldAuth, hasJwtAuth, token: !!jwtToken });
-
-          if (hasOldAuth || hasJwtAuth) {
-            console.log('[App] Navigating to home (authenticated)');
-            router.replace('/(app)/home');
-          } else {
-            console.log('[App] Navigating to login (unauthenticated)');
-            router.replace('/(auth)/login');
-          }
-        } catch (navError) {
-          console.error('[App] Navigation error:', navError);
-          setInitError('Navigation failed');
-        }
-      }
     } catch (error) {
       console.error('[App] Failed to initialize app:', error);
       setInitError(error instanceof Error ? error.message : 'Unknown error');
@@ -130,16 +100,12 @@ function RootStack() {
           } catch (splashErr) {
             console.warn('[App] Failed to hide splash on error:', splashErr);
           }
-
-          if (routerReady) {
-            router.replace('/(auth)/login');
-          }
         } catch (fallbackError) {
           console.error('[App] Fallback error handling failed:', fallbackError);
         }
       }, 1500);
     }
-  }, [router, routerReady]);
+  }, []);
 
   useEffect(() => {
     if (routerReady) {

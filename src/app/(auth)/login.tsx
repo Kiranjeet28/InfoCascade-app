@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import LoginForm from '../../components/auth/login-form';
 import BgBlobs from '../../components/layout/bg-blobs';
@@ -11,10 +12,13 @@ export default function LoginScreen() {
     const { colors, isDark } = useThemeColors();
     const auth = useAuth();
 
-    // If already authenticated, render nothing and let root layout handle navigation
-    if (auth.isAuthenticated) {
-        return null;
-    }
+    // If already authenticated, navigate to profile
+    useEffect(() => {
+        if (auth.isAuthenticated && auth.user) {
+            console.log('[LoginScreen] Authenticated, navigating to profile');
+            router.replace('/(app)/profile');
+        }
+    }, [auth.isAuthenticated, auth.user, router]);
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.bg, overflow: 'hidden' }}>
@@ -23,8 +27,7 @@ export default function LoginScreen() {
 
             <LoginForm
                 onLoginSuccess={() => {
-                    // Auth context listener in root layout will trigger navigation
-                    // when it detects isAuthenticated changed to true
+                    // Navigation happens in useEffect above when auth.isAuthenticated changes
                 }}
                 onSwitchToSignup={() => {
                     router.push('/(auth)/register');

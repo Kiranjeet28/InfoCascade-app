@@ -16,6 +16,7 @@ export interface AuthContextType {
     user: AuthUser | null;
     token: string | null;
     loading: boolean;
+    isInitialized: boolean; // Whether auth context has finished checking cache
 
     // Login attempt tracking
     attemptsRemaining: number;
@@ -53,6 +54,7 @@ const defaultContext: AuthContextType = {
     user: null,
     token: null,
     loading: false,
+    isInitialized: false,
     attemptsRemaining: 3,
     totalAttempts: 0,
     error: '',
@@ -228,6 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         token,
         loading,
+        isInitialized: initialCheckDone,
         attemptsRemaining,
         totalAttempts,
         error,
@@ -243,10 +246,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         clearError,
     };
-
-    if (!initialCheckDone) {
-        return null;
-    }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
