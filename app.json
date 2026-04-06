@@ -10,7 +10,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon-custom.png",
-      "supportsTabletMode": true,
+      "supportsTablet": true,
       "requireFullScreen": true
     },
     "android": {
