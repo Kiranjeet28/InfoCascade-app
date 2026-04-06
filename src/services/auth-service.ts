@@ -21,6 +21,13 @@ export interface LoginResponse {
     warning?: string;
     requireOTP?: boolean;
     message?: string;
+    // Optional profile data included from backend (auto-populate on login)
+    profileData?: {
+        department?: string;
+        group?: string;
+        urn?: string;
+        crn?: string;
+    };
 }
 
 export interface SignupRequest {
@@ -63,6 +70,20 @@ export interface TokenVerifyResponse {
 export interface EmailCheckResponse {
     success: boolean;
     exists: boolean;
+    message?: string;
+}
+
+export interface StudentProfileResponse {
+    success: boolean;
+    student?: {
+        _id: string;
+        name?: string;
+        email?: string;
+        department?: string;
+        group?: string;
+        urn?: string;
+        crn?: string;
+    };
     message?: string;
 }
 
@@ -236,6 +257,15 @@ export async function login(email: string, password: string): Promise<LoginRespo
         if (res.ok && data.success) {
             // Backend returns 'student' object, map it to 'user'
             const user = data.student || data.user;
+
+            // Extract profile data if available from student object
+            const profileData = user ? {
+                department: user.department,
+                group: user.group,
+                urn: user.urn,
+                crn: user.crn,
+            } : undefined;
+
             return {
                 success: true,
                 code: data.code || 'LOGIN_SUCCESS',
@@ -245,6 +275,7 @@ export async function login(email: string, password: string): Promise<LoginRespo
                     name: user.name,
                     email: user.email,
                 } : undefined,
+                profileData: profileData,
                 page: 1,
             };
         }
@@ -505,3 +536,57 @@ export function mapOtpFlowErrorToUserMessage(
     }
     return defaultMessage;
 }
+
+/**
+ * Fetch the authenticated student's profile from the backend
+ * Called after login to sync profile data (name, group, department, etc.)
+ * Requires a valid JWT token in the Authorization header
+ */
+export async function fetchStudentProfile(token: string): Promise<StudentProfileResponse> {
+    try {
+        console.log('[Auth] Fetching student profile from backend');
+        const res = await fetchJsonAsync(
+            '/api/students/profile',
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            },
+            10000
+        );
+
+        const data = (await res.json().catch(() => ({}))) as StudentProfileResponse;
+
+        if (!res.ok) {
+            console.warn('[Auth] Fetch profile failed with status:', res.status);
+            return {
+                success: false,
+                message: data.message || 'Failed to fetch profile',
+            };
+        }
+
+        if (data.success && data.student) {
+            console.log('[Auth] Student profile fetched successfully');
+            return {
+                success: true,
+                student: data.student,
+            };
+        }
+
+        console.warn('[Auth] Fetch profile returned success=false or missing student data');
+        return {
+            success: false,
+            message: data.message || 'Invalid response format',
+        };
+    } catch (err) {
+        console.error('[Auth] Fetch profile error:', {
+            error: err instanceof Error ? err.message : String(err),
+        });
+        return {
+            success: false,
+            message: err instanceof Error ? err.message : 'Failed to fetch profile',
+        };
+    }
+}
+

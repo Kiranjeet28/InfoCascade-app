@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useAuth } from '../../context/auth-context';
+import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { useAuthEmailExists } from '../../hooks/use-auth-email-exists';
 import * as authService from '../../services/auth-service';
@@ -30,6 +31,7 @@ export default function LoginForm({
 }: LoginFormProps) {
     const { colors } = useThemeColors();
     const auth = useAuth();
+    const { syncProfileFromBackend } = useProfile();
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -125,16 +127,21 @@ export default function LoginForm({
                 auth.formData.password
             );
 
-            console.log('[LoginForm] Login result:', { success: result.success, hasToken: !!result.token, hasUser: !!result.user, code: result.code });
+            console.log('[LoginForm] Login result:', { success: result.success, hasToken: !!result.token, hasUser: !!result.user, code: result.code, hasProfileData: !!result.profileData });
 
             if (result.success && result.token && result.user) {
                 console.log('[LoginForm] Login successful, calling setAuthData');
                 await auth.setAuthData(result.user, result.token);
+
+                // Sync profile from backend regardless of whether data is in response
+                // This ensures we always have the latest profile data
+                console.log('[LoginForm] Syncing profile from backend...');
+                await syncProfileFromBackend(result.token);
+                console.log('[LoginForm] Profile sync complete');
+
                 // auth.isAuthenticated is now true.
-                // Parent LoginScreen checks this and renders null immediately,
-                // unmounting this component and stopping the email hook dead.
-                // onLoginSuccess calls router.replace as the navigation trigger.
-                console.log('[LoginForm] setAuthData complete, calling onLoginSuccess');
+                // The App layout will handle navigation based on auth state
+                console.log('[LoginForm] setAuthData complete');
                 onLoginSuccess?.();
             } else if (result.code === 'OTP_VERIFICATION_REQUIRED') {
                 auth.setError('Too many sign-in attempts. Wait a bit, then try again or use Forgot password.');

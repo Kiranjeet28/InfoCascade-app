@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { clearJwtAuth } from '../utils/auth-cache';
+import { clearJwtAuth, hasValidJwtToken } from '../utils/auth-cache';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -109,6 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         async function checkCachedAuth() {
             try {
                 console.log('[AuthProvider] Checking cached auth...');
+
+                // If the cached token is expired, clear it before restoring state
+                const isTokenValid = await hasValidJwtToken();
+                if (!isTokenValid) {
+                    await clearJwtAuth();
+                    return;
+                }
 
                 let storedToken = null;
                 let storedUser = null;

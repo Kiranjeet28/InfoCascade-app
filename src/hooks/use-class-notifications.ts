@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 import { useInAppNotifications } from '../context/in-app-notification-context';
 import { ClassSlot } from '../types';
@@ -68,14 +69,18 @@ export function useClassNotifications(current: ClassSlot | null, next: ClassSlot
 
     // Cleanup: Clear notifications when day changes (next day)
     useEffect(() => {
-        const checkDayChange = () => {
-            const now = new Date();
-            const dayId = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
-            const lastDayId = sessionStorage.getItem('lastNotificationDayId');
+        const checkDayChange = async () => {
+            try {
+                const now = new Date();
+                const dayId = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+                const lastDayId = await AsyncStorage.getItem('lastNotificationDayId');
 
-            if (lastDayId !== dayId) {
-                notifiedClasses.clear();
-                sessionStorage.setItem('lastNotificationDayId', dayId);
+                if (lastDayId !== dayId) {
+                    notifiedClasses.clear();
+                    await AsyncStorage.setItem('lastNotificationDayId', dayId);
+                }
+            } catch (err) {
+                console.warn('[useClassNotifications] Error checking day change:', err);
             }
         };
 

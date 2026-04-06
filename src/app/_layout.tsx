@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from '../components/error-boundary';
 import SplashScreenComponent from '../components/splash/splash-screen';
 import { AuthProvider, useAuth } from '../context/auth-context';
@@ -15,39 +15,83 @@ import { hideCustomSplash } from '../utils/custom-splash';
 function RootStack() {
   const { isDark } = useThemeColors();
   const [splashVisible, setSplashVisible] = useState(true);
-  const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
-  const [routerReady, setRouterReady] = useState(false);
+  const segments = useSegments();
+  const pathname = usePathname();
   const auth = useAuth();
-  const navigationDoneRef = useRef(false); // Prevent navigation loops
+  const [legacySessionPresent, setLegacySessionPresent] = useState<boolean | null>(null);
 
-  // Ensure router is ready before navigation
+  const authScreens = new Set(['login', 'register', 'forgot-password']);
+
+  const pathFirstSegment = (pathname ?? '')
+    .split('?')[0]
+    .split('#')[0]
+    .split('/')
+    .filter(Boolean)[0];
+
+  const isAuthRoute =
+    (segments?.some((s) => s === '(auth)' || authScreens.has(String(s))) ?? false) ||
+    (pathFirstSegment ? authScreens.has(pathFirstSegment) : false);
+
+  const isRootRoute =
+    !pathFirstSegment ||
+    (segments?.length ?? 0) === 0 ||
+    segments?.[0] === 'index';
+
+  // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
+  // rely on this for access to app routes.
   useEffect(() => {
-    const timer = setTimeout(() => setRouterReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!auth.isInitialized) return;
 
-  // Listen for auth state changes and navigate accordingly during initial load
-  // (After splash screen hides and app initializes)
+    let cancelled = false;
+    (async () => {
+      // If JWT auth is present, legacy session doesn't matter for routing.
+      if (auth.token && auth.user) {
+        if (!cancelled) setLegacySessionPresent(false);
+        return;
+      }
+
+      const session = await getSession();
+      if (!cancelled) setLegacySessionPresent(!!session);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.isInitialized, auth.token, auth.user]);
+
+  // Auth guard: keep navigation in sync with auth state & current route
   useEffect(() => {
-    if (!routerReady || splashVisible) return;
-    if (!auth.isInitialized) return; // Wait for auth context to check cache
-    if (navigationDoneRef.current) return; // Already navigated, don't do it again
+    if (!auth.isInitialized) return;
+    if (splashVisible) return;
 
-    // Only perform initial navigation after splash completes
-    // Subsequent navigation is handled by screen-level useEffects (e.g., LoginScreen)
-    if (auth.isAuthenticated && auth.user && auth.token) {
-      console.log('[App] Initial auth detected, navigating to home');
-      navigationDoneRef.current = true;
-      router.replace('/(app)/home');
-    } else if (!auth.isAuthenticated) {
-      console.log('[App] No auth detected, navigating to login');
-      navigationDoneRef.current = true;
-      router.replace('/(auth)/login');
+    const jwtAuthed = !!auth.token && !!auth.user;
+    const legacyAuthed = legacySessionPresent === true;
+
+    // Avoid redirecting to login until we've checked legacy session.
+    if (!jwtAuthed && legacySessionPresent === null) return;
+
+    const isAuthed = jwtAuthed || legacyAuthed;
+
+    const replaceIfNeeded = (href: string) => {
+      // Avoid firing replace repeatedly during render loops
+      // (on web, pathname doesn't include group names like /(auth))
+      router.replace(href);
+    };
+
+    // If not signed in, force auth routes only
+    if (!isAuthed) {
+      if (!isAuthRoute) replaceIfNeeded('/(auth)/login');
+      return;
     }
-  }, [routerReady, splashVisible, auth.isInitialized, auth.isAuthenticated, auth.user, auth.token, router]);
 
-  // Hide splash screen after theme is applied - NO NAVIGATION HERE, let useEffect handle it
+    // If signed in, keep users out of auth screens and off the root fallback
+    if (isAuthRoute || isRootRoute) {
+      replaceIfNeeded('/(app)/profile');
+    }
+  }, [auth.isInitialized, auth.token, auth.user, legacySessionPresent, isAuthRoute, isRootRoute, router, splashVisible]);
+
+  // Initialize app and hide splash screen
   const initializeApp = useCallback(async () => {
     try {
       console.log('[App] Starting initialization...');
@@ -72,7 +116,7 @@ function RootStack() {
         console.error('[App] Error during parallel async checks:', error);
       }
 
-      // Just hide the splash - auth state will trigger navigation
+      // Hide the splash screen after a short delay
       setTimeout(() => {
         try {
           console.log('[App] Hiding splash screen');
@@ -84,13 +128,11 @@ function RootStack() {
           }
         } catch (error) {
           console.error('[App] Error during splash hide:', error);
-          setInitError('Failed to hide splash screen');
           setSplashVisible(false);
         }
-      }, 1500);
+      }, 800);
     } catch (error) {
       console.error('[App] Failed to initialize app:', error);
-      setInitError(error instanceof Error ? error.message : 'Unknown error');
 
       setTimeout(() => {
         try {
@@ -103,15 +145,13 @@ function RootStack() {
         } catch (fallbackError) {
           console.error('[App] Fallback error handling failed:', fallbackError);
         }
-      }, 1500);
+      }, 800);
     }
   }, []);
 
   useEffect(() => {
-    if (routerReady) {
-      initializeApp();
-    }
-  }, [routerReady, initializeApp]);
+    initializeApp();
+  }, [initializeApp]);
 
   return (
     <>
@@ -120,17 +160,11 @@ function RootStack() {
       ) : (
         <>
           <StatusBar style={isDark ? 'light' : 'dark'} />
-          {initError ? (
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" />
-            </Stack>
-          ) : (
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(app)" />
-            </Stack>
-          )}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
         </>
       )}
     </>
