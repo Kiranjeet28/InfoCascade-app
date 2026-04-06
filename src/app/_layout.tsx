@@ -31,7 +31,16 @@ function RootStack() {
 
   const isAuthRoute =
     (segments?.some((s) => s === '(auth)' || authScreens.has(String(s))) ?? false) ||
+    pathFirstSegment === '(auth)' ||
     (pathFirstSegment ? authScreens.has(pathFirstSegment) : false);
+
+  const isProfileRoute =
+    (segments?.some((s) => String(s) === 'profile') ?? false) ||
+    pathFirstSegment === 'profile';
+
+  const isLoginRoute =
+    (segments?.some((s) => String(s) === 'login') ?? false) ||
+    pathFirstSegment === 'login';
 
   const isRootRoute =
     !pathFirstSegment ||
@@ -74,8 +83,8 @@ function RootStack() {
     const isAuthed = jwtAuthed || legacyAuthed;
 
     const replaceIfNeeded = (href: string) => {
-      // Avoid firing replace repeatedly during render loops
-      // (on web, pathname doesn't include group names like /(auth))
+      if (href.includes('/(auth)/login') && isLoginRoute) return;
+      if (href.includes('/(app)/profile') && isProfileRoute) return;
       router.replace(href);
     };
 
@@ -89,7 +98,7 @@ function RootStack() {
     if (isAuthRoute || isRootRoute) {
       replaceIfNeeded('/(app)/profile');
     }
-  }, [auth.isInitialized, auth.token, auth.user, legacySessionPresent, isAuthRoute, isRootRoute, router, splashVisible]);
+  }, [auth.isInitialized, auth.token, auth.user, legacySessionPresent, isAuthRoute, isLoginRoute, isProfileRoute, isRootRoute, router, splashVisible]);
 
   // Initialize app and hide splash screen
   const initializeApp = useCallback(async () => {
