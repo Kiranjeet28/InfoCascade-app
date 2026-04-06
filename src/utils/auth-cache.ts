@@ -139,3 +139,30 @@ export async function clearJwtAuth(): Promise<void> {
         // Ignore errors
     }
 }
+/**
+ * Clear all app cache and storage
+ * Removes: auth tokens, user data, profile, notification preferences, API URL overrides
+ */
+export async function clearAllCache(): Promise<void> {
+    try {
+        await Promise.all([
+            // Auth tokens and sessions
+            AsyncStorage.removeItem(SESSION_KEY),
+            AsyncStorage.removeItem(JWT_TOKEN_KEY),
+            AsyncStorage.removeItem(JWT_USER_KEY),
+            AsyncStorage.removeItem('auth_jwt_token'),
+            AsyncStorage.removeItem('auth_jwt_user'),
+            // Profile
+            AsyncStorage.removeItem('studentProfile'),
+            // Notification preferences
+            AsyncStorage.removeItem('notificationPreferences'),
+            // API URL overrides
+            AsyncStorage.removeItem('app_api_url_override'),
+            // Session storage markers
+            AsyncStorage.removeItem('lastNotificationDayId'),
+        ]);
+        console.log('[Cache] All cache cleared successfully');
+    } catch (error) {
+        console.error('[Cache] Error clearing cache:', error);
+    }
+}

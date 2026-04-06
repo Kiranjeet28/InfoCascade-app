@@ -23,7 +23,7 @@ import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { checkNotificationPermission, requestNotificationPermissionWithAlert } from '../../services/permission-service';
 import { ThemeMode } from '../../types';
-import { clearJwtAuth, clearSession } from '../../utils/auth-cache';
+import { clearAllCache } from '../../utils/auth-cache';
 
 export default function SettingsScreen() {
     const router = useRouter();
@@ -66,10 +66,8 @@ export default function SettingsScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            // Clear all authentication data
-                            await clearSession();
-                            await clearJwtAuth();
-                            await clearProfile();
+                            // Clear all app cache and storage
+                            await clearAllCache();
 
                             // Call auth context logout
                             await logout();
