@@ -88,7 +88,7 @@ function NotificationToast({
             ? colors.primary
             : colors.surface;
 
-    const icon = notification.type === 'reminder' ? '⏰' : notification.type === 'start' ? '🔔' : 'ℹ️';
+    const icon = notification.type === 'reminder' ? '📋' : notification.type === 'start' ? '🔴' : 'ℹ️';
 
     return (
         <Animated.View

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeColors } from '../../context/theme-context';
+import { useClassNotifications } from '../../hooks/use-class-notifications';
 import { ClassSlot } from '../../types';
 
 interface Props {
@@ -70,6 +71,9 @@ export default function LiveClassBanner({ current, next, onTap }: Props) {
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const slideAnim = useRef(new Animated.Value(16)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    // Show notifications for current and next class
+    useClassNotifications(current, next);
 
     useEffect(() => {
         // Entrance
