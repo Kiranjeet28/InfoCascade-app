@@ -23,13 +23,20 @@
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "WAKE_LOCK",
-        "POST_NOTIFICATIONS",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "WAKE_LOCK",
         "POST_NOTIFICATIONS"
       ],
-      "package": "com.kiranjeet28.Infocascade"
+      "package": "com.kiranjeet28.Infocascade",
+      // OPTIMIZATION: Enable Hermes for significant size reduction
+      "jsEngine": "hermes",
+      // High-level optimization flags
+      "buildProperties": {
+        "enableProguard": true,
+        "proguardFiles": ["./proguard-rules.pro"],
+        "enableShrinkResources": true,
+        "minSdkVersion": 21,
+        "targetSdkVersion": 34,
+        "compileSdkVersion": 34
+      }
     },
     "web": {
       "output": "static",
