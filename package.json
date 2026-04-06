@@ -12,8 +12,8 @@
     "scrape": "node ./src/utils/runAllTimetables.js",
     "scrape:watch": "node ./src/utils/watchTimetables.js",
     "scrape:check": "node ./src/utils/watchTimetables.js --single",
-    "build:android:release": "eas build --platform android --profile release",
-    "build:ios:release": "eas build --platform ios --profile release",
+    "build:android:release": "eas build --platform android --profile production",
+    "build:ios:release": "eas build --platform ios --profile production",
     "bundle:analyze": "expo export --platform android && echo 'Bundle exported to ./dist - analyze with source-map-explorer'",
     "bundle:size": "du -sh ./dist 2>/dev/null || echo 'Run bundle:analyze first'"
   },
