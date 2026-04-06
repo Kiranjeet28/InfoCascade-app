@@ -17,17 +17,19 @@ import AppIcon from '../../components/app-icon';
 import BackButton from '../../components/layout/back-button';
 import BgBlobs from '../../components/layout/bg-blobs';
 import Badge from '../../components/ui/badge';
+import { useAuth } from '../../context/auth-context';
 import { useNotificationPreferences } from '../../context/notification-preferences-context';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { checkNotificationPermission, requestNotificationPermissionWithAlert } from '../../services/permission-service';
 import { ThemeMode } from '../../types';
-import { clearSession } from '../../utils/auth-cache';
+import { clearJwtAuth, clearSession } from '../../utils/auth-cache';
 
 export default function SettingsScreen() {
     const router = useRouter();
     const { colors, isDark, themeMode, setThemeMode } = useThemeColors();
     const { clearProfile } = useProfile();
+    const { logout } = useAuth();
     const { preferences, updatePreferences, loading: prefLoading } = useNotificationPreferences();
 
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -56,16 +58,28 @@ export default function SettingsScreen() {
     async function handleLogout() {
         Alert.alert(
             'Log Out',
-            'Are you sure you want to log out?',
+            'Are you sure you want to log out? All data will be cleared from this device.',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Log Out',
                     style: 'destructive',
                     onPress: async () => {
-                        await clearSession();
-                        await clearProfile();
-                        router.replace('/(auth)/login');
+                        try {
+                            // Clear all authentication data
+                            await clearSession();
+                            await clearJwtAuth();
+                            await clearProfile();
+
+                            // Call auth context logout
+                            await logout();
+
+                            // Navigate to login
+                            router.replace('/(auth)/login');
+                        } catch (error) {
+                            console.error('Error during logout:', error);
+                            Alert.alert('Error', 'Failed to log out. Please try again.');
+                        }
                     },
                 },
             ]

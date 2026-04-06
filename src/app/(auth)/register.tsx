@@ -384,7 +384,7 @@ export default function RegisterScreen() {
                         await registerServiceWorker();
                     }
                     await requestAllPermissionsSequentially();
-                    router.replace('/(app)/home');
+                    router.replace('/(app)/profile');
                 }, 1200);
             }
             // Handle client/validation errors

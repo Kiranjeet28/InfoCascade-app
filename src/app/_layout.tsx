@@ -37,9 +37,9 @@ function RootStack() {
     // Only perform initial navigation after splash completes
     // Subsequent navigation is handled by screen-level useEffects (e.g., LoginScreen)
     if (auth.isAuthenticated && auth.user && auth.token) {
-      console.log('[App] Initial auth detected, navigating to profile');
+      console.log('[App] Initial auth detected, navigating to home');
       navigationDoneRef.current = true;
-      router.replace('/(app)/profile');
+      router.replace('/(app)/home');
     } else if (!auth.isAuthenticated) {
       console.log('[App] No auth detected, navigating to login');
       navigationDoneRef.current = true;

@@ -86,8 +86,13 @@ export function useLiveClass(): LiveClassState {
         }
         try {
             setLoading(true);
-            const file = getTimetableFile();
-            const resp = await fetch(`/${file}`);
+
+            // Fetch timetable from GitHub repository
+            const dept = profile?.department?.toLowerCase();
+            const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web';
+            const timetableFile = `timetable_${dept}.json`;
+
+            const resp = await fetch(`${GITHUB_RAW_URL}/${timetableFile}`);
             if (!resp.ok) {
                 const errorMsg = `Failed to load timetable (${resp.status})`;
                 console.error('[useLiveClass]', errorMsg);
@@ -114,7 +119,7 @@ export function useLiveClass(): LiveClassState {
         } finally {
             setLoading(false);
         }
-    }, [profile, hasProfile, profileLoading, getTimetableFile]);
+    }, [profile, hasProfile, profileLoading]);
 
     // Initial load
     useEffect(() => { load(); }, [load]);

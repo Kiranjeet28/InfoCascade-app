@@ -9,6 +9,7 @@ import { useInAppNotifications } from '../../context/in-app-notification-context
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 import { getEndTime, useLiveClass } from '../../hooks/Useliveclass';
+import { useClassNotifications } from '../../hooks/use-class-notifications';
 import { useNotifications } from '../../hooks/use-notifications';
 import { ClassSlot } from '../../types';
 import { fetchJson } from '../../utils/api';
@@ -223,6 +224,9 @@ export default function HomeScreen() {
     const { profile, hasProfile, getDepartmentLabel, loading: profileLoading } = useProfile();
     const { showNotification } = useInAppNotifications();
     const { current, next, refresh: refreshLiveClass } = useLiveClass();
+
+    // Show notifications for current and next class
+    useClassNotifications(current, next);
 
     // Notifications hook
     const {
@@ -483,16 +487,7 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                         )}
 
-                        {/* ── Now & Next Section ── */}
-                        {hasProfile && (
-                            <View style={{ marginBottom: 24 }}>
-                                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginBottom: 12, letterSpacing: -0.5 }}>Today's Classes</Text>
-                                <LiveClassSection
-                                    onNavigate={() => router.push('/(app)/timetable')}
-                                    onRefresh={refreshNotifications}
-                                />
-                            </View>
-                        )}
+                        {/* ── Now & Next Section removed ── */}
 
                         {/* ── Main Action Tiles ── */}
                         <View style={{ marginBottom: 28, gap: 12 }}>

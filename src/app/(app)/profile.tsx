@@ -64,10 +64,13 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         setLoading(true);
-        const groups = loadGroupsForDept(department);
-        setAvailableGroups(groups);
-        setSelectedGroup('');
-        setLoading(false);
+        const loadGroups = async () => {
+            const groups = await loadGroupsForDept(department);
+            setAvailableGroups(groups);
+            setSelectedGroup('');
+            setLoading(false);
+        };
+        loadGroups();
     }, [department]);
 
     useEffect(() => {
