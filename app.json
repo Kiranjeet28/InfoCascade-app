@@ -3,6 +3,7 @@
     "name": "Infocascade",
     "slug": "Infocascade",
     "version": "1.0.0",
+    "jsEngine": "hermes",
     "orientation": "portrait",
     "icon": "./assets/images/icon-custom.png",
     "scheme": "myapp",
@@ -25,18 +26,7 @@
         "WAKE_LOCK",
         "POST_NOTIFICATIONS"
       ],
-      "package": "com.kiranjeet28.Infocascade",
-      // OPTIMIZATION: Enable Hermes for significant size reduction
-      "jsEngine": "hermes",
-      // High-level optimization flags
-      "buildProperties": {
-        "enableProguard": true,
-        "proguardFiles": ["./proguard-rules.pro"],
-        "enableShrinkResources": true,
-        "minSdkVersion": 21,
-        "targetSdkVersion": 34,
-        "compileSdkVersion": 34
-      }
+      "package": "com.kiranjeet28.Infocascade"
     },
     "web": {
       "output": "static",
@@ -44,6 +34,18 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "minSdkVersion": 21,
+            "targetSdkVersion": 34,
+            "compileSdkVersion": 34
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
