@@ -7,27 +7,17 @@ export async function fetchDepartments() {
 
 // ...existing code...
 export async function fetchGroups(department) {
-  // Try fetching the static JSON path (works when dev server serves project files)
+  // Fetch from GitHub repository
+  const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web/group';
   try {
-    const res = await fetch(`/web/group/${department}.json`);
+    const res = await fetch(`${GITHUB_RAW_URL}/${department}.json`);
     if (res.ok) return await res.json();
   } catch (e) {
-    // ignore and fall back to bundler require
+    console.warn(`Failed to fetch groups from GitHub for ${department}:`, e.message);
   }
 
-  // Fallback: static require map (Metro-friendly — no dynamic require)
-   
-  const groupsMap = {
-    appliedscience: require('../../web/group/appliedscience.json'),
-    bca: require('../../web/group/bca.json'),
-    civil: require('../../web/group/civil.json'),
-    cse: require('../../web/group/cse.json'),
-    ece: require('../../web/group/ece.json'),
-    electrical: require('../../web/group/electrical.json'),
-    it: require('../../web/group/it.json'),
-    mechanical: require('../../web/group/mechanical.json'),
-  };
-
-  return groupsMap[department] || [];
+  // Fallback: return empty array
+  console.warn(`No groups available for department: ${department}`);
+  return [];
 }
 // ...existing code...

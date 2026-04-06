@@ -18,30 +18,25 @@ import { DEPARTMENT_OPTIONS } from '../../constants/theme';
 import { useProfile } from '../../context/profile-context';
 import { useThemeColors } from '../../context/theme-context';
 
-// static group lists (imported from web/group/*.json)
-import appliedscienceGroups from '../../../web/group/appliedscience.json';
-import bcaGroups from '../../../web/group/bca.json';
-import civilGroups from '../../../web/group/civil.json';
-import cseGroups from '../../../web/group/cse.json';
-import eceGroups from '../../../web/group/ece.json';
-import electricalGroups from '../../../web/group/electrical.json';
-import itGroups from '../../../web/group/it.json';
-import mechanicalGroups from '../../../web/group/mechanical.json';
+// Load group lists from GitHub repository
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web/group';
+const GROUP_CACHE: Record<string, string[]> = {};
 
-// --- group loader ---------------------------------------------------------
-const GROUP_MAP: Record<string, string[]> = {
-    appliedscience: (appliedscienceGroups as unknown) as string[],
-    bca: (bcaGroups as unknown) as string[],
-    civil: (civilGroups as unknown) as string[],
-    cse: (cseGroups as unknown) as string[],
-    ece: (eceGroups as unknown) as string[],
-    electrical: (electricalGroups as unknown) as string[],
-    it: (itGroups as unknown) as string[],
-    mechanical: (mechanicalGroups as unknown) as string[],
-};
-
-function loadGroupsForDept(department: string): string[] {
-    return GROUP_MAP[department] ?? [];
+async function loadGroupsForDept(department: string): Promise<string[]> {
+    if (GROUP_CACHE[department]) {
+        return GROUP_CACHE[department];
+    }
+    try {
+        const res = await fetch(`${GITHUB_RAW_URL}/${department}.json`);
+        if (res.ok) {
+            const groups = await res.json();
+            GROUP_CACHE[department] = groups;
+            return groups;
+        }
+    } catch (e) {
+        console.warn(`Failed to load groups for ${department}:`, e);
+    }
+    return [];
 }
 
 export default function ProfileScreen() {

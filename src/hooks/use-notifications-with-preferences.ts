@@ -157,7 +157,10 @@ export function useNotificationsWithPreferences(): UseNotificationsWithPreferenc
             }
 
             try {
-                const timetableData: TimetableJson = require(`../../public/${timetableFile}`);
+                const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web';
+                const res = await fetch(`${GITHUB_RAW_URL}/${timetableFile}`);
+                if (!res.ok) throw new Error(`Failed to fetch timetable: ${res.status}`);
+                const timetableData: TimetableJson = await res.json();
                 const groupTimetable = timetableData.timetable?.[profile.group];
                 const allClasses = groupTimetable?.classes || [];
 

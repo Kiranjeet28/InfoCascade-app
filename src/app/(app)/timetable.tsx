@@ -3,14 +3,6 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import appliedScienceTimetable from '../../assets/timetables/timetable_appliedscience.json';
-import bcaTimetable from '../../assets/timetables/timetable_bca.json';
-import civilTimetable from '../../assets/timetables/timetable_civil.json';
-import cseTimetable from '../../assets/timetables/timetable_cse.json';
-import eceTimetable from '../../assets/timetables/timetable_ece.json';
-import electricalTimetable from '../../assets/timetables/timetable_electrical.json';
-import itTimetable from '../../assets/timetables/timetable_it.json';
-import mechanicalTimetable from '../../assets/timetables/timetable_mechanical.json';
 import AppIcon from '../../components/app-icon';
 import ClassCard from '../../components/timetable/class-card';
 import DaySelector from '../../components/timetable/day-selector';
@@ -138,36 +130,16 @@ export default function TimetableScreen() {
                 setLoading(true);
                 let json: TimetableJson | null = null;
 
-                // Get timetable based on department (all bundled now)
+                // Fetch timetable from GitHub repository
                 const dept = profile?.department?.toLowerCase();
-                switch (dept) {
-                    case 'appliedscience':
-                        json = (appliedScienceTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'bca':
-                        json = (bcaTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'civil':
-                        json = (civilTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'cse':
-                        json = (cseTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'ece':
-                        json = (eceTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'electrical':
-                        json = (electricalTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'it':
-                        json = (itTimetable as unknown) as TimetableJson;
-                        break;
-                    case 'mechanical':
-                        json = (mechanicalTimetable as unknown) as TimetableJson;
-                        break;
-                    default:
-                        throw new Error(`Unknown department: ${profile?.department}`);
+                const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web';
+                const timetableFile = `timetable_${dept}.json`;
+
+                const res = await fetch(`${GITHUB_RAW_URL}/${timetableFile}`);
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch timetable for ${dept}: ${res.status}`);
                 }
+                json = await res.json();
 
                 if (!mounted) return;
                 if (json && json.timetable && profile?.group && json.timetable[profile.group]) {
