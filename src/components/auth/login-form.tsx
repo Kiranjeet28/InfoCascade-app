@@ -31,7 +31,7 @@ export default function LoginForm({
 }: LoginFormProps) {
     const { colors } = useThemeColors();
     const auth = useAuth();
-    const { syncProfileFromBackend } = useProfile();
+    const { saveProfile, syncProfileFromBackend } = useProfile();
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +39,13 @@ export default function LoginForm({
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const emailInputRef = useRef<TextInput>(null);
 
+    const EMAIL_CHECK_DEBOUNCE_MS = 5_000;
+
     // Only run email check when not loading (to prevent infinite loops during login)
-    const emailCheck = useAuthEmailExists(isLoading || auth.loading ? '' : auth.formData.email, 400);
+    const emailCheck = useAuthEmailExists(
+        isLoading || auth.loading ? '' : auth.formData.email,
+        EMAIL_CHECK_DEBOUNCE_MS
+    );
 
     // Auto-focus email input on mount
     useEffect(() => {
@@ -96,19 +101,11 @@ export default function LoginForm({
                 return;
             }
 
-            if (emailCheck.status === 'checking') {
-                setEmailError('Checking email...');
-                triggerShake();
-                return;
-            } else if (emailCheck.status === 'available') {
+            // Only block when we've actually confirmed the email has no account.
+            // If the check hasn't run yet (debounced), allow login to proceed.
+            if (emailCheck.status === 'available') {
                 setEmailError('Email not found. Please sign up first.');
                 triggerShake();
-                return;
-            } else if (emailCheck.status === 'idle') {
-                setEmailError('Please wait while we verify your email...');
-                triggerShake();
-                return;
-            } else if (emailCheck.status !== 'taken') {
                 return;
             }
 
@@ -133,11 +130,30 @@ export default function LoginForm({
                 console.log('[LoginForm] Login successful, calling setAuthData');
                 await auth.setAuthData(result.user, result.token);
 
-                // Sync profile from backend regardless of whether data is in response
-                // This ensures we always have the latest profile data
-                console.log('[LoginForm] Syncing profile from backend...');
-                await syncProfileFromBackend(result.token);
-                console.log('[LoginForm] Profile sync complete');
+                // Cache backend-returned profile fields so Profile screen is pre-filled.
+                // If backend didn't return enough, fall back to fetching /api/students/profile.
+                const department = result.profileData?.department ?? '';
+                const group = result.profileData?.group ?? '';
+                const urn = result.profileData?.urn ?? '';
+                const crn = result.profileData?.crn ?? '';
+
+                let saved = false;
+                if (department) {
+                    saved = await saveProfile({
+                        name: result.user.name ?? '',
+                        email: result.user.email ?? auth.formData.email,
+                        urn,
+                        crn,
+                        department,
+                        group,
+                    });
+                }
+
+                if (!saved) {
+                    console.log('[LoginForm] Profile not cached from login payload, syncing from backend...');
+                    await syncProfileFromBackend(result.token);
+                    console.log('[LoginForm] Profile sync complete');
+                }
 
                 // auth.isAuthenticated is now true.
                 // The App layout will handle navigation based on auth state
@@ -188,7 +204,7 @@ export default function LoginForm({
         auth.formData.password.trim().length > 0 &&
         isValidGNDECEmail(auth.formData.email) &&
         !isLoading &&
-        emailCheck.status === 'taken';
+        emailCheck.status !== 'available';
 
     const attemptsText =
         auth.attemptsRemaining > 0

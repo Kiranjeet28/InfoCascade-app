@@ -42,7 +42,7 @@ async function loadGroupsForDept(department: string): Promise<string[]> {
 export default function ProfileScreen() {
     const router = useRouter();
     const { colors, isDark } = useThemeColors();
-    const { profile, saveProfile, clearProfile } = useProfile();
+    const { profile, saveProfile } = useProfile();
 
     const [name, setName] = useState('');
     const [department, setDepartment] = useState('cse');
@@ -63,23 +63,45 @@ export default function ProfileScreen() {
     }, []);
 
     useEffect(() => {
-        setLoading(true);
-        const loadGroups = async () => {
-            const groups = await loadGroupsForDept(department);
-            setAvailableGroups(groups);
-            setSelectedGroup('');
-            setLoading(false);
-        };
-        loadGroups();
-    }, [department]);
+        if (!profile) return;
+        setName(profile.name ?? '');
+        if (profile.department) setDepartment(profile.department);
+    }, [profile]);
 
     useEffect(() => {
-        if (profile) {
-            setName(profile.name ?? '');
-            if (profile.group) setSelectedGroup(profile.group);
-            if (profile.department) setDepartment(profile.department);
-        }
-    }, [profile]);
+        let cancelled = false;
+        setLoading(true);
+
+        (async () => {
+            const groups = await loadGroupsForDept(department);
+            if (cancelled) return;
+
+            setAvailableGroups(groups);
+
+            // Preserve an already-selected group if it's still valid.
+            // Otherwise, if we're hydrating from a cached profile, use that group.
+            setSelectedGroup((prev) => {
+                if (prev && groups.includes(prev)) return prev;
+
+                const fromProfile =
+                    profile?.department === department ? (profile.group ?? '') : '';
+                if (fromProfile && groups.includes(fromProfile)) return fromProfile;
+
+                return '';
+            });
+        })()
+            .catch((e) => {
+                console.warn('[Profile] Failed to load groups:', e);
+                if (!cancelled) setAvailableGroups([]);
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [department, profile?.department, profile?.group]);
 
     const isValidGroup = availableGroups.length === 0 || availableGroups.includes(selectedGroup);
     const selectedDept = DEPARTMENT_OPTIONS.find(d => d.value === department);
@@ -96,9 +118,10 @@ export default function ProfileScreen() {
             name,
             department,
             group: selectedGroup,
-            email: '',
-            urn: '',
-            crn: ''
+            // Preserve values already cached from backend login.
+            email: profile?.email ?? '',
+            urn: profile?.urn ?? '',
+            crn: profile?.crn ?? '',
         });
         setSaving(false);
         if (success) {
@@ -185,6 +208,41 @@ export default function ProfileScreen() {
                                 onBlur={() => Animated.timing(nameBorderAnim, { toValue: 0, duration: 200, useNativeDriver: false }).start()}
                             />
                         </Animated.View>
+
+                        {(profile?.email || profile?.urn || profile?.crn) ? (
+                            <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}>
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 10, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                                    Student Details
+                                </Text>
+
+                                {!!profile?.email && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '600' }}>Email</Text>
+                                        <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '600' }} numberOfLines={1}>
+                                            {profile.email}
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {!!profile?.urn && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '600' }}>URN</Text>
+                                        <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '700' }} numberOfLines={1}>
+                                            {profile.urn}
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {!!profile?.crn && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                                        <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: '600' }}>CRN</Text>
+                                        <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '700' }} numberOfLines={1}>
+                                            {profile.crn}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        ) : null}
                     </View>
 
                     {/* Department card */}

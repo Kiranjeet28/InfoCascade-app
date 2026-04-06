@@ -33,11 +33,16 @@ export function useAuthEmailExists(email: string, debounceMs = 400): UseAuthEmai
         }
 
         const id = ++seq.current;
-        setStatus('checking');
-        setMessage('Checking...');
+        // Debounce backend call. While user is typing, keep UI neutral.
+        setStatus('idle');
+        setMessage('');
 
         const timer = setTimeout(async () => {
             try {
+                if (id !== seq.current) return;
+                setStatus('checking');
+                setMessage('Checking...');
+
                 const res = await checkEmailExists(trimmed);
                 if (id !== seq.current) return;
 
