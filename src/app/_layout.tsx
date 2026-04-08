@@ -42,14 +42,17 @@ function RootStack() {
     (segments?.some((s) => String(s) === "profile") ?? false) ||
     pathFirstSegment === "profile";
 
+  const isHomeRoute =
+    (segments?.some((s) => String(s) === "home") ?? false) ||
+    pathFirstSegment === "home";
+
   const isLoginRoute =
     (segments?.some((s) => String(s) === "login") ?? false) ||
     pathFirstSegment === "login";
 
   const isRootRoute =
     !pathFirstSegment ||
-    (segments?.length ?? 0) === 0 ||
-    segments?.[0] === "index";
+    pathFirstSegment === "index";
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.
@@ -86,9 +89,9 @@ function RootStack() {
 
     const isAuthed = jwtAuthed || legacyAuthed;
 
-    const replaceIfNeeded = (href: string) => {
+    const replaceIfNeeded = (href: "/(auth)/login" | "/(app)/home") => {
       if (href.includes("/(auth)/login") && isLoginRoute) return;
-      if (href.includes("/(app)/profile") && isProfileRoute) return;
+      if (href.includes("/(app)/home") && isHomeRoute) return;
       router.replace(href);
     };
 
@@ -110,6 +113,7 @@ function RootStack() {
     isAuthRoute,
     isLoginRoute,
     isProfileRoute,
+    isHomeRoute,
     isRootRoute,
     router,
     splashVisible,
