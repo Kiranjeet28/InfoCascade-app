@@ -10,6 +10,7 @@ import { NotificationPreferencesProvider } from "../context/notification-prefere
 import { ProfileProvider } from "../context/profile-context";
 import { PushNotificationProvider } from "../context/push-notifications";
 import { ThemeProvider, useThemeColors } from "../context/theme-context";
+import { WebNotificationProvider } from "../context/web-notifications-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
 
@@ -50,9 +51,7 @@ function RootStack() {
     (segments?.some((s) => String(s) === "login") ?? false) ||
     pathFirstSegment === "login";
 
-  const isRootRoute =
-    !pathFirstSegment ||
-    pathFirstSegment === "index";
+  const isRootRoute = !pathFirstSegment || pathFirstSegment === "index";
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.
@@ -204,15 +203,17 @@ export default function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <PushNotificationProvider>
-            <ProfileProvider>
-              <NotificationPreferencesProvider>
-                <InAppNotificationProvider>
-                  <RootStack />
-                </InAppNotificationProvider>
-              </NotificationPreferencesProvider>
-            </ProfileProvider>
-          </PushNotificationProvider>
+          <WebNotificationProvider>
+            <PushNotificationProvider>
+              <ProfileProvider>
+                <NotificationPreferencesProvider>
+                  <InAppNotificationProvider>
+                    <RootStack />
+                  </InAppNotificationProvider>
+                </NotificationPreferencesProvider>
+              </ProfileProvider>
+            </PushNotificationProvider>
+          </WebNotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
