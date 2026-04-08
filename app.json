@@ -10,7 +10,8 @@
     "ios": {
       "icon": "./assets/images/icon-custom.png",
       "supportsTablet": true,
-      "requireFullScreen": true
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.kiranjeet28.Infocascade"
     },
     "android": {
       "adaptiveIcon": {
@@ -39,15 +40,13 @@
           "android": {
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
-            "buildArchs": [
-              "armeabi-v7a",
-              "arm64-v8a"
-            ],
+            "buildArchs": ["armeabi-v7a", "arm64-v8a"],
             "useLegacyPackaging": true,
             "enableBundleCompression": true,
             "minSdkVersion": 24,
-            "targetSdkVersion": 34,
-            "compileSdkVersion": 34
+            "targetSdkVersion": 36,
+            "compileSdkVersion": 36,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],

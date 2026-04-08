@@ -1,16 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
-import { ErrorBoundary } from '../components/error-boundary';
-import SplashScreenComponent from '../components/splash/splash-screen';
-import { AuthProvider, useAuth } from '../context/auth-context';
-import { InAppNotificationProvider } from '../context/in-app-notification-context';
-import { NotificationPreferencesProvider } from '../context/notification-preferences-context';
-import { ProfileProvider } from '../context/profile-context';
-import { ThemeProvider, useThemeColors } from '../context/theme-context';
-import { getJwtToken, getSession } from '../utils/auth-cache';
-import { hideCustomSplash } from '../utils/custom-splash';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Stack, usePathname, useRouter, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorBoundary } from "../components/error-boundary";
+import SplashScreenComponent from "../components/splash/splash-screen";
+import { AuthProvider, useAuth } from "../context/auth-context";
+import { InAppNotificationProvider } from "../context/in-app-notification-context";
+import { NotificationPreferencesProvider } from "../context/notification-preferences-context";
+import { PushNotificationProvider } from "../context/push-notifications";
+import { ProfileProvider } from "../context/profile-context";
+import { ThemeProvider, useThemeColors } from "../context/theme-context";
+import { getJwtToken, getSession } from "../utils/auth-cache";
+import { hideCustomSplash } from "../utils/custom-splash";
 
 function RootStack() {
   const { isDark } = useThemeColors();
@@ -19,33 +20,36 @@ function RootStack() {
   const segments = useSegments();
   const pathname = usePathname();
   const auth = useAuth();
-  const [legacySessionPresent, setLegacySessionPresent] = useState<boolean | null>(null);
+  const [legacySessionPresent, setLegacySessionPresent] = useState<
+    boolean | null
+  >(null);
 
-  const authScreens = new Set(['login', 'register', 'forgot-password']);
+  const authScreens = new Set(["login", "register", "forgot-password"]);
 
-  const pathFirstSegment = (pathname ?? '')
-    .split('?')[0]
-    .split('#')[0]
-    .split('/')
+  const pathFirstSegment = (pathname ?? "")
+    .split("?")[0]
+    .split("#")[0]
+    .split("/")
     .filter(Boolean)[0];
 
   const isAuthRoute =
-    (segments?.some((s) => s === '(auth)' || authScreens.has(String(s))) ?? false) ||
-    pathFirstSegment === '(auth)' ||
+    (segments?.some((s) => s === "(auth)" || authScreens.has(String(s))) ??
+      false) ||
+    pathFirstSegment === "(auth)" ||
     (pathFirstSegment ? authScreens.has(pathFirstSegment) : false);
 
   const isProfileRoute =
-    (segments?.some((s) => String(s) === 'profile') ?? false) ||
-    pathFirstSegment === 'profile';
+    (segments?.some((s) => String(s) === "profile") ?? false) ||
+    pathFirstSegment === "profile";
 
   const isLoginRoute =
-    (segments?.some((s) => String(s) === 'login') ?? false) ||
-    pathFirstSegment === 'login';
+    (segments?.some((s) => String(s) === "login") ?? false) ||
+    pathFirstSegment === "login";
 
   const isRootRoute =
     !pathFirstSegment ||
     (segments?.length ?? 0) === 0 ||
-    segments?.[0] === 'index';
+    segments?.[0] === "index";
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.
@@ -83,65 +87,76 @@ function RootStack() {
     const isAuthed = jwtAuthed || legacyAuthed;
 
     const replaceIfNeeded = (href: string) => {
-      if (href.includes('/(auth)/login') && isLoginRoute) return;
-      if (href.includes('/(app)/profile') && isProfileRoute) return;
+      if (href.includes("/(auth)/login") && isLoginRoute) return;
+      if (href.includes("/(app)/profile") && isProfileRoute) return;
       router.replace(href);
     };
 
     // If not signed in, force auth routes only
     if (!isAuthed) {
-      if (!isAuthRoute) replaceIfNeeded('/(auth)/login');
+      if (!isAuthRoute) replaceIfNeeded("/(auth)/login");
       return;
     }
 
     // If signed in, keep users out of auth screens and off the root fallback
     if (isAuthRoute || isRootRoute) {
-      replaceIfNeeded('/(app)/profile');
+      replaceIfNeeded("/(app)/profile");
     }
-  }, [auth.isInitialized, auth.token, auth.user, legacySessionPresent, isAuthRoute, isLoginRoute, isProfileRoute, isRootRoute, router, splashVisible]);
+  }, [
+    auth.isInitialized,
+    auth.token,
+    auth.user,
+    legacySessionPresent,
+    isAuthRoute,
+    isLoginRoute,
+    isProfileRoute,
+    isRootRoute,
+    router,
+    splashVisible,
+  ]);
 
   // Initialize app and hide splash screen
   const initializeApp = useCallback(async () => {
     try {
-      console.log('[App] Starting initialization...');
+      console.log("[App] Starting initialization...");
 
       try {
         // Check cache in parallel
         await Promise.all([
-          getSession().catch(err => {
-            console.error('[App] Error getting session:', err);
+          getSession().catch((err) => {
+            console.error("[App] Error getting session:", err);
             return null;
           }),
-          AsyncStorage.getItem('studentProfile').catch(err => {
-            console.error('[App] Error getting profile:', err);
+          AsyncStorage.getItem("studentProfile").catch((err) => {
+            console.error("[App] Error getting profile:", err);
             return null;
           }),
-          getJwtToken().catch(err => {
-            console.error('[App] Error getting JWT token:', err);
+          getJwtToken().catch((err) => {
+            console.error("[App] Error getting JWT token:", err);
             return null;
           }),
         ]);
       } catch (error) {
-        console.error('[App] Error during parallel async checks:', error);
+        console.error("[App] Error during parallel async checks:", error);
       }
 
       // Hide the splash screen after a short delay
       setTimeout(() => {
         try {
-          console.log('[App] Hiding splash screen');
+          console.log("[App] Hiding splash screen");
           setSplashVisible(false);
           try {
             hideCustomSplash();
           } catch (splashErr) {
-            console.warn('[App] Failed to hide custom splash:', splashErr);
+            console.warn("[App] Failed to hide custom splash:", splashErr);
           }
         } catch (error) {
-          console.error('[App] Error during splash hide:', error);
+          console.error("[App] Error during splash hide:", error);
           setSplashVisible(false);
         }
       }, 800);
     } catch (error) {
-      console.error('[App] Failed to initialize app:', error);
+      console.error("[App] Failed to initialize app:", error);
 
       setTimeout(() => {
         try {
@@ -149,10 +164,10 @@ function RootStack() {
           try {
             hideCustomSplash();
           } catch (splashErr) {
-            console.warn('[App] Failed to hide splash on error:', splashErr);
+            console.warn("[App] Failed to hide splash on error:", splashErr);
           }
         } catch (fallbackError) {
-          console.error('[App] Fallback error handling failed:', fallbackError);
+          console.error("[App] Fallback error handling failed:", fallbackError);
         }
       }, 800);
     }
@@ -168,7 +183,7 @@ function RootStack() {
         <SplashScreenComponent onFinish={() => setSplashVisible(false)} />
       ) : (
         <>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
+          <StatusBar style={isDark ? "light" : "dark"} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
@@ -185,13 +200,15 @@ export default function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <ProfileProvider>
-            <NotificationPreferencesProvider>
-              <InAppNotificationProvider>
-                <RootStack />
-              </InAppNotificationProvider>
-            </NotificationPreferencesProvider>
-          </ProfileProvider>
+          <PushNotificationProvider>
+            <ProfileProvider>
+              <NotificationPreferencesProvider>
+                <InAppNotificationProvider>
+                  <RootStack />
+                </InAppNotificationProvider>
+              </NotificationPreferencesProvider>
+            </ProfileProvider>
+          </PushNotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
