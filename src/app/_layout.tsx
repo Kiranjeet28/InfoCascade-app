@@ -7,8 +7,8 @@ import SplashScreenComponent from "../components/splash/splash-screen";
 import { AuthProvider, useAuth } from "../context/auth-context";
 import { InAppNotificationProvider } from "../context/in-app-notification-context";
 import { NotificationPreferencesProvider } from "../context/notification-preferences-context";
-import { PushNotificationProvider } from "../context/push-notifications";
 import { ProfileProvider } from "../context/profile-context";
+import { PushNotificationProvider } from "../context/push-notifications";
 import { ThemeProvider, useThemeColors } from "../context/theme-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
@@ -100,7 +100,7 @@ function RootStack() {
 
     // If signed in, keep users out of auth screens and off the root fallback
     if (isAuthRoute || isRootRoute) {
-      replaceIfNeeded("/(app)/profile");
+      replaceIfNeeded("/(app)/home");
     }
   }, [
     auth.isInitialized,
