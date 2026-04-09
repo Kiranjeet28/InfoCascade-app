@@ -20,7 +20,6 @@ import { saveSession } from '../../utils/auth-cache';
 import type { AvailabilityStatus } from '../../utils/availability';
 import { cancelPendingChecks, checkAvailabilityDebounced } from '../../utils/availability';
 import { fetchDepartments, fetchGroups } from '../../utils/departmentUtils';
-import { registerServiceWorker } from '../../utils/web-notifications';
 
 // ─── Password Validation Function ────────────────────────────────────────────
 const validatePassword = (pwd: string) => {
@@ -379,10 +378,6 @@ export default function RegisterScreen() {
 
                 showMessage('Registration successful!', 'success');
                 setTimeout(async () => {
-                    // Register service worker on web
-                    if (Platform.OS === 'web') {
-                        await registerServiceWorker();
-                    }
                     await requestAllPermissionsSequentially();
                     router.replace('/(app)/profile');
                 }, 1200);

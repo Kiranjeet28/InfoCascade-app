@@ -1,127 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorBoundary } from "../components/error-boundary";
 import SplashScreenComponent from "../components/splash/splash-screen";
 import { AuthProvider, useAuth } from "../context/auth-context";
-import { InAppNotificationProvider } from "../context/in-app-notification-context";
-import { NotificationPreferencesProvider } from "../context/notification-preferences-context";
 import { ProfileProvider } from "../context/profile-context";
-import { PushNotificationProvider } from "../context/push-notifications";
 import { ThemeProvider, useThemeColors } from "../context/theme-context";
-import { WebNotificationProvider } from "../context/web-notifications-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
-import {
-  setupNotificationHandlers,
-  setNotificationNavigationRef,
-} from "../handlers/notification-handler";
-import { setupNotificationLogging } from "../utils/notifications-debug";
-
-/**
- * Initialize notification system on app startup
- * - Requests permissions
- * - Sets up Android notification channel
- * - Configures notification handler
- */
-async function initializeNotificationSystem() {
-  if (Platform.OS === "web") {
-    console.log("[NotificationSystem] Skipping on web platform");
-    return;
-  }
-
-  try {
-    console.log("[NotificationSystem] Initializing notification system...");
-
-    // 1. Request notification permissions
-    try {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      console.log(
-        "[NotificationSystem] Current permission status:",
-        existingStatus,
-      );
-
-      if (existingStatus !== "granted") {
-        console.log(
-          "[NotificationSystem] Requesting notification permissions...",
-        );
-        const { status } = await Notifications.requestPermissionsAsync();
-        console.log("[NotificationSystem] Permission request result:", status);
-
-        if (status !== "granted") {
-          console.warn(
-            "[NotificationSystem] ⚠️ Permissions not granted. Notifications may not work.",
-          );
-          return false;
-        }
-      }
-    } catch (permErr) {
-      console.error("[NotificationSystem] Error with permissions:", permErr);
-      return false;
-    }
-
-    // 2. Set up Android notification channel (CRITICAL for Android 8+)
-    if (Platform.OS === "android") {
-      try {
-        await Notifications.setNotificationChannelAsync("class-notifications", {
-          name: "Class Notifications",
-          description: "Notifications for upcoming classes and reminders",
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#6C63FF",
-          lockscreenVisibility:
-            Notifications.AndroidNotificationVisibility.PUBLIC,
-          enableVibrate: true,
-          enableLights: true,
-          showBadge: true,
-          bypassDnd: false,
-          sound: "default",
-        });
-        console.log(
-          "[NotificationSystem] ✅ Android notification channel configured",
-        );
-      } catch (channelErr) {
-        console.error(
-          "[NotificationSystem] Error setting up Android channel:",
-          channelErr,
-        );
-        return false;
-      }
-    }
-
-    // 3. Configure foreground notification handler
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
-    console.log("[NotificationSystem] ✅ Notification handler configured");
-
-    console.log(
-      "[NotificationSystem] ✅ Notification system fully initialized",
-    );
-    return true;
-  } catch (error) {
-    console.error(
-      "[NotificationSystem] ❌ Unexpected error during initialization:",
-      error,
-    );
-    return false;
-  }
-}
 
 function RootStack() {
   const { isDark } = useThemeColors();
   const [splashVisible, setSplashVisible] = useState(true);
-  const [notificationSystemReady, setNotificationSystemReady] = useState(false);
   const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
@@ -157,41 +48,6 @@ function RootStack() {
     pathFirstSegment === "login";
 
   const isRootRoute = !pathFirstSegment || pathFirstSegment === "index";
-
-  // Initialize notification system on mount
-  useEffect(() => {
-    console.log("[App] Setting up notification system...");
-    initializeNotificationSystem().then((success) => {
-      setNotificationSystemReady(success !== false);
-      if (success !== false) {
-        console.log("[App] ✅ Notification system ready");
-      } else {
-        console.warn(
-          "[App] ⚠️ Notification system may not be fully functional",
-        );
-      }
-    });
-  }, []);
-
-  // Set up notification handlers and deep linking
-  useEffect(() => {
-    if (!notificationSystemReady) {
-      console.log("[App] Waiting for notification system to be ready...");
-      return;
-    }
-
-    console.log("[App] Initializing notification handlers");
-    const cleanup1 = setupNotificationHandlers();
-    const cleanup2 = setupNotificationLogging();
-
-    // Enable deep linking from notifications
-    setNotificationNavigationRef(router);
-
-    return () => {
-      if (cleanup1) cleanup1();
-      if (cleanup2) cleanup2();
-    };
-  }, [router, notificationSystemReady]);
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.
@@ -343,17 +199,9 @@ export default function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <WebNotificationProvider>
-            <PushNotificationProvider>
-              <ProfileProvider>
-                <NotificationPreferencesProvider>
-                  <InAppNotificationProvider>
-                    <RootStack />
-                  </InAppNotificationProvider>
-                </NotificationPreferencesProvider>
-              </ProfileProvider>
-            </PushNotificationProvider>
-          </WebNotificationProvider>
+          <ProfileProvider>
+            <RootStack />
+          </ProfileProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

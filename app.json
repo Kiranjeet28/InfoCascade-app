@@ -67,16 +67,6 @@
         }
       ],
       "expo-image",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/android-icon-monochrome.png",
-          "color": "#6C63FF",
-          "defaultChannel": "class-notifications",
-          "sounds": [],
-          "enableBackgroundRemoteNotifications": true
-        }
-      ],
       "expo-font",
       "expo-web-browser"
     ],
