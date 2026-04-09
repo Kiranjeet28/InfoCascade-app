@@ -4,9 +4,8 @@ import {
     registerForPushNotificationsAsync,
     sendPushNotification,
 } from '@/utils/notifications';
-import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Text, TouchableOpacity } from 'react-native';
 
 interface NotificationTestButtonProps {
     onTokenReceived?: (token: string) => void;
@@ -22,20 +21,29 @@ export default function NotificationTestButton({
     const { colors } = useThemeColors();
     const [expoPushToken, setExpoPushToken] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
-    const [notification, setNotification] = useState<Notifications.Notification | undefined>();
+    const [notification, setNotification] = useState<any>(undefined);
 
     useEffect(() => {
+        // Skip if on web platform
+        if (Platform.OS === 'web') {
+            console.log('Notifications not supported on web');
+            return;
+        }
+
         // Register for push notifications on mount
-        registerForPushNotificationsAsync()
-            .then(token => {
+        const register = async () => {
+            try {
+                const token = await registerForPushNotificationsAsync();
                 if (token) {
                     setExpoPushToken(token);
                     onTokenReceived?.(token);
                 }
-            })
-            .catch((error: any) => {
+            } catch (error) {
                 console.error('Failed to register for notifications:', error);
-            });
+            }
+        };
+
+        register();
 
         // Add listeners for notification events
         const unsubscribe = addNotificationListeners(
