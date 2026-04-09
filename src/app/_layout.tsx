@@ -1,3 +1,8 @@
+/**
+ * Firebase MUST be imported before any other Firebase usage
+ */
+import '@/utils/firebaseConfig';
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
