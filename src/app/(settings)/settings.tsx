@@ -440,131 +440,132 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
             </Modal>
 
-            visible={showReminderOptions}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setShowReminderOptions(false)}
+            <Modal
+                visible={showReminderOptions}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowReminderOptions(false)}
             >
-            <TouchableOpacity
-                style={{
-                    flex: 1,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    justifyContent: 'flex-end',
-                }}
-                activeOpacity={1}
-                onPress={() => setShowReminderOptions(false)}
-            >
-                <View
+                <TouchableOpacity
                     style={{
-                        backgroundColor: colors.surface,
-                        borderTopLeftRadius: 20,
-                        borderTopRightRadius: 20,
-                        padding: 24,
-                        maxHeight: '50%',
+                        flex: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        justifyContent: 'flex-end',
                     }}
-                    onStartShouldSetResponder={() => true}
+                    activeOpacity={1}
+                    onPress={() => setShowReminderOptions(false)}
                 >
                     <View
                         style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: 20,
+                            backgroundColor: colors.surface,
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                            padding: 24,
+                            maxHeight: '50%',
                         }}
+                        onStartShouldSetResponder={() => true}
                     >
-                        <Text
+                        <View
                             style={{
-                                fontSize: 18,
-                                fontWeight: '700',
-                                color: colors.textPrimary,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 20,
                             }}
                         >
-                            Reminder Time
-                        </Text>
-                        <TouchableOpacity onPress={() => setShowReminderOptions(false)}>
-                            <AppIcon
-                                family="MaterialCommunityIcons"
-                                name="close"
-                                size={24}
-                                color={colors.textSecondary}
-                            />
-                        </TouchableOpacity>
-                    </View>
-
-                    <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 200 }}>
-                        {[10, 15, 30].map((time) => (
-                            <TouchableOpacity
-                                key={time}
+                            <Text
                                 style={{
-                                    paddingVertical: 14,
-                                    paddingHorizontal: 16,
-                                    borderRadius: 12,
-                                    marginBottom: 8,
-                                    backgroundColor:
-                                        preferences.reminderTime === time
-                                            ? colors.primary + '20'
-                                            : colors.bg,
-                                    borderWidth: preferences.reminderTime === time ? 2 : 1,
-                                    borderColor:
-                                        preferences.reminderTime === time ? colors.primary : colors.border,
-                                }}
-                                onPress={() => {
-                                    updatePreferences({ reminderTime: time as 10 | 15 | 30 });
-                                    setShowReminderOptions(false);
+                                    fontSize: 18,
+                                    fontWeight: '700',
+                                    color: colors.textPrimary,
                                 }}
                             >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                    <View
-                                        style={{
-                                            width: 20,
-                                            height: 20,
-                                            borderRadius: 10,
-                                            borderWidth: 2,
-                                            borderColor: colors.primary,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            backgroundColor:
-                                                preferences.reminderTime === time ? colors.primary : 'transparent',
-                                        }}
-                                    >
-                                        {preferences.reminderTime === time && (
-                                            <View
-                                                style={{
-                                                    width: 8,
-                                                    height: 8,
-                                                    borderRadius: 4,
-                                                    backgroundColor: colors.surface,
-                                                }}
-                                            />
-                                        )}
-                                    </View>
-                                    <View>
-                                        <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '600',
-                                                color: colors.textPrimary,
-                                            }}
-                                        >
-                                            {time} minutes before
-                                        </Text>
-                                        <Text
-                                            style={{
-                                                fontSize: 12,
-                                                color: colors.textSecondary,
-                                                marginTop: 2,
-                                            }}
-                                        >
-                                            Get notified {time} mins early
-                                        </Text>
-                                    </View>
-                                </View>
+                                Reminder Time
+                            </Text>
+                            <TouchableOpacity onPress={() => setShowReminderOptions(false)}>
+                                <AppIcon
+                                    family="MaterialCommunityIcons"
+                                    name="close"
+                                    size={24}
+                                    color={colors.textSecondary}
+                                />
                             </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                </View>
-            </TouchableOpacity>
-        </Modal>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 200 }}>
+                            {[10, 15, 30].map((time) => (
+                                <TouchableOpacity
+                                    key={time}
+                                    style={{
+                                        paddingVertical: 14,
+                                        paddingHorizontal: 16,
+                                        borderRadius: 12,
+                                        marginBottom: 8,
+                                        backgroundColor:
+                                            preferences.reminderTime === time
+                                                ? colors.primary + '20'
+                                                : colors.bg,
+                                        borderWidth: preferences.reminderTime === time ? 2 : 1,
+                                        borderColor:
+                                            preferences.reminderTime === time ? colors.primary : colors.border,
+                                    }}
+                                    onPress={() => {
+                                        updatePreferences({ reminderTime: time as 10 | 15 | 30 });
+                                        setShowReminderOptions(false);
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                        <View
+                                            style={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 10,
+                                                borderWidth: 2,
+                                                borderColor: colors.primary,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                backgroundColor:
+                                                    preferences.reminderTime === time ? colors.primary : 'transparent',
+                                            }}
+                                        >
+                                            {preferences.reminderTime === time && (
+                                                <View
+                                                    style={{
+                                                        width: 8,
+                                                        height: 8,
+                                                        borderRadius: 4,
+                                                        backgroundColor: colors.surface,
+                                                    }}
+                                                />
+                                            )}
+                                        </View>
+                                        <View>
+                                            <Text
+                                                style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '600',
+                                                    color: colors.textPrimary,
+                                                }}
+                                            >
+                                                {time} minutes before
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: colors.textSecondary,
+                                                    marginTop: 2,
+                                                }}
+                                            >
+                                                Get notified {time} mins early
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </KeyboardAvoidingView >
     );
 }
