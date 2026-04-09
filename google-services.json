@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "887025246114",
+    "project_id": "info-765f3",
+    "storage_bucket": "info-765f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:887025246114:android:bad11d79c6c95c53425cfb",
+        "android_client_info": {
+          "package_name": "com.kiranjeet28.Infocascade"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASeJSVNWpwvNTrFh4Ud_SV3yetUg_oWiA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
