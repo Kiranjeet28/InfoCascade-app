@@ -13,7 +13,7 @@ import { ThemeProvider, useThemeColors } from "../context/theme-context";
 import { WebNotificationProvider } from "../context/web-notifications-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
-import { setupNotificationHandlers } from "../handlers/notification-handler";
+import { setupNotificationHandlers,setNotificationNavigationRef } from "../handlers/notification-handler";
 
 function RootStack() {
   const { isDark } = useThemeColors();
@@ -54,14 +54,17 @@ function RootStack() {
 
   const isRootRoute = !pathFirstSegment || pathFirstSegment === "index";
 
-  // Setup notification handlers on app mount
   useEffect(() => {
-    console.log("[App] Initializing notification handlers");
-    const cleanup = setupNotificationHandlers();
-    return () => {
-      if (cleanup) cleanup();
-    };
-  }, []);
+     console.log("[App] Initializing notification handlers");
+     const cleanup = setupNotificationHandlers();
+     
+     // Enable deep linking from notifications
+     setNotificationNavigationRef(router);
+     
+     return () => {
+       if (cleanup) cleanup();
+     };
+   }, [router]);
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.

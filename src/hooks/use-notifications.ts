@@ -393,12 +393,25 @@ export function useNotifications(): UseNotificationsResult {
 
             // Cancel existing notifications first
             if (Platform.OS === 'web') {
-                cancelAllWebNotifications();
-            } else {
-                const Notifications = getNotificationsModule();
-                if (!Notifications) return;
-                await Notifications.cancelAllScheduledNotificationsAsync();
-            }
+                          cancelAllWebNotifications();
+                      } else {
+                          const Notifications = getNotificationsModule();
+                          if (!Notifications) return;
+                          
+                          // FIXED: Only cancel notifications that have already passed
+                          const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
+                          const now = new Date();
+                          const pastNotifications = allScheduled.filter(n => {
+                            const trigger = n.trigger as any;
+                            if (trigger.type !== 'date') return false;
+                            return new Date(trigger.date) < now;
+                          });
+                          
+                          console.log(`[useNotifications] Cancelling ${pastNotifications.length} past notifications`);
+                          for (const notif of pastNotifications) {
+                            await Notifications.cancelNotificationAsync(notif.identifier);
+                          }
+                      }
 
             // Fetch timetable
             const file = getTimetableFile();
