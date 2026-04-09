@@ -1,5 +1,5 @@
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
 /**
  * Comprehensive notification debugging utilities
@@ -12,12 +12,12 @@ export class NotificationDebugger {
    */
   static async logScheduledNotifications() {
     try {
-      console.log('\n========== 📋 SCHEDULED NOTIFICATIONS ==========');
+      console.log("\n========== 📋 SCHEDULED NOTIFICATIONS ==========");
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 
       if (scheduled.length === 0) {
-        console.log('❌ NO NOTIFICATIONS SCHEDULED');
-        console.log('   ↳ If you expected notifications, something is wrong!');
+        console.log("❌ NO NOTIFICATIONS SCHEDULED");
+        console.log("   ↳ If you expected notifications, something is wrong!");
         return [];
       }
 
@@ -29,14 +29,24 @@ export class NotificationDebugger {
         console.log(`    Title: ${notif.content.title}`);
         console.log(`    Body: ${notif.content.body}`);
 
-        if (notif.trigger && typeof notif.trigger === 'object' && 'date' in notif.trigger) {
+        if (
+          notif.trigger &&
+          typeof notif.trigger === "object" &&
+          "date" in notif.trigger
+        ) {
           const triggerDate = new Date(notif.trigger.date);
           const now = new Date();
-          const delaySeconds = Math.round((triggerDate.getTime() - now.getTime()) / 1000);
+          const delaySeconds = Math.round(
+            (triggerDate.getTime() - now.getTime()) / 1000,
+          );
 
           console.log(`    Trigger Time: ${triggerDate.toISOString()}`);
-          console.log(`    Time Until Trigger: ${delaySeconds}s (${Math.round(delaySeconds / 60)}m)`);
-          console.log(`    Status: ${delaySeconds > 0 ? '⏳ PENDING' : '⚠️ SHOULD HAVE FIRED'}`);
+          console.log(
+            `    Time Until Trigger: ${delaySeconds}s (${Math.round(delaySeconds / 60)}m)`,
+          );
+          console.log(
+            `    Status: ${delaySeconds > 0 ? "⏳ PENDING" : "⚠️ SHOULD HAVE FIRED"}`,
+          );
         }
 
         if (notif.content.data && Object.keys(notif.content.data).length > 0) {
@@ -44,10 +54,10 @@ export class NotificationDebugger {
         }
       });
 
-      console.log('\n================================================\n');
+      console.log("\n================================================\n");
       return scheduled;
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
       return [];
     }
   }
@@ -58,39 +68,51 @@ export class NotificationDebugger {
    */
   static async testScheduleNotification() {
     try {
-      console.log('\n[NotificationDebugger] 🧪 Testing notification scheduling...');
+      console.log(
+        "\n[NotificationDebugger] 🧪 Testing notification scheduling...",
+      );
 
-      const triggerDate = new Date(Date.now() + 5000);
+      // Log before scheduling
+      console.log(
+        "[NotificationDebugger] Scheduling test notification with trigger: { seconds: 10 }",
+      );
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: '🧪 Test Notification',
-          body: 'If you see this, notifications are WORKING! (scheduled 5s ago)',
+          title: "🧪 Test Notification",
+          body: "If you see this, notifications are WORKING!",
           data: {
-            test: 'true',
+            test: "true",
             scheduledAt: new Date().toISOString(),
           },
           sound: true,
           badge: 1,
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: triggerDate,
-          ...(Platform.OS === 'android' && {
-            channelId: 'class-notifications',
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 10,
+          ...(Platform.OS === "android" && {
+            channelId: "class-notifications",
           }),
         },
       });
 
-      console.log(`✅ Test notification scheduled!`);
-      console.log(`   ID: ${notificationId}`);
-      console.log(`   Will fire at: ${triggerDate.toISOString()}`);
-      console.log(`   ↳ Verify with: NotificationDebugger.logScheduledNotifications()`);
-      console.log(`   ↳ Should appear in device notification tray in ~5 seconds\n`);
+      // Log returned notification ID
+      console.log(`✅ Test notification scheduled! ID: ${notificationId}`);
+
+      // Log getAllScheduledNotificationsAsync()
+      await this.logScheduledNotifications();
+
+      console.log(
+        `   ↳ Should appear in device notification tray in ~10 seconds\n`,
+      );
 
       return notificationId;
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error scheduling test notification:', error);
+      console.error(
+        "[NotificationDebugger] ❌ Error scheduling test notification:",
+        error,
+      );
       return null;
     }
   }
@@ -100,11 +122,11 @@ export class NotificationDebugger {
    */
   static async checkPermissions() {
     try {
-      console.log('\n========== 🔐 PERMISSIONS STATUS ==========');
+      console.log("\n========== 🔐 PERMISSIONS STATUS ==========");
 
-      if (Platform.OS === 'web') {
-        console.log('ℹ️  Web platform - skipping native permission check\n');
-        return { granted: false, reason: 'Web platform' };
+      if (Platform.OS === "web") {
+        console.log("ℹ️  Web platform - skipping native permission check\n");
+        return { granted: false, reason: "Web platform" };
       }
 
       const { status } = await Notifications.getPermissionsAsync();
@@ -112,18 +134,20 @@ export class NotificationDebugger {
       console.log(`Platform: ${Platform.OS}`);
       console.log(`Status: ${status}`);
 
-      if (status === 'granted') {
-        console.log('✅ Notifications ENABLED - Good to go!\n');
-      } else if (status === 'denied') {
-        console.log('❌ Notifications DISABLED');
-        console.log('   ↳ User must enable in: Settings > Apps > [YourApp] > Notifications\n');
+      if (status === "granted") {
+        console.log("✅ Notifications ENABLED - Good to go!\n");
+      } else if (status === "denied") {
+        console.log("❌ Notifications DISABLED");
+        console.log(
+          "   ↳ User must enable in: Settings > Apps > [YourApp] > Notifications\n",
+        );
       } else {
         console.log(`⚠️  Status: ${status}\n`);
       }
 
-      return { granted: status === 'granted', status };
+      return { granted: status === "granted", status };
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
       return { granted: false, error };
     }
   }
@@ -133,24 +157,26 @@ export class NotificationDebugger {
    */
   static async requestPermissions() {
     try {
-      console.log('[NotificationDebugger] 📍 Requesting notification permissions...');
+      console.log(
+        "[NotificationDebugger] 📍 Requesting notification permissions...",
+      );
 
-      if (Platform.OS === 'web') {
-        console.log('ℹ️  Web platform - skipping\n');
+      if (Platform.OS === "web") {
+        console.log("ℹ️  Web platform - skipping\n");
         return false;
       }
 
       const { status } = await Notifications.requestPermissionsAsync();
 
-      if (status === 'granted') {
-        console.log('✅ Permissions GRANTED\n');
+      if (status === "granted") {
+        console.log("✅ Permissions GRANTED\n");
         return true;
       } else {
-        console.log('❌ Permissions DENIED - User must enable in Settings\n');
+        console.log("❌ Permissions DENIED - User must enable in Settings\n");
         return false;
       }
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
       return false;
     }
   }
@@ -160,32 +186,37 @@ export class NotificationDebugger {
    */
   static async getFullDiagnostics() {
     try {
-      console.log('\n╔════════════════════════════════════════╗');
-      console.log('║  🔍 NOTIFICATION SYSTEM DIAGNOSTICS   ║');
-      console.log('╚════════════════════════════════════════╝\n');
+      console.log("\n╔════════════════════════════════════════╗");
+      console.log("║  🔍 NOTIFICATION SYSTEM DIAGNOSTICS   ║");
+      console.log("╚════════════════════════════════════════╝\n");
 
       // Platform
       console.log(`📱 Platform: ${Platform.OS}`);
 
       // Permissions
       const perms = await this.checkPermissions();
-      console.log(`🔐 Permissions: ${perms.granted ? '✅ Granted' : '❌ Denied'}`);
+      console.log(
+        `🔐 Permissions: ${perms.granted ? "✅ Granted" : "❌ Denied"}`,
+      );
 
       // Scheduled notifications
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
       console.log(`📋 Scheduled: ${scheduled.length} notification(s)`);
 
-      console.log('\n✅ Diagnostics complete\n');
+      console.log("\n✅ Diagnostics complete\n");
 
       // Recommendations
-      console.log('📝 NEXT STEPS:');
-      console.log('   1. If permissions are ❌, enable in Settings');
-      console.log('   2. Test with: NotificationDebugger.testScheduleNotification()');
-      console.log('   3. View scheduled: NotificationDebugger.logScheduledNotifications()');
-      console.log('   4. Check logs for [useClassNotifications] messages\n');
-
+      console.log("📝 NEXT STEPS:");
+      console.log("   1. If permissions are ❌, enable in Settings");
+      console.log(
+        "   2. Test with: NotificationDebugger.testScheduleNotification()",
+      );
+      console.log(
+        "   3. View scheduled: NotificationDebugger.logScheduledNotifications()",
+      );
+      console.log("   4. Check logs for [useClassNotifications] messages\n");
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
     }
   }
 
@@ -194,11 +225,13 @@ export class NotificationDebugger {
    */
   static async cancelAllNotifications() {
     try {
-      console.log('[NotificationDebugger] 🧹 Cancelling all scheduled notifications...');
+      console.log(
+        "[NotificationDebugger] 🧹 Cancelling all scheduled notifications...",
+      );
       await Notifications.cancelAllScheduledNotificationsAsync();
-      console.log('✅ All notifications cleared\n');
+      console.log("✅ All notifications cleared\n");
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
     }
   }
 
@@ -211,7 +244,7 @@ export class NotificationDebugger {
       await Notifications.cancelScheduledNotificationAsync(id);
       console.log(`✅ Cancelled\n`);
     } catch (error) {
-      console.error('[NotificationDebugger] ❌ Error:', error);
+      console.error("[NotificationDebugger] ❌ Error:", error);
     }
   }
 }
@@ -221,32 +254,38 @@ export class NotificationDebugger {
  * Call this in your app initialization to see all notification events
  */
 export function setupNotificationLogging() {
-  if (Platform.OS === 'web') {
-    console.log('[NotificationLogging] Skipping on web platform');
+  if (Platform.OS === "web") {
+    console.log("[NotificationLogging] Skipping on web platform");
     return;
   }
 
-  console.log('[NotificationLogging] 📍 Setting up notification lifecycle logging\n');
+  console.log(
+    "[NotificationLogging] 📍 Setting up notification lifecycle logging\n",
+  );
 
   // Log received notifications (foreground)
-  const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
-    console.log('[🔔 Notification Received - Foreground]', {
-      title: notification.request.content.title,
-      body: notification.request.content.body,
-      time: new Date().toISOString(),
-    });
-  });
+  const receivedSub = Notifications.addNotificationReceivedListener(
+    (notification) => {
+      console.log("[🔔 Notification Received - Foreground]", {
+        title: notification.request.content.title,
+        body: notification.request.content.body,
+        time: new Date().toISOString(),
+      });
+    },
+  );
 
   // Log user interactions
-  const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-    console.log('[👆 User Tapped Notification]', {
-      title: response.notification.request.content.title,
-      body: response.notification.request.content.body,
-      time: new Date().toISOString(),
-    });
-  });
+  const responseSub = Notifications.addNotificationResponseReceivedListener(
+    (response) => {
+      console.log("[👆 User Tapped Notification]", {
+        title: response.notification.request.content.title,
+        body: response.notification.request.content.body,
+        time: new Date().toISOString(),
+      });
+    },
+  );
 
-  console.log('[NotificationLogging] ✅ Logging active\n');
+  console.log("[NotificationLogging] ✅ Logging active\n");
 
   return () => {
     receivedSub.remove();

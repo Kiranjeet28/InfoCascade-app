@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 
@@ -39,14 +40,7 @@ export function usePushNotifications() {
   return useContext(PushNotificationContext);
 }
 
-// Set default notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Notification handler is set in _layout.tsx to avoid conflicts
 
 export function PushNotificationProvider({
   children,
@@ -129,7 +123,13 @@ export function PushNotificationProvider({
           sound: true,
           badge: 1,
         },
-        trigger: { type: "time", seconds: 1 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 1,
+          ...(Platform.OS === "android" && {
+            channelId: "class-notifications",
+          }),
+        },
       });
       console.log("[PushNotifications] Local notification scheduled:", title);
     } catch (error) {
@@ -151,8 +151,8 @@ export function PushNotificationProvider({
         console.log("[PushNotifications] Notification received:", notif);
         setNotification({
           id: notif.request.identifier,
-          title: notif.request.content.title,
-          body: notif.request.content.body,
+          title: notif.request.content.title || undefined,
+          body: notif.request.content.body || undefined,
           data: notif.request.content.data as Record<string, any> | undefined,
         });
       });
@@ -167,8 +167,8 @@ export function PushNotificationProvider({
         const notif = response.notification;
         setNotification({
           id: notif.request.identifier,
-          title: notif.request.content.title,
-          body: notif.request.content.body,
+          title: notif.request.content.title || undefined,
+          body: notif.request.content.body || undefined,
           data: notif.request.content.data as Record<string, any> | undefined,
         });
       });

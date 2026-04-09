@@ -19,6 +19,7 @@ import {
   setupNotificationHandlers,
   setNotificationNavigationRef,
 } from "../handlers/notification-handler";
+import { setupNotificationLogging } from "../utils/notifications-debug";
 
 /**
  * Initialize notification system on app startup
@@ -180,13 +181,15 @@ function RootStack() {
     }
 
     console.log("[App] Initializing notification handlers");
-    const cleanup = setupNotificationHandlers();
+    const cleanup1 = setupNotificationHandlers();
+    const cleanup2 = setupNotificationLogging();
 
     // Enable deep linking from notifications
     setNotificationNavigationRef(router);
 
     return () => {
-      if (cleanup) cleanup();
+      if (cleanup1) cleanup1();
+      if (cleanup2) cleanup2();
     };
   }, [router, notificationSystemReady]);
 
