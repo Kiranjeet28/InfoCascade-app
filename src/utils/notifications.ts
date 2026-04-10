@@ -31,8 +31,8 @@ if (Platform.OS !== "web") {
  */
 export async function sendPushNotification(
   expoPushToken: string,
-  title = "Test Notification",
-  body = "This is a test notification",
+  title: string,
+  body: string,
 ) {
   if (!notificationsAvailable) {
     console.warn("Notifications not available on this platform");
