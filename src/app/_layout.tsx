@@ -1,7 +1,7 @@
 /**
  * Firebase MUST be imported before any other Firebase usage
  */
-import '@/utils/firebaseConfig';
+import "@/utils/firebaseConfig";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
@@ -17,7 +17,9 @@ import { hideCustomSplash } from "../utils/custom-splash";
 
 function RootStack() {
   const { isDark } = useThemeColors();
+  // Track initialization state to avoid flashing between splash and content
   const [splashVisible, setSplashVisible] = useState(true);
+  const [initComplete, setInitComplete] = useState(false);
   const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
@@ -120,12 +122,13 @@ function RootStack() {
   ]);
 
   // Initialize app and hide splash screen
+  // Optimized to reduce flickering by minimizing delays
   const initializeApp = useCallback(async () => {
     try {
       console.log("[App] Starting initialization...");
 
       try {
-        // Check cache in parallel
+        // Check cache in parallel for faster initialization
         await Promise.all([
           getSession().catch((err) => {
             console.error("[App] Error getting session:", err);
@@ -144,7 +147,11 @@ function RootStack() {
         console.error("[App] Error during parallel async checks:", error);
       }
 
-      // Hide the splash screen after a short delay
+      // Mark initialization as complete
+      setInitComplete(true);
+
+      // Hide the splash screen with minimal delay to reduce flickering
+      // Use a shorter timeout (300ms) to allow auth provider to stabilize
       setTimeout(() => {
         try {
           console.log("[App] Hiding splash screen");
@@ -158,10 +165,12 @@ function RootStack() {
           console.error("[App] Error during splash hide:", error);
           setSplashVisible(false);
         }
-      }, 800);
+      }, 300);
     } catch (error) {
       console.error("[App] Failed to initialize app:", error);
 
+      // Ensure splash is hidden even on error
+      setInitComplete(true);
       setTimeout(() => {
         try {
           setSplashVisible(false);
@@ -173,7 +182,7 @@ function RootStack() {
         } catch (fallbackError) {
           console.error("[App] Fallback error handling failed:", fallbackError);
         }
-      }, 800);
+      }, 300);
     }
   }, []);
 

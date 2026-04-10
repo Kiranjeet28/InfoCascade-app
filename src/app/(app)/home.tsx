@@ -15,10 +15,10 @@ import {
 } from "react-native";
 import AppIcon from "../../components/app-icon";
 import BgBlobs from "../../components/layout/bg-blobs";
-import NotificationTestButton from "../../components/notification-test-button";
 import { useProfile } from "../../context/profile-context";
 import { useThemeColors } from "../../context/theme-context";
 import { getEndTime, useLiveClass } from "../../hooks/Useliveclass";
+import { useNextClassNotifications } from "../../hooks/use-next-class-notifications";
 import { ClassSlot } from "../../types";
 import { fetchJson } from "../../utils/api";
 
@@ -325,6 +325,12 @@ export default function HomeScreen() {
     loading: profileLoading,
   } = useProfile();
   const { current, next, refresh: refreshLiveClass } = useLiveClass();
+  const {
+    isInitialized: notifInitialized,
+    isEnabled: notifEnabled,
+    scheduleNotification,
+    scheduledClass,
+  } = useNextClassNotifications();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -360,11 +366,22 @@ export default function HomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  // Refresh "Next Class" data when screen comes into focus
+  // Refresh "Next Class" data and reschedule notifications when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refreshLiveClass();
-    }, [refreshLiveClass]),
+      // Schedule notification for next class if it exists
+      if (notifInitialized && notifEnabled && next) {
+        scheduleNotification([current, next].filter(Boolean) as ClassSlot[]);
+      }
+    }, [
+      refreshLiveClass,
+      notifInitialized,
+      notifEnabled,
+      next,
+      scheduleNotification,
+      current,
+    ]),
   );
 
   // Fetch backend root info for status/debugging
@@ -388,14 +405,28 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // Placeholder functions for notification handling
-  const refreshNotifications = useCallback(() => {
-    console.log("Refreshing notifications...");
-  }, []);
+  // Schedule notifications when next class data updates
+  useEffect(() => {
+    if (notifInitialized && notifEnabled && next) {
+      // Get all classes for today to pass to notification scheduler
+      const classesToSchedule = [current, next].filter(Boolean) as ClassSlot[];
+      scheduleNotification(classesToSchedule);
+    }
+  }, [next, notifInitialized, notifEnabled, scheduleNotification, current]);
 
+  // Refresh notifications for current session
+  const refreshNotifications = useCallback(async () => {
+    console.log("[HomeScreen] Refreshing notifications...");
+    if (notifInitialized && notifEnabled && next) {
+      const classesToSchedule = [current, next].filter(Boolean) as ClassSlot[];
+      await scheduleNotification(classesToSchedule);
+    }
+  }, [notifInitialized, notifEnabled, next, scheduleNotification, current]);
+
+  // Legacy: placeholder function for backwards compatibility
   const enableNotifications = useCallback(() => {
     setNotificationsEnabled(true);
-    console.log("Notifications enabled");
+    console.log("[HomeScreen] Notifications enabled (legacy)");
   }, []);
 
   useEffect(() => {
@@ -596,8 +627,6 @@ export default function HomeScreen() {
                   )}
                 </TouchableOpacity>
               )}
-              {/* Test Notification Button */}
-              {Platform.OS !== "web" && <NotificationTestButton />}
               {/* Spacer to prevent layout shift */}
               <View style={{ width: 4 }} />
               {/* Profile Avatar */}
@@ -713,24 +742,6 @@ export default function HomeScreen() {
                 </View>
                 <Text style={{ fontSize: 20, color: colors.accent }}>›</Text>
               </TouchableOpacity>
-            )}
-
-            {/* ── Test Notification Button ── */}
-            {Platform.OS !== "web" && (
-              <View style={{ marginBottom: 28 }}>
-                <NotificationTestButton
-                  title="📢 Test Notification"
-                  style={{
-                    width: "100%",
-                    paddingVertical: 12,
-                    paddingHorizontal: 16,
-                    borderRadius: 12,
-                    backgroundColor: colors.primary + "15",
-                    borderWidth: 1,
-                    borderColor: colors.primary + "30",
-                  }}
-                />
-              </View>
             )}
 
             {/* ── Now & Next Section removed ── */}
@@ -859,7 +870,7 @@ export default function HomeScreen() {
                 onPress={() => {
                   Alert.alert(
                     "🤖 Coming Soon",
-                    "AI Assistant feature will be available soon"
+                    "AI Assistant feature will be available soon",
                   );
                 }}
                 style={{
@@ -922,7 +933,7 @@ export default function HomeScreen() {
                 onPress={() => {
                   Alert.alert(
                     "📍 Coming Soon",
-                    "Classroom Navigation feature will be available soon"
+                    "Classroom Navigation feature will be available soon",
                   );
                 }}
                 style={{
