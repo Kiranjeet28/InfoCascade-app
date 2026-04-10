@@ -45,7 +45,7 @@ export default function LoginForm({
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const emailInputRef = useRef<TextInput>(null);
 
-  const EMAIL_CHECK_DEBOUNCE_MS = 1_000;
+  const EMAIL_CHECK_DEBOUNCE_MS = 600;
 
   // Only run email check when not loading (to prevent infinite loops during login)
   const emailCheck = useAuthEmailExists(
