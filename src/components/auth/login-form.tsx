@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -34,7 +35,9 @@ export default function LoginForm({
   const { saveProfile, syncProfileFromBackend } = useProfile();
   const {
     suggestedEmail,
+    suggestedPassword,
     canAutofill,
+    hasSaved,
     saveCredentialOnLogin,
     recordSuccessfulLogin,
   } = useCredentialManager();
@@ -56,16 +59,20 @@ export default function LoginForm({
   // Auto-focus email input on mount and autofill if available
   useEffect(() => {
     const focusAndAutofill = () => {
-      // Autofill email from saved credentials if available
+      // Autofill email/password from saved credentials if available
       if (suggestedEmail && !auth.formData.email) {
         auth.setEmail(suggestedEmail);
         console.log("[LoginForm] Autofilled email from saved credentials");
+      }
+      if (suggestedPassword && !auth.formData.password) {
+        auth.setPassword(suggestedPassword);
+        console.log("[LoginForm] Autofilled password from saved credentials");
       }
       setTimeout(() => emailInputRef.current?.focus(), 300);
     };
 
     focusAndAutofill();
-  }, [suggestedEmail, auth]);
+  }, [suggestedEmail, suggestedPassword, auth]);
 
   const triggerShake = () => {
     Animated.sequence([
@@ -199,10 +206,33 @@ export default function LoginForm({
 
         // Save credentials to device for autofill (optional - user can skip)
         try {
-          await saveCredentialOnLogin(
-            auth.formData.email,
-            auth.formData.password,
-          );
+          if (!hasSaved) {
+            const shouldSave = await new Promise<boolean>((resolve) => {
+              Alert.alert(
+                "Save login?",
+                "Save your email and password to your password manager for faster sign-in on this device.",
+                [
+                  {
+                    text: "Not now",
+                    style: "cancel",
+                    onPress: () => resolve(false),
+                  },
+                  {
+                    text: "Save",
+                    onPress: () => resolve(true),
+                  },
+                ],
+              );
+            });
+
+            if (shouldSave) {
+              await saveCredentialOnLogin(
+                auth.formData.email,
+                auth.formData.password,
+              );
+            }
+          }
+
           await recordSuccessfulLogin();
         } catch (err) {
           console.warn("[LoginForm] Error saving credentials:", err);
@@ -382,6 +412,9 @@ export default function LoginForm({
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
+              textContentType="username"
+              importantForAutofill="yes"
               editable={!isLoading}
               style={{
                 borderWidth: 1,
@@ -462,6 +495,10 @@ export default function LoginForm({
               value={auth.formData.password}
               onChangeText={handlePasswordChange}
               secureTextEntry={!showPassword}
+              autoCorrect={false}
+              autoComplete="password"
+              textContentType="password"
+              importantForAutofill="yes"
               editable={!isLoading && !emailCheck.isChecking}
               style={{
                 borderWidth: 1,
