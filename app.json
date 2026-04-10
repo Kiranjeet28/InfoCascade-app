@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Infocascade",
-    "slug": "Infocascade",
+    "slug": "info",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon-custom.png",
@@ -40,7 +40,10 @@
           "android": {
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
-            "buildArchs": ["armeabi-v7a", "arm64-v8a"],
+            "buildArchs": [
+              "armeabi-v7a",
+              "arm64-v8a"
+            ],
             "useLegacyPackaging": true,
             "enableBundleCompression": true,
             "minSdkVersion": 24,
@@ -78,9 +81,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "883f5977-8834-40d5-87d7-ebb18bd9a885"
+        "projectId": "75b89c62-7d5d-4c64-b8ee-d64633e3db7a"
       }
     },
-    "owner": "kiranjeet28"
+    "owner": "jasvinderkour286s-organization"
   }
 }
