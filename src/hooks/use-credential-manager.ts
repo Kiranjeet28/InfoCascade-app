@@ -3,18 +3,16 @@
  * Handles saving, retrieving, and clearing credentials securely
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   clearSavedCredentials,
-  getCredentialManagerStatus,
-  getCredentialSuggestion,
+  getSavedCredentials,
   getSavedEmail,
   hasSavedCredentials,
   initializeCredentialManager,
   promptToSaveCredentials,
-  saveCredentials,
   updateLastAccessedTime,
-} from '../services/google-credential-manager';
+} from "../services/google-credential-manager";
 
 interface UseCredentialManagerResult {
   // Status
@@ -24,6 +22,7 @@ interface UseCredentialManagerResult {
 
   // Autofill
   suggestedEmail: string | null;
+  suggestedPassword: string | null;
   canAutofill: boolean;
 
   // Actions
@@ -38,6 +37,9 @@ export function useCredentialManager(): UseCredentialManagerResult {
   const [hasSaved, setHasSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [suggestedEmail, setSuggestedEmail] = useState<string | null>(null);
+  const [suggestedPassword, setSuggestedPassword] = useState<string | null>(
+    null,
+  );
   const [canAutofill, setCanAutofill] = useState(false);
 
   // Initialize credential manager on mount
@@ -54,16 +56,19 @@ export function useCredentialManager(): UseCredentialManagerResult {
         setHasSaved(saved);
 
         if (saved) {
-          // Get suggested email for autofill
-          const email = await getSavedEmail();
-          setSuggestedEmail(email);
+          // Get suggested email/password for autofill
+          const credentials = await getSavedCredentials();
+          const email = credentials?.email ?? (await getSavedEmail());
+          const password = credentials?.password ?? null;
+          setSuggestedEmail(email ?? null);
+          setSuggestedPassword(password);
           setCanAutofill(!!email);
         }
 
         setIsInitialized(true);
-        console.log('[useCredentialManager] Initialized');
+        console.log("[useCredentialManager] Initialized");
       } catch (error) {
-        console.error('[useCredentialManager] Initialization error:', error);
+        console.error("[useCredentialManager] Initialization error:", error);
         setIsInitialized(true); // Still mark as initialized even on error
       } finally {
         setLoading(false);
@@ -84,17 +89,21 @@ export function useCredentialManager(): UseCredentialManagerResult {
         if (success) {
           setHasSaved(true);
           setSuggestedEmail(email);
+          setSuggestedPassword(password);
           setCanAutofill(true);
-          console.log('[useCredentialManager] Credentials saved');
+          console.log("[useCredentialManager] Credentials saved");
         }
 
         return success;
       } catch (error) {
-        console.error('[useCredentialManager] Error saving credentials:', error);
+        console.error(
+          "[useCredentialManager] Error saving credentials:",
+          error,
+        );
         return false;
       }
     },
-    []
+    [],
   );
 
   // Clear saved credentials (call on logout)
@@ -103,20 +112,26 @@ export function useCredentialManager(): UseCredentialManagerResult {
       await clearSavedCredentials();
       setHasSaved(false);
       setSuggestedEmail(null);
+      setSuggestedPassword(null);
       setCanAutofill(false);
-      console.log('[useCredentialManager] Credentials cleared');
+      console.log("[useCredentialManager] Credentials cleared");
     } catch (error) {
-      console.error('[useCredentialManager] Error clearing credentials:', error);
+      console.error(
+        "[useCredentialManager] Error clearing credentials:",
+        error,
+      );
     }
   }, []);
 
   // Get saved email for autofill
-  const getSavedEmailCallback = useCallback(async (): Promise<string | null> => {
+  const getSavedEmailCallback = useCallback(async (): Promise<
+    string | null
+  > => {
     try {
       const email = await getSavedEmail();
       return email;
     } catch (error) {
-      console.error('[useCredentialManager] Error getting saved email:', error);
+      console.error("[useCredentialManager] Error getting saved email:", error);
       return null;
     }
   }, []);
@@ -125,9 +140,9 @@ export function useCredentialManager(): UseCredentialManagerResult {
   const recordSuccessfulLogin = useCallback(async () => {
     try {
       await updateLastAccessedTime();
-      console.log('[useCredentialManager] Login recorded');
+      console.log("[useCredentialManager] Login recorded");
     } catch (error) {
-      console.error('[useCredentialManager] Error recording login:', error);
+      console.error("[useCredentialManager] Error recording login:", error);
     }
   }, []);
 
@@ -136,6 +151,7 @@ export function useCredentialManager(): UseCredentialManagerResult {
     hasSaved,
     loading,
     suggestedEmail,
+    suggestedPassword,
     canAutofill,
     saveCredentialOnLogin,
     clearCredentials,
