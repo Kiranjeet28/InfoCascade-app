@@ -366,22 +366,11 @@ export default function HomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  // Refresh "Next Class" data and reschedule notifications when screen comes into focus
+  // Refresh "Next Class" data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       refreshLiveClass();
-      // Schedule notification for next class if it exists
-      if (notifInitialized && notifEnabled && next) {
-        scheduleNotification([current, next].filter(Boolean) as ClassSlot[]);
-      }
-    }, [
-      refreshLiveClass,
-      notifInitialized,
-      notifEnabled,
-      next,
-      scheduleNotification,
-      current,
-    ]),
+    }, [refreshLiveClass]),
   );
 
   // Fetch backend root info for status/debugging
