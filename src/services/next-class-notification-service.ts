@@ -4,20 +4,16 @@
  * Works in foreground, background, and when app is closed
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
-import * as TaskManager from 'expo-task-manager';
-import { Platform } from 'react-native';
-import { ClassSlot } from '../types';
-import { findCurrentAndNext } from '../hooks/Useliveclass';
-
-// Background task name
-const NEXT_CLASS_NOTIFICATION_TASK = 'next-class-notification-task';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
+import { ClassSlot } from "../types";
+import { findCurrentAndNext } from "../hooks/Useliveclass";
 
 // Storage keys
-const SCHEDULED_NOTIFICATION_ID_KEY = 'scheduled_notification_id';
-const LAST_SCHEDULED_CLASS_KEY = 'last_scheduled_class';
-const NOTIFICATION_SETTINGS_KEY = 'next_class_notification_settings';
+const SCHEDULED_NOTIFICATION_ID_KEY = "scheduled_notification_id";
+const LAST_SCHEDULED_CLASS_KEY = "last_scheduled_class";
+const NOTIFICATION_SETTINGS_KEY = "next_class_notification_settings";
 
 interface NotificationSettings {
   enabled: boolean;
@@ -34,7 +30,7 @@ interface ScheduledNotification {
  * Converts time string (HH:MM) to minutes since midnight
  */
 function timeToMinutes(t: string): number {
-  const [h, m] = t.split(':').map(Number);
+  const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
 
@@ -51,13 +47,13 @@ function isWeekday(): boolean {
  * Must be called once when app starts
  */
 export async function initializeNextClassNotifications(): Promise<void> {
-  if (Platform.OS === 'web') {
-    console.log('[NextClassNotifications] Skipping on web platform');
+  if (Platform.OS === "web") {
+    console.log("[NextClassNotifications] Skipping on web platform");
     return;
   }
 
   try {
-    console.log('[NextClassNotifications] Initializing...');
+    console.log("[NextClassNotifications] Initializing...");
 
     // Set up notification handler
     Notifications.setNotificationHandler({
@@ -70,50 +66,20 @@ export async function initializeNextClassNotifications(): Promise<void> {
     });
 
     // Register Android notification channel
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('next-class', {
-        name: 'Next Class Notifications',
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("next-class", {
+        name: "Next Class Notifications",
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-        sound: 'default',
+        lightColor: "#FF231F7C",
+        sound: "default",
         enableVibrate: true,
       });
     }
 
-    // Register background task
-    await registerBackgroundTask();
-
-    console.log('[NextClassNotifications] Initialization complete');
+    console.log("[NextClassNotifications] Initialization complete");
   } catch (error) {
-    console.error('[NextClassNotifications] Initialization error:', error);
-  }
-}
-
-/**
- * Register background task for checking next class
- */
-async function registerBackgroundTask(): Promise<void> {
-  if (Platform.OS === 'web') return;
-
-  try {
-    // Define the background task
-    TaskManager.defineTask(NEXT_CLASS_NOTIFICATION_TASK, async () => {
-      try {
-        console.log('[NextClassNotifications] Background task triggered');
-        // Background task execution - re-schedule if needed
-        // Note: In background, we have limited access to user data
-        // This is mainly to keep notifications alive if already scheduled
-      } catch (error) {
-        console.error('[NextClassNotifications] Background task error:', error);
-      }
-
-      return TaskManager.BackgroundFetchResult.NewData;
-    });
-
-    console.log('[NextClassNotifications] Background task registered');
-  } catch (error) {
-    console.error('[NextClassNotifications] Failed to register background task:', error);
+    console.error("[NextClassNotifications] Initialization error:", error);
   }
 }
 
@@ -124,10 +90,10 @@ async function registerBackgroundTask(): Promise<void> {
  */
 export async function scheduleNextClassNotification(
   classes: ClassSlot[],
-  minutesBefore: number = 15
+  minutesBefore: number = 15,
 ): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    console.log('[NextClassNotifications] Skipping on web platform');
+  if (Platform.OS === "web") {
+    console.log("[NextClassNotifications] Skipping on web platform");
     return false;
   }
 
@@ -137,7 +103,7 @@ export async function scheduleNextClassNotification(
 
     // Check if it's a weekday
     if (!isWeekday()) {
-      console.log('[NextClassNotifications] Weekend - no notification needed');
+      console.log("[NextClassNotifications] Weekend - no notification needed");
       return false;
     }
 
@@ -148,7 +114,7 @@ export async function scheduleNextClassNotification(
     const { next } = findCurrentAndNext(classes);
 
     if (!next) {
-      console.log('[NextClassNotifications] No next class found today');
+      console.log("[NextClassNotifications] No next class found today");
       return false;
     }
 
@@ -160,7 +126,7 @@ export async function scheduleNextClassNotification(
     // If notification time has already passed, don't schedule
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     if (notificationTimeMinutes <= currentMinutes) {
-      console.log('[NextClassNotifications] Notification time already passed');
+      console.log("[NextClassNotifications] Notification time already passed");
       return false;
     }
 
@@ -169,17 +135,20 @@ export async function scheduleNextClassNotification(
     const delaySeconds = delayMinutes * 60;
 
     // Extract class details
-    const subject = next.data?.subject || 'Class';
-    const room = next.data?.room || 'TBD';
-    const teacher = next.data?.teacher || '';
+    const subject = next.data?.subject || "Class";
+    const room =
+      next.data?.classRoom ?? next.data?.entries?.[0]?.classRoom ?? "TBD";
+    const teacher =
+      next.data?.teacher ?? next.data?.entries?.[0]?.teacher ?? "";
     const timeOfClass = next.timeOfClass;
     const endTime = calculateEndTime(next.timeOfClass);
 
     // Build notification content
-    const title = `📚 ${subject}`;
-    const body = `${timeOfClass} - ${endTime} in ${room}${teacher ? ` (${teacher})` : ''}`;
+    const title = "📚 " + subject;
+    const teacherSuffix = teacher ? " (" + teacher + ")" : "";
+    const body = timeOfClass + " - " + endTime + " in " + room + teacherSuffix;
 
-    console.log('[NextClassNotifications] Scheduling notification:', {
+    console.log("[NextClassNotifications] Scheduling notification:", {
       subject,
       timeOfClass,
       minutesBefore: validMinutes,
@@ -191,9 +160,9 @@ export async function scheduleNextClassNotification(
       content: {
         title,
         body,
-        sound: 'default',
+        sound: "default",
         badge: 1,
-        priority: 'high',
+        priority: "high",
         data: {
           classSlot: JSON.stringify(next),
           subject,
@@ -203,7 +172,9 @@ export async function scheduleNextClassNotification(
         },
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: delaySeconds,
+        repeats: false,
       },
     });
 
@@ -216,13 +187,22 @@ export async function scheduleNextClassNotification(
 
     await Promise.all([
       AsyncStorage.setItem(SCHEDULED_NOTIFICATION_ID_KEY, notificationId),
-      AsyncStorage.setItem(LAST_SCHEDULED_CLASS_KEY, JSON.stringify(scheduledNotif)),
+      AsyncStorage.setItem(
+        LAST_SCHEDULED_CLASS_KEY,
+        JSON.stringify(scheduledNotif),
+      ),
     ]);
 
-    console.log('[NextClassNotifications] Notification scheduled with ID:', notificationId);
+    console.log(
+      "[NextClassNotifications] Notification scheduled with ID:",
+      notificationId,
+    );
     return true;
   } catch (error) {
-    console.error('[NextClassNotifications] Error scheduling notification:', error);
+    console.error(
+      "[NextClassNotifications] Error scheduling notification:",
+      error,
+    );
     return false;
   }
 }
@@ -232,15 +212,23 @@ export async function scheduleNextClassNotification(
  */
 export async function cancelNextClassNotification(): Promise<void> {
   try {
-    const notificationId = await AsyncStorage.getItem(SCHEDULED_NOTIFICATION_ID_KEY);
+    const notificationId = await AsyncStorage.getItem(
+      SCHEDULED_NOTIFICATION_ID_KEY,
+    );
 
     if (notificationId) {
       await Notifications.cancelScheduledNotificationAsync(notificationId);
       await AsyncStorage.removeItem(SCHEDULED_NOTIFICATION_ID_KEY);
-      console.log('[NextClassNotifications] Notification cancelled:', notificationId);
+      console.log(
+        "[NextClassNotifications] Notification cancelled:",
+        notificationId,
+      );
     }
   } catch (error) {
-    console.error('[NextClassNotifications] Error cancelling notification:', error);
+    console.error(
+      "[NextClassNotifications] Error cancelling notification:",
+      error,
+    );
   }
 }
 
@@ -255,7 +243,10 @@ export async function getScheduledNotification(): Promise<ScheduledNotification 
     }
     return null;
   } catch (error) {
-    console.error('[NextClassNotifications] Error getting scheduled notification:', error);
+    console.error(
+      "[NextClassNotifications] Error getting scheduled notification:",
+      error,
+    );
     return null;
   }
 }
@@ -263,12 +254,20 @@ export async function getScheduledNotification(): Promise<ScheduledNotification 
 /**
  * Enable/disable next class notifications
  */
-export async function setNotificationSettings(settings: NotificationSettings): Promise<void> {
+export async function setNotificationSettings(
+  settings: NotificationSettings,
+): Promise<void> {
   try {
-    await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
-    console.log('[NextClassNotifications] Settings updated:', settings);
+    await AsyncStorage.setItem(
+      NOTIFICATION_SETTINGS_KEY,
+      JSON.stringify(settings),
+    );
+    console.log("[NextClassNotifications] Settings updated:", settings);
   } catch (error) {
-    console.error('[NextClassNotifications] Error setting notification settings:', error);
+    console.error(
+      "[NextClassNotifications] Error setting notification settings:",
+      error,
+    );
   }
 }
 
@@ -282,7 +281,10 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
       return JSON.parse(data);
     }
   } catch (error) {
-    console.error('[NextClassNotifications] Error getting notification settings:', error);
+    console.error(
+      "[NextClassNotifications] Error getting notification settings:",
+      error,
+    );
   }
 
   // Default settings
@@ -296,24 +298,31 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
  * Request notification permissions
  */
 export async function requestNotificationPermissions(): Promise<boolean> {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     return false;
   }
 
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
+    if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
-    const granted = finalStatus === 'granted';
-    console.log('[NextClassNotifications] Notification permissions:', granted ? 'granted' : 'denied');
+    const granted = finalStatus === "granted";
+    console.log(
+      "[NextClassNotifications] Notification permissions:",
+      granted ? "granted" : "denied",
+    );
     return granted;
   } catch (error) {
-    console.error('[NextClassNotifications] Error requesting permissions:', error);
+    console.error(
+      "[NextClassNotifications] Error requesting permissions:",
+      error,
+    );
     return false;
   }
 }
@@ -326,7 +335,10 @@ export async function areNotificationsEnabled(): Promise<boolean> {
     const settings = await getNotificationSettings();
     return settings.enabled;
   } catch (error) {
-    console.error('[NextClassNotifications] Error checking notification status:', error);
+    console.error(
+      "[NextClassNotifications] Error checking notification status:",
+      error,
+    );
     return false;
   }
 }
@@ -334,18 +346,23 @@ export async function areNotificationsEnabled(): Promise<boolean> {
 /**
  * Refresh/reschedule notifications (call when timetable changes or app resumes)
  */
-export async function refreshNotificationSchedule(classes: ClassSlot[]): Promise<boolean> {
+export async function refreshNotificationSchedule(
+  classes: ClassSlot[],
+): Promise<boolean> {
   try {
     const enabled = await areNotificationsEnabled();
     if (!enabled) {
-      console.log('[NextClassNotifications] Notifications disabled');
+      console.log("[NextClassNotifications] Notifications disabled");
       return false;
     }
 
     const settings = await getNotificationSettings();
     return await scheduleNextClassNotification(classes, settings.minutesBefore);
   } catch (error) {
-    console.error('[NextClassNotifications] Error refreshing notification schedule:', error);
+    console.error(
+      "[NextClassNotifications] Error refreshing notification schedule:",
+      error,
+    );
     return false;
   }
 }
@@ -354,11 +371,11 @@ export async function refreshNotificationSchedule(classes: ClassSlot[]): Promise
  * Calculate end time (assumes 1-hour classes)
  */
 function calculateEndTime(startTime: string): string {
-  const [h, m] = startTime.split(':').map(Number);
+  const [h, m] = startTime.split(":").map(Number);
   const endH = h + 1; // Classes are 1 hour long
   const endM = m;
 
-  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  return String(endH).padStart(2, "0") + ":" + String(endM).padStart(2, "0");
 }
 
 /**
@@ -371,11 +388,11 @@ export async function clearAllNotificationData(): Promise<void> {
       AsyncStorage.removeItem(LAST_SCHEDULED_CLASS_KEY),
       AsyncStorage.removeItem(NOTIFICATION_SETTINGS_KEY),
     ]);
-    console.log('[NextClassNotifications] All notification data cleared');
+    console.log("[NextClassNotifications] All notification data cleared");
   } catch (error) {
-    console.error('[NextClassNotifications] Error clearing notification data:', error);
+    console.error(
+      "[NextClassNotifications] Error clearing notification data:",
+      error,
+    );
   }
 }
-```
-
-Now let me create a hook to use this service:

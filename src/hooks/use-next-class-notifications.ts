@@ -3,11 +3,10 @@
  * Handles scheduling, enabling/disabling, and refreshing notifications
  */
 
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
-import { ClassSlot } from '../types';
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from "react";
+import { ClassSlot } from "../types";
 import {
-  areNotificationsEnabled,
   clearAllNotificationData,
   getNotificationSettings,
   getScheduledNotification,
@@ -15,7 +14,7 @@ import {
   requestNotificationPermissions,
   scheduleNextClassNotification,
   setNotificationSettings,
-} from '../services/next-class-notification-service';
+} from "../services/next-class-notification-service";
 
 interface UseNextClassNotificationsResult {
   isInitialized: boolean;
@@ -62,9 +61,12 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
         }
 
         setIsInitialized(true);
-        console.log('[useNextClassNotifications] Initialized');
+        console.log("[useNextClassNotifications] Initialized");
       } catch (error) {
-        console.error('[useNextClassNotifications] Initialization error:', error);
+        console.error(
+          "[useNextClassNotifications] Initialization error:",
+          error,
+        );
         setIsInitialized(true); // Still mark as initialized even on error
       } finally {
         setLoading(false);
@@ -84,12 +86,15 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
             setScheduledClass(scheduled.classSlot);
           }
         } catch (error) {
-          console.error('[useNextClassNotifications] Error refreshing scheduled class:', error);
+          console.error(
+            "[useNextClassNotifications] Error refreshing scheduled class:",
+            error,
+          );
         }
       };
 
       refresh();
-    }, [])
+    }, []),
   );
 
   const setEnabled = async (enabled: boolean) => {
@@ -99,7 +104,10 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
         minutesBefore,
       });
       setIsEnabledState(enabled);
-      console.log('[useNextClassNotifications] Notifications', enabled ? 'enabled' : 'disabled');
+      console.log(
+        "[useNextClassNotifications] Notifications",
+        enabled ? "enabled" : "disabled",
+      );
 
       if (!enabled) {
         // Clear notification data when disabled
@@ -107,7 +115,10 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
         setScheduledClass(null);
       }
     } catch (error) {
-      console.error('[useNextClassNotifications] Error setting enabled state:', error);
+      console.error(
+        "[useNextClassNotifications] Error setting enabled state:",
+        error,
+      );
     }
   };
 
@@ -121,25 +132,40 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
         minutesBefore: validMinutes,
       });
       setMinutesBeforeState(validMinutes);
-      console.log('[useNextClassNotifications] Minutes before updated to:', validMinutes);
+      console.log(
+        "[useNextClassNotifications] Minutes before updated to:",
+        validMinutes,
+      );
     } catch (error) {
-      console.error('[useNextClassNotifications] Error setting minutes before:', error);
+      console.error(
+        "[useNextClassNotifications] Error setting minutes before:",
+        error,
+      );
     }
   };
 
-  const scheduleNotification = async (classes: ClassSlot[]): Promise<boolean> => {
+  const scheduleNotification = async (
+    classes: ClassSlot[],
+  ): Promise<boolean> => {
     try {
       if (!isEnabled) {
-        console.log('[useNextClassNotifications] Notifications disabled, skipping schedule');
+        console.log(
+          "[useNextClassNotifications] Notifications disabled, skipping schedule",
+        );
         return false;
       }
 
       if (!hasPermission) {
-        console.log('[useNextClassNotifications] No permission to schedule notifications');
+        console.log(
+          "[useNextClassNotifications] No permission to schedule notifications",
+        );
         return false;
       }
 
-      const success = await scheduleNextClassNotification(classes, minutesBefore);
+      const success = await scheduleNextClassNotification(
+        classes,
+        minutesBefore,
+      );
 
       if (success) {
         // Update scheduled class
@@ -151,7 +177,10 @@ export function useNextClassNotifications(): UseNextClassNotificationsResult {
 
       return success;
     } catch (error) {
-      console.error('[useNextClassNotifications] Error scheduling notification:', error);
+      console.error(
+        "[useNextClassNotifications] Error scheduling notification:",
+        error,
+      );
       return false;
     }
   };
