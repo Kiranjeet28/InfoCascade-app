@@ -147,42 +147,13 @@ function RootStack() {
         console.error("[App] Error during parallel async checks:", error);
       }
 
-      // Mark initialization as complete
+      // Mark initialization as complete. Splash hiding is gated by auth readiness.
       setInitComplete(true);
-
-      // Hide the splash screen with minimal delay to reduce flickering
-      // Use a shorter timeout (300ms) to allow auth provider to stabilize
-      setTimeout(() => {
-        try {
-          console.log("[App] Hiding splash screen");
-          setSplashVisible(false);
-          try {
-            hideCustomSplash();
-          } catch (splashErr) {
-            console.warn("[App] Failed to hide custom splash:", splashErr);
-          }
-        } catch (error) {
-          console.error("[App] Error during splash hide:", error);
-          setSplashVisible(false);
-        }
-      }, 300);
     } catch (error) {
       console.error("[App] Failed to initialize app:", error);
 
-      // Ensure splash is hidden even on error
+      // Ensure init completes even on error. Splash hiding is gated by auth readiness.
       setInitComplete(true);
-      setTimeout(() => {
-        try {
-          setSplashVisible(false);
-          try {
-            hideCustomSplash();
-          } catch (splashErr) {
-            console.warn("[App] Failed to hide splash on error:", splashErr);
-          }
-        } catch (fallbackError) {
-          console.error("[App] Fallback error handling failed:", fallbackError);
-        }
-      }, 300);
     }
   }, []);
 
@@ -190,10 +161,28 @@ function RootStack() {
     initializeApp();
   }, [initializeApp]);
 
+  const canHideSplash =
+    initComplete &&
+    auth.isInitialized &&
+    (!!auth.token && !!auth.user ? true : legacySessionPresent !== null);
+
+  useEffect(() => {
+    if (!splashVisible) return;
+    if (!canHideSplash) return;
+
+    console.log("[App] Ready - hiding splash screen");
+    setSplashVisible(false);
+    try {
+      hideCustomSplash();
+    } catch (splashErr) {
+      console.warn("[App] Failed to hide custom splash:", splashErr);
+    }
+  }, [canHideSplash, splashVisible]);
+
   return (
     <>
       {splashVisible ? (
-        <SplashScreenComponent onFinish={() => setSplashVisible(false)} />
+        <SplashScreenComponent />
       ) : (
         <>
           <StatusBar style={isDark ? "light" : "dark"} />

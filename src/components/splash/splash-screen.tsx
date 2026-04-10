@@ -5,7 +5,7 @@
  */
 
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React from "react";
 import { Image, StyleSheet, useColorScheme, View } from "react-native";
 
 // Prevent splash screen from auto-hiding
@@ -13,28 +13,9 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   // Error may be thrown if splash already hidden
 });
 
-interface SplashScreenComponentProps {
-  onFinish?: () => void;
-}
-
-export default function SplashScreenComponent({
-  onFinish,
-}: SplashScreenComponentProps) {
+export default function SplashScreenComponent() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  useEffect(() => {
-    // Optionally hide splash after a minimal delay
-    // The parent component (_layout.tsx) controls when the splash is actually hidden
-    // This timeout is a fallback to prevent splash from being stuck
-    const timer = setTimeout(() => {
-      if (onFinish) {
-        onFinish();
-      }
-    }, 100); // Minimal fallback delay - parent handles actual hide timing
-
-    return () => clearTimeout(timer);
-  }, [onFinish]);
 
   const styles = getStyles(isDark);
 
