@@ -303,21 +303,44 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   try {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    // expo-notifications permission API typing differs across SDK versions:
+    // some return `{ status }`, others return an object with platform fields like `granted`.
+    const existingPerms: any = await Notifications.getPermissionsAsync();
 
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    const getStatus = (p: any): string | undefined =>
+      typeof p?.status === "string"
+        ? p.status
+        : typeof p?.ios?.status === "string"
+          ? p.ios.status
+          : typeof p?.android?.status === "string"
+            ? p.android.status
+            : undefined;
+
+    const getGranted = (p: any): boolean | undefined =>
+      typeof p?.granted === "boolean"
+        ? p.granted
+        : typeof p?.ios?.granted === "boolean"
+          ? p.ios.granted
+          : typeof p?.android?.granted === "boolean"
+            ? p.android.granted
+            : undefined;
+
+    let finalStatus = getStatus(existingPerms);
+    let granted = getGranted(existingPerms);
+
+    // If we can't conclusively tell it's granted, request permissions.
+    if (finalStatus !== "granted" && granted !== true) {
+      const requestedPerms: any = await Notifications.requestPermissionsAsync();
+      finalStatus = getStatus(requestedPerms) ?? finalStatus;
+      granted = getGranted(requestedPerms) ?? granted;
     }
 
-    const granted = finalStatus === "granted";
+    const isGranted = granted === true || finalStatus === "granted";
     console.log(
       "[NextClassNotifications] Notification permissions:",
-      granted ? "granted" : "denied",
+      isGranted ? "granted" : "denied",
     );
-    return granted;
+    return isGranted;
   } catch (error) {
     console.error(
       "[NextClassNotifications] Error requesting permissions:",
