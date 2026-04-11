@@ -21,7 +21,6 @@ import SelectField from "../../components/ui/select-field";
 import { useProfile } from "../../context/profile-context";
 import { useThemeColors } from "../../context/theme-context";
 import { useEmailAvailability } from "../../hooks/use-email-availability";
-import { useCredentialManager } from "../../hooks/use-credential-manager";
 import {
   isValidGNDECEmail,
   resendOTP,
@@ -167,7 +166,6 @@ export default function RegisterScreen() {
   const router = useRouter();
   const { colors, isDark } = useThemeColors();
   const { saveProfile } = useProfile();
-  const { saveCredentialOnLogin, hasSaved } = useCredentialManager();
 
   // Steps: 0=Email, 1=OTP, 2=Identity (URN/CRN), 3=Academic (Dept/Group)
   const [step, setStep] = useState(0);
@@ -296,18 +294,8 @@ export default function RegisterScreen() {
     setTimeout(() => setMsg(null), 3000);
   }, []);
 
-  const promptToSaveCredentials = useCallback(() => {
-    return new Promise<boolean>((resolve) => {
-      Alert.alert(
-        "Save login?",
-        "Save your email and password to your password manager for faster sign-in on this device.",
-        [
-          { text: "Not now", style: "cancel", onPress: () => resolve(false) },
-          { text: "Save", onPress: () => resolve(true) },
-        ],
-      );
-    });
-  }, []);
+  // NOTE: Credential saving to Google account / OS credential store is intentionally
+  // disabled for the registration flow.
 
   // ─── Send OTP ───────────────────────────────────────────────────────────────
   const handleSendOTP = async () => {
@@ -505,12 +493,7 @@ export default function RegisterScreen() {
           group,
         });
 
-        if (!hasSaved) {
-          const shouldSave = await promptToSaveCredentials();
-          if (shouldSave) {
-            await saveCredentialOnLogin(email.trim(), password.trim());
-          }
-        }
+        // Credential saving is disabled during registration.
 
         showMessage("Registration successful!", "success");
         setTimeout(async () => {

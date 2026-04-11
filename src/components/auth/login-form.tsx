@@ -56,10 +56,16 @@ export default function LoginForm({
     EMAIL_CHECK_DEBOUNCE_MS,
   );
 
-  // Auto-focus email input on mount and autofill if available
+  // Auto-focus email input on initial mount and autofill if available.
+  // IMPORTANT: this must not re-run on subsequent renders, otherwise focus can jump
+  // back to the email field while the user is typing the password.
+  const didInitialFocusRef = useRef(false);
+
   useEffect(() => {
+    if (didInitialFocusRef.current) return;
+
+    // If autofill suggestions arrive later, we'll still only apply them once.
     const focusAndAutofill = () => {
-      // Autofill email/password from saved credentials if available
       if (suggestedEmail && !auth.formData.email) {
         auth.setEmail(suggestedEmail);
         console.log("[LoginForm] Autofilled email from saved credentials");
@@ -68,11 +74,17 @@ export default function LoginForm({
         auth.setPassword(suggestedPassword);
         console.log("[LoginForm] Autofilled password from saved credentials");
       }
+
+      // Focus only once on first mount (prevents cursor jump issues)
       setTimeout(() => emailInputRef.current?.focus(), 300);
+      didInitialFocusRef.current = true;
     };
 
     focusAndAutofill();
-  }, [suggestedEmail, suggestedPassword, auth]);
+    // Intentionally avoid depending on `auth` (object identity can change and retrigger).
+    // We also avoid refocusing if suggested values update later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestedEmail, suggestedPassword]);
 
   const triggerShake = () => {
     Animated.sequence([
