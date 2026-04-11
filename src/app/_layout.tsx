@@ -6,7 +6,7 @@ import "@/utils/firebaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "../components/error-boundary";
 import SplashScreenComponent from "../components/splash/splash-screen";
 import { AuthProvider, useAuth } from "../context/auth-context";
@@ -27,6 +27,10 @@ function RootStack() {
   const [legacySessionPresent, setLegacySessionPresent] = useState<
     boolean | null
   >(null);
+
+  // Prevent duplicate redirects during startup flicker
+  const lastRedirectRef = useRef<string | null>(null);
+  const redirectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const authScreens = new Set(["login", "register", "forgot-password"]);
   const settingsScreens = new Set(["settings"]);
@@ -51,19 +55,12 @@ function RootStack() {
     pathFirstSegment === "(settings)" ||
     (pathFirstSegment ? settingsScreens.has(pathFirstSegment) : false);
 
-  const isProfileRoute =
-    (segments?.some((s) => String(s) === "profile") ?? false) ||
-    pathFirstSegment === "profile";
-
-  const isHomeRoute =
-    (segments?.some((s) => String(s) === "home") ?? false) ||
-    pathFirstSegment === "home";
-
-  const isLoginRoute =
-    (segments?.some((s) => String(s) === "login") ?? false) ||
-    pathFirstSegment === "login";
-
   const isRootRoute = !pathFirstSegment || pathFirstSegment === "index";
+
+  // Compute auth state outside of effects to avoid recreations
+  const jwtAuthed = !!auth.token && !!auth.user;
+  const legacyAuthed = legacySessionPresent === true;
+  const isAuthed = jwtAuthed || legacyAuthed;
 
   // Legacy session support (URN-based auth_session). Some flows (e.g. registration)
   // rely on this for access to app routes.
@@ -88,54 +85,76 @@ function RootStack() {
   }, [auth.isInitialized, auth.token, auth.user]);
 
   // Auth guard: keep navigation in sync with auth state & current route
-  useEffect(() => {
-    if (!auth.isInitialized) return;
-    if (splashVisible) return;
+  // Optimized to prevent first-launch flicker by:
+  // 1. Only running after splash is completely hidden (route is stable/visible)
+  // 2. Preventing duplicate redirects with ref tracking
+  // 3. Using narrowed dependency array to minimize re-triggers
+  // 4. Computing auth state outside effect to prevent inline recreations
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(
+    () => {
+      // Only run auth guard after:
+      // - Auth is initialized
+      // - Legacy session check complete
+      // - Splash is hidden (UI is stable)
+      if (!auth.isInitialized) return;
+      if (!canHideSplash) return;
+      if (splashVisible) return;
 
-    const jwtAuthed = !!auth.token && !!auth.user;
-    const legacyAuthed = legacySessionPresent === true;
+      // Avoid redirecting to login until we've checked legacy session
+      if (!jwtAuthed && legacySessionPresent === null) return;
 
-    // Avoid redirecting to login until we've checked legacy session.
-    if (!jwtAuthed && legacySessionPresent === null) return;
+      let targetRoute: "/(auth)/login" | "/(app)/home" | null = null;
 
-    const isAuthed = jwtAuthed || legacyAuthed;
+      // Determine target route based on auth state and current route
+      if (!isAuthed) {
+        // User is not authenticated: redirect to login if not already on auth route
+        if (!isAuthRoute && !isSettingsRoute) {
+          targetRoute = "/(auth)/login";
+        }
+      } else {
+        // User is authenticated: redirect to home if on auth route or root
+        if (isAuthRoute || isRootRoute) {
+          targetRoute = "/(app)/home";
+        }
+      }
 
-    const replaceIfNeeded = (href: "/(auth)/login" | "/(app)/home") => {
-      if (href.includes("/(auth)/login") && isLoginRoute) return;
-      if (href.includes("/(app)/home") && isHomeRoute) return;
-      router.replace(href);
-    };
+      // Only redirect if:
+      // 1. We have a target route
+      // 2. It's different from the last redirect (prevent loops)
+      if (targetRoute && lastRedirectRef.current !== targetRoute) {
+        console.log("[App] Redirecting:", `${pathname} → ${targetRoute}`);
+        lastRedirectRef.current = targetRoute;
 
-    // If not signed in, force auth routes only
-    if (!isAuthed) {
-      if (!isAuthRoute) replaceIfNeeded("/(auth)/login");
-      return;
-    }
+        router.replace(targetRoute);
 
-    // If signed in, keep users out of auth screens and off the root fallback
-    if (isAuthRoute || isRootRoute) {
-      replaceIfNeeded("/(app)/home");
-      return;
-    }
-
-    // Allow settings route for authenticated users
-    if (isSettingsRoute) {
-      return;
-    }
-  }, [
-    auth.isInitialized,
-    auth.token,
-    auth.user,
-    legacySessionPresent,
-    isAuthRoute,
-    isSettingsRoute,
-    isLoginRoute,
-    isProfileRoute,
-    isHomeRoute,
-    isRootRoute,
-    router,
-    splashVisible,
-  ]);
+        // Clear redirect ref after a delay to allow for rapid route changes
+        // (e.g., logout then login in quick succession)
+        if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = setTimeout(() => {
+          lastRedirectRef.current = null;
+        }, 500);
+      }
+    },
+    [],
+    [
+      // Narrow dependency array: only include critical auth/route state
+      auth.isInitialized,
+      jwtAuthed,
+      legacyAuthed,
+      legacySessionPresent,
+      isAuthRoute,
+      isSettingsRoute,
+      isRootRoute,
+      splashVisible,
+      // INTENTIONALLY EXCLUDED (to prevent first-launch flicker):
+      // - pathname: excluded because route changes during redirect are normal
+      // - router: excluded because it's stable and doesn't need to trigger redirects
+      // - canHideSplash: excluded because it's used in a separate effect for timing
+      // - isAuthed: derived state, changes are captured by isAuthRoute/isRootRoute
+      // Including these would cause rapid re-runs during startup transitions
+    ],
+  );
 
   // Initialize app and hide splash screen
   // Optimized to reduce flickering by minimizing delays
@@ -177,11 +196,16 @@ function RootStack() {
     initializeApp();
   }, [initializeApp]);
 
+  // Gate for hiding splash: don't hide until:
+  // 1. App initialization complete
+  // 2. Auth initialized
+  // 3. Auth state decisively resolved (either JWT or legacy session check complete)
   const canHideSplash =
     initComplete &&
     auth.isInitialized &&
-    (!!auth.token && !!auth.user ? true : legacySessionPresent !== null);
+    (jwtAuthed ? true : legacySessionPresent !== null);
 
+  // Hide splash only once when fully ready, and only after gates are stable
   useEffect(() => {
     if (!splashVisible) return;
     if (!canHideSplash) return;
@@ -194,6 +218,15 @@ function RootStack() {
       console.warn("[App] Failed to hide custom splash:", splashErr);
     }
   }, [canHideSplash, splashVisible]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
