@@ -29,6 +29,7 @@ function RootStack() {
   >(null);
 
   const authScreens = new Set(["login", "register", "forgot-password"]);
+  const settingsScreens = new Set(["settings"]);
 
   const pathFirstSegment = (pathname ?? "")
     .split("?")[0]
@@ -41,6 +42,14 @@ function RootStack() {
       false) ||
     pathFirstSegment === "(auth)" ||
     (pathFirstSegment ? authScreens.has(pathFirstSegment) : false);
+
+  const isSettingsRoute =
+    (segments?.some(
+      (s) => s === "(settings)" || settingsScreens.has(String(s)),
+    ) ??
+      false) ||
+    pathFirstSegment === "(settings)" ||
+    (pathFirstSegment ? settingsScreens.has(pathFirstSegment) : false);
 
   const isProfileRoute =
     (segments?.some((s) => String(s) === "profile") ?? false) ||
@@ -106,6 +115,12 @@ function RootStack() {
     // If signed in, keep users out of auth screens and off the root fallback
     if (isAuthRoute || isRootRoute) {
       replaceIfNeeded("/(app)/home");
+      return;
+    }
+
+    // Allow settings route for authenticated users
+    if (isSettingsRoute) {
+      return;
     }
   }, [
     auth.isInitialized,
@@ -113,6 +128,7 @@ function RootStack() {
     auth.user,
     legacySessionPresent,
     isAuthRoute,
+    isSettingsRoute,
     isLoginRoute,
     isProfileRoute,
     isHomeRoute,
@@ -190,6 +206,7 @@ function RootStack() {
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(app)" />
+            <Stack.Screen name="(settings)" />
           </Stack>
         </>
       )}
