@@ -84,78 +84,6 @@ function RootStack() {
     };
   }, [auth.isInitialized, auth.token, auth.user]);
 
-  // Auth guard: keep navigation in sync with auth state & current route
-  // Optimized to prevent first-launch flicker by:
-  // 1. Only running after splash is completely hidden (route is stable/visible)
-  // 2. Preventing duplicate redirects with ref tracking
-  // 3. Using narrowed dependency array to minimize re-triggers
-  // 4. Computing auth state outside effect to prevent inline recreations
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(
-    () => {
-      // Only run auth guard after:
-      // - Auth is initialized
-      // - Legacy session check complete
-      // - Splash is hidden (UI is stable)
-      if (!auth.isInitialized) return;
-      if (!canHideSplash) return;
-      if (splashVisible) return;
-
-      // Avoid redirecting to login until we've checked legacy session
-      if (!jwtAuthed && legacySessionPresent === null) return;
-
-      let targetRoute: "/(auth)/login" | "/(app)/home" | null = null;
-
-      // Determine target route based on auth state and current route
-      if (!isAuthed) {
-        // User is not authenticated: redirect to login if not already on auth route
-        if (!isAuthRoute && !isSettingsRoute) {
-          targetRoute = "/(auth)/login";
-        }
-      } else {
-        // User is authenticated: redirect to home if on auth route or root
-        if (isAuthRoute || isRootRoute) {
-          targetRoute = "/(app)/home";
-        }
-      }
-
-      // Only redirect if:
-      // 1. We have a target route
-      // 2. It's different from the last redirect (prevent loops)
-      if (targetRoute && lastRedirectRef.current !== targetRoute) {
-        console.log("[App] Redirecting:", `${pathname} → ${targetRoute}`);
-        lastRedirectRef.current = targetRoute;
-
-        router.replace(targetRoute);
-
-        // Clear redirect ref after a delay to allow for rapid route changes
-        // (e.g., logout then login in quick succession)
-        if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-        redirectTimerRef.current = setTimeout(() => {
-          lastRedirectRef.current = null;
-        }, 500);
-      }
-    },
-    [],
-    [
-      // Narrow dependency array: only include critical auth/route state
-      auth.isInitialized,
-      jwtAuthed,
-      legacyAuthed,
-      legacySessionPresent,
-      isAuthRoute,
-      isSettingsRoute,
-      isRootRoute,
-      splashVisible,
-      // INTENTIONALLY EXCLUDED (to prevent first-launch flicker):
-      // - pathname: excluded because route changes during redirect are normal
-      // - router: excluded because it's stable and doesn't need to trigger redirects
-      // - canHideSplash: excluded because it's used in a separate effect for timing
-      // - isAuthed: derived state, changes are captured by isAuthRoute/isRootRoute
-      // Including these would cause rapid re-runs during startup transitions
-    ],
-  );
-
   // Initialize app and hide splash screen
   // Optimized to reduce flickering by minimizing delays
   const initializeApp = useCallback(async () => {
@@ -218,6 +146,67 @@ function RootStack() {
       console.warn("[App] Failed to hide custom splash:", splashErr);
     }
   }, [canHideSplash, splashVisible]);
+
+  // Auth guard: keep navigation in sync with auth state & current route.
+  // FIX: This must be a standard `useEffect(fn, deps)` call. The previous code
+  // accidentally used an invalid signature, so the redirect logic could fail
+  // on fresh installs (leading to the app getting stuck on the fallback route).
+  useEffect(() => {
+    // Only run auth guard after:
+    // - Auth is initialized
+    // - Legacy session check complete
+    // - Splash is hidden (UI is stable)
+    if (!auth.isInitialized) return;
+    if (!canHideSplash) return;
+    if (splashVisible) return;
+
+    // Avoid redirecting to login until we've checked legacy session
+    if (!jwtAuthed && legacySessionPresent === null) return;
+
+    let targetRoute: "/(auth)/login" | "/(app)/home" | null = null;
+
+    // Determine target route based on auth state and current route
+    if (!isAuthed) {
+      // Fresh install / no cache: route to login
+      if (!isAuthRoute && !isSettingsRoute) {
+        targetRoute = "/(auth)/login";
+      }
+    } else {
+      // Cached session: route to home (if on auth or root)
+      if (isAuthRoute || isRootRoute) {
+        targetRoute = "/(app)/home";
+      }
+    }
+
+    // Only redirect if:
+    // 1. We have a target route
+    // 2. It's different from the last redirect (prevent loops)
+    if (targetRoute && lastRedirectRef.current !== targetRoute) {
+      console.log("[App] Redirecting:", `${pathname} → ${targetRoute}`);
+      lastRedirectRef.current = targetRoute;
+
+      router.replace(targetRoute);
+
+      // Clear redirect ref after a delay to allow for rapid route changes
+      // (e.g., logout then login in quick succession)
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = setTimeout(() => {
+        lastRedirectRef.current = null;
+      }, 500);
+    }
+  }, [
+    auth.isInitialized,
+    canHideSplash,
+    splashVisible,
+    jwtAuthed,
+    legacySessionPresent,
+    isAuthed,
+    isAuthRoute,
+    isSettingsRoute,
+    isRootRoute,
+    pathname,
+    router,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
