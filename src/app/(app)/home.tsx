@@ -328,6 +328,7 @@ export default function HomeScreen() {
   const {
     isInitialized: notifInitialized,
     isEnabled: notifEnabled,
+    setEnabled: setNotificationsEnabled,
     scheduleNotification,
     scheduledClass,
   } = useNextClassNotifications();
@@ -338,7 +339,6 @@ export default function HomeScreen() {
   const [backendLoading, setBackendLoading] = useState(true);
   const [backendError, setBackendError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
 
   // Debug logging
@@ -412,11 +412,14 @@ export default function HomeScreen() {
     }
   }, [notifInitialized, notifEnabled, next, scheduleNotification, current]);
 
-  // Legacy: placeholder function for backwards compatibility
-  const enableNotifications = useCallback(() => {
-    setNotificationsEnabled(true);
-    console.log("[HomeScreen] Notifications enabled (legacy)");
-  }, []);
+  // Sync scheduled count with hook state
+  useEffect(() => {
+    if (notifEnabled && scheduledClass) {
+      setScheduledCount(1);
+    } else {
+      setScheduledCount(0);
+    }
+  }, [notifEnabled, scheduledClass]);
 
   useEffect(() => {
     fetchBackendInfo();
@@ -554,40 +557,32 @@ export default function HomeScreen() {
                     width: 48,
                     height: 48,
                     borderRadius: 12,
-                    backgroundColor: notificationsEnabled
+                    backgroundColor: notifEnabled
                       ? colors.accent + "20"
                       : colors.surface,
                     borderWidth: 1.5,
-                    borderColor: notificationsEnabled
+                    borderColor: notifEnabled
                       ? colors.accent + "50"
                       : colors.border,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
                   onPress={() => {
-                    if (notificationsEnabled) {
+                    if (notifEnabled) {
                       refreshNotifications();
                     } else {
-                      enableNotifications();
+                      setNotificationsEnabled(!notifEnabled);
                     }
                   }}
                   activeOpacity={0.75}
                 >
                   <AppIcon
                     family="Ionicons"
-                    name={
-                      notificationsEnabled
-                        ? "notifications"
-                        : "notifications-off"
-                    }
+                    name={notifEnabled ? "notifications" : "notifications-off"}
                     size={20}
-                    color={
-                      notificationsEnabled
-                        ? colors.accent
-                        : colors.textSecondary
-                    }
+                    color={notifEnabled ? colors.accent : colors.textSecondary}
                   />
-                  {notificationsEnabled && scheduledCount > 0 && (
+                  {notifEnabled && scheduledCount > 0 && (
                     <View
                       style={{
                         position: "absolute",
@@ -693,9 +688,9 @@ export default function HomeScreen() {
             </View>
 
             {/* ── Notification Banner (Android) ── */}
-            {Platform.OS !== "web" && !notificationsEnabled && hasProfile && (
+            {Platform.OS !== "web" && !notifEnabled && hasProfile && (
               <TouchableOpacity
-                onPress={enableNotifications}
+                onPress={() => setNotificationsEnabled(true)}
                 style={{
                   backgroundColor: colors.accent + "12",
                   borderRadius: 16,
