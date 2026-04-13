@@ -973,6 +973,66 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              {/* Test Button Tile */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert("Test Button", "Test button pressed!");
+                }}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 20,
+                  padding: 20,
+                  borderWidth: 1.5,
+                  borderColor: "#FF444440",
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 16,
+                      backgroundColor: "#FF444415",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AppIcon
+                      family="Ionicons"
+                      name="flask"
+                      size={28}
+                      color="#FF4444"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: colors.textPrimary,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Test Button
+                    </Text>
+                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                      For testing purposes
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
+                    ›
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* ── Profile Card Section ── */}

@@ -1,7 +1,8 @@
 import LiveClassBanner from "@/components/timetable/current-class-banner";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -17,6 +18,7 @@ import { TIME_SLOTS, WEEK_DAYS } from "../../constants/theme";
 import { useProfile } from "../../context/profile-context";
 import { useThemeColors } from "../../context/theme-context";
 import { ClassSlot, TimetableJson } from "../../types";
+import { useTimetableNotifications } from "../../hooks/use-timetable-notifications";
 
 function getCurrentDay(): string {
   const days = [
@@ -226,6 +228,14 @@ export default function TimetableScreen() {
     hasProfile,
   } = useProfile();
 
+  // Timetable notifications
+  const {
+    isEnabled: notificationsEnabled,
+    isScheduling,
+    scheduledCount,
+    refreshNotifications,
+  } = useTimetableNotifications();
+
   const [timetableData, setTimetableData] = useState<{
     classes: ClassSlot[];
   } | null>(null);
@@ -294,6 +304,14 @@ export default function TimetableScreen() {
           setTimetableData(data);
           setCurrentNext(findCurrentAndNextClass(data.classes));
           setError(null);
+
+          // Schedule notifications for all classes in timetable
+          if (notificationsEnabled) {
+            console.log(
+              "[TimetableScreen] Scheduling notifications for timetable classes",
+            );
+            await refreshNotifications(data.classes);
+          }
         } else {
           setError(`No timetable found for group: ${profile?.group}`);
         }
@@ -306,7 +324,23 @@ export default function TimetableScreen() {
     return () => {
       mounted = false;
     };
-  }, [profile, profileLoading, hasProfile]);
+  }, [
+    profile,
+    profileLoading,
+    hasProfile,
+    notificationsEnabled,
+    refreshNotifications,
+  ]);
+
+  // Refresh notifications when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (timetableData && notificationsEnabled) {
+        console.log("[TimetableScreen] Refreshing notifications on focus");
+        refreshNotifications(timetableData.classes);
+      }
+    }, [timetableData, notificationsEnabled, refreshNotifications]),
+  );
 
   function getClassForSlot(day: string, time: string): ClassSlot | null {
     return (
