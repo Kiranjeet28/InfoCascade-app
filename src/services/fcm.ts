@@ -20,7 +20,7 @@ const TOKEN_KEY = "fcm_token";
  */
 export async function handleMessage(
   message: any,
-  state: "foreground" | "background" | "terminated" = "foreground"
+  state: "foreground" | "background" | "terminated" = "foreground",
 ): Promise<void> {
   try {
     const title = message?.notification?.title || "Notification";
@@ -29,8 +29,8 @@ export async function handleMessage(
 
     console.log(`[FCM] ${state}: ${title}`);
 
-    // Display system notification
-    await Notifications.scheduleNotificationAsync({
+    // Schedule notification with immediate trigger
+    const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body,
@@ -39,10 +39,15 @@ export async function handleMessage(
         priority: "high",
         data,
       },
-      trigger: null,
+      trigger: null, // null = immediate
     });
+
+    console.log(`[FCM] ✓ Notification (${state}):`, notificationId);
   } catch (error) {
-    console.error("[FCM] Handle error:", error);
+    console.error(
+      "[FCM] Error:",
+      error instanceof Error ? error.message : error,
+    );
   }
 }
 
@@ -80,8 +85,9 @@ export async function initFCM(): Promise<void> {
 
     // Request permissions
     await Notifications.requestPermissionsAsync();
+    console.log("[FCM] Permissions requested");
 
-    // Configure notification behavior
+    // Configure notification behavior - FORCE SHOW IN FOREGROUND
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldPlaySound: true,
@@ -91,21 +97,33 @@ export async function initFCM(): Promise<void> {
       }),
     });
 
+    console.log("[FCM] Notification handler configured");
+
     // Handle notification taps
     Notifications.addNotificationResponseReceivedListener((response) => {
       console.log("[FCM] Tapped:", response.notification.request.content.data);
     });
 
+    console.log("[FCM] Response listener registered");
+
     // Foreground listener
     try {
       const messaging = getMessaging(app);
-      onMessage(messaging, (msg) => handleMessage(msg, "foreground"));
-    } catch {
-      console.warn("[FCM] Firebase messaging unavailable");
+      onMessage(messaging, (msg) => {
+        console.log(
+          "[FCM] Foreground message from Firebase:",
+          msg.notification?.title,
+        );
+        handleMessage(msg, "foreground");
+      });
+      console.log("[FCM] Foreground listener registered");
+    } catch (err) {
+      console.warn("[FCM] Firebase messaging unavailable:", err);
     }
 
     // Background listener
     Notifications.addNotificationReceivedListener((notification) => {
+      console.log("[FCM] Background notification received");
       handleMessage(
         {
           notification: {
@@ -114,9 +132,11 @@ export async function initFCM(): Promise<void> {
           },
           data: notification.request.content.data,
         },
-        "background"
+        "background",
       );
     });
+
+    console.log("[FCM] Background listener registered");
 
     // Get token
     await getToken();
@@ -131,6 +151,7 @@ export async function initFCM(): Promise<void> {
  * Send test notification
  */
 export async function sendTest(): Promise<void> {
+  console.log("[FCM] Test button clicked");
   await handleMessage(
     {
       notification: {
@@ -139,7 +160,7 @@ export async function sendTest(): Promise<void> {
       },
       data: { type: "test", time: new Date().toLocaleTimeString() },
     },
-    "foreground"
+    "foreground",
   );
 }
 
