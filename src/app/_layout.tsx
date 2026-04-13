@@ -14,7 +14,7 @@ import { ProfileProvider } from "../context/profile-context";
 import { ThemeProvider, useThemeColors } from "../context/theme-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
-import { initializeFcm } from "../services/fcm-initialization-service";
+import { initFCM } from "../services/fcm";
 
 function RootStack() {
   const { isDark } = useThemeColors();
@@ -110,7 +110,7 @@ function RootStack() {
 
         // Initialize FCM
         try {
-          await initializeFcm();
+          await initFCM();
         } catch (fcmErr) {
           console.warn("[App] FCM initialization warning:", fcmErr);
         }

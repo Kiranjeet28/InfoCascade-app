@@ -21,7 +21,7 @@ import { getEndTime, useLiveClass } from "../../hooks/Useliveclass";
 import { useNextClassNotifications } from "../../hooks/use-next-class-notifications";
 import { ClassSlot } from "../../types";
 import { fetchJson } from "../../utils/api";
-import { sendTestFcmNotification } from "../../handlers/fcm-message-handler";
+import { sendTest } from "../../services/fcm";
 
 // ── Extract readable info from a ClassSlot ─────────────────────────────────
 function slotInfo(cls: ClassSlot) {
@@ -626,10 +626,7 @@ export default function HomeScreen() {
                 }}
                 onPress={() => {
                   Alert.alert("Test FCM", "Sending test notification...");
-                  sendTestFcmNotification(
-                    "📬 Test FCM",
-                    "This is a test notification!",
-                  );
+                  sendTest();
                 }}
                 activeOpacity={0.75}
               >
