@@ -21,6 +21,7 @@ import { getEndTime, useLiveClass } from "../../hooks/Useliveclass";
 import { useNextClassNotifications } from "../../hooks/use-next-class-notifications";
 import { ClassSlot } from "../../types";
 import { fetchJson } from "../../utils/api";
+import { sendTestFcmNotification } from "../../handlers/fcm-message-handler";
 
 // ── Extract readable info from a ClassSlot ─────────────────────────────────
 function slotInfo(cls: ClassSlot) {
@@ -611,6 +612,34 @@ export default function HomeScreen() {
                   )}
                 </TouchableOpacity>
               )}
+              {/* Test FCM Button */}
+              <TouchableOpacity
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onPress={() => {
+                  Alert.alert("Test FCM", "Sending test notification...");
+                  sendTestFcmNotification(
+                    "📬 Test FCM",
+                    "This is a test notification!",
+                  );
+                }}
+                activeOpacity={0.75}
+              >
+                <AppIcon
+                  family="MaterialCommunityIcons"
+                  name="send"
+                  size={20}
+                  color={colors.accent}
+                />
+              </TouchableOpacity>
               {/* Spacer to prevent layout shift */}
               <View style={{ width: 4 }} />
               {/* Profile Avatar */}

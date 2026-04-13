@@ -14,6 +14,7 @@ import { ProfileProvider } from "../context/profile-context";
 import { ThemeProvider, useThemeColors } from "../context/theme-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
+import { initializeFcm } from "../services/fcm-initialization-service";
 
 function RootStack() {
   const { isDark } = useThemeColors();
@@ -106,6 +107,13 @@ function RootStack() {
             return null;
           }),
         ]);
+
+        // Initialize FCM
+        try {
+          await initializeFcm();
+        } catch (fcmErr) {
+          console.warn("[App] FCM initialization warning:", fcmErr);
+        }
       } catch (error) {
         console.error("[App] Error during parallel async checks:", error);
       }
