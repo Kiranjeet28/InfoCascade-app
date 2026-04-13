@@ -17,54 +17,49 @@ import DaySelector from "../../components/timetable/day-selector";
 import { TIME_SLOTS, WEEK_DAYS } from "../../constants/theme";
 import { useProfile } from "../../context/profile-context";
 import { useThemeColors } from "../../context/theme-context";
+import {
+  areNotificationsEnabled,
+  scheduleNextClassNotification,
+} from "../../services/next-class-notification-service";
 import { ClassSlot, TimetableJson } from "../../types";
-import { useTimetableNotifications } from "../../hooks/use-timetable-notifications";
 
+// ── Helpers ────────────────────────────────────────────────────────────────
 function getCurrentDay(): string {
   const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
   ];
   const today = days[new Date().getDay()];
   return (WEEK_DAYS as readonly string[]).includes(today) ? today : "Monday";
 }
+
 function getEndTime(time: string): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + 60;
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
+
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
+
 function findCurrentAndNextClass(classes: ClassSlot[]): {
   current: ClassSlot | null;
   next: ClassSlot | null;
 } {
   const now = new Date();
   const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
   ];
   const currentDay = days[now.getDay()];
   const currentMin = now.getHours() * 60 + now.getMinutes();
   const todayClasses = classes
     .filter((c) => c.dayOfClass === currentDay && !c.data.freeClass)
-    .sort(
-      (a, b) => timeToMinutes(a.timeOfClass) - timeToMinutes(b.timeOfClass),
-    );
+    .sort((a, b) => timeToMinutes(a.timeOfClass) - timeToMinutes(b.timeOfClass));
+
   let current: ClassSlot | null = null;
   let next: ClassSlot | null = null;
+
   for (let i = 0; i < todayClasses.length; i++) {
     const cls = todayClasses[i];
     const start = timeToMinutes(cls.timeOfClass);
@@ -85,26 +80,31 @@ function TimeSlotRow({
   time,
   cls,
   isActive,
+  isNextUp,
 }: {
   time: string;
   cls: ClassSlot | null;
   isActive: boolean;
+  isNextUp: boolean;
 }) {
   const { colors } = useThemeColors();
+  const rowAccent = isActive ? colors.primary : "#FF8C42";
+  const showHighlight = isActive || isNextUp;
+
   return (
     <View
       style={{
         flexDirection: "row",
         marginBottom: 10,
         borderRadius: 14,
-        ...(isActive
+        ...(showHighlight
           ? {
-              backgroundColor: colors.primary + "08",
-              borderWidth: 1,
-              borderColor: colors.primary + "25",
-              padding: 4,
-              marginHorizontal: -4,
-            }
+            backgroundColor: rowAccent + "0D",
+            borderWidth: 1,
+            borderColor: rowAccent + "30",
+            padding: 4,
+            marginHorizontal: -4,
+          }
           : {}),
       }}
     >
@@ -116,7 +116,7 @@ function TimeSlotRow({
           position: "relative",
         }}
       >
-        {isActive && (
+        {showHighlight && (
           <View
             style={{
               position: "absolute",
@@ -124,7 +124,7 @@ function TimeSlotRow({
               top: 6,
               bottom: 6,
               width: 3,
-              backgroundColor: colors.primary,
+              backgroundColor: rowAccent,
               borderRadius: 2,
             }}
           />
@@ -133,7 +133,7 @@ function TimeSlotRow({
           style={{
             fontSize: 13,
             fontWeight: "700",
-            color: isActive ? colors.primary : colors.textMuted,
+            color: showHighlight ? rowAccent : colors.textMuted,
           }}
         >
           {time}
@@ -141,19 +141,50 @@ function TimeSlotRow({
         <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 2 }}>
           {getEndTime(time)}
         </Text>
+
+        {isNextUp && !isActive && (
+          <View
+            style={{
+              marginTop: 5,
+              backgroundColor: "#FF8C4220",
+              borderRadius: 5,
+              paddingHorizontal: 5,
+              paddingVertical: 2,
+              borderWidth: 1,
+              borderColor: "#FF8C4240",
+            }}
+          >
+            <Text style={{ fontSize: 8, fontWeight: "800", color: "#FF8C42", letterSpacing: 0.5 }}>
+              NEXT
+            </Text>
+          </View>
+        )}
+
+        {isActive && (
+          <View
+            style={{
+              marginTop: 5,
+              backgroundColor: colors.primary + "20",
+              borderRadius: 5,
+              paddingHorizontal: 5,
+              paddingVertical: 2,
+              borderWidth: 1,
+              borderColor: colors.primary + "40",
+            }}
+          >
+            <Text style={{ fontSize: 8, fontWeight: "800", color: colors.primary, letterSpacing: 0.5 }}>
+              LIVE
+            </Text>
+          </View>
+        )}
       </View>
+
       <View style={{ flex: 1, paddingLeft: 10, justifyContent: "center" }}>
         {cls ? (
           <ClassCard classData={cls} compact={false} />
         ) : (
           <View style={{ paddingVertical: 18 }}>
-            <View
-              style={{
-                height: 1,
-                backgroundColor: colors.border,
-                opacity: 0.5,
-              }}
-            />
+            <View style={{ height: 1, backgroundColor: colors.border, opacity: 0.5 }} />
           </View>
         )}
       </View>
@@ -168,22 +199,11 @@ export default function TimetableScreen() {
   const {
     profile,
     loading: profileLoading,
-    getTimetableFile,
     getDepartmentLabel,
     hasProfile,
   } = useProfile();
 
-  // Timetable notifications
-  const {
-    isEnabled: notificationsEnabled,
-    isScheduling,
-    scheduledCount,
-    refreshNotifications,
-  } = useTimetableNotifications();
-
-  const [timetableData, setTimetableData] = useState<{
-    classes: ClassSlot[];
-  } | null>(null);
+  const [timetableData, setTimetableData] = useState<{ classes: ClassSlot[] } | null>(null);
   const [currentNext, setCurrentNext] = useState<{
     current: ClassSlot | null;
     next: ClassSlot | null;
@@ -197,20 +217,12 @@ export default function TimetableScreen() {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: false,
-      }),
-      Animated.spring(headerAnim, {
-        toValue: 0,
-        tension: 70,
-        friction: 10,
-        useNativeDriver: false,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
+      Animated.spring(headerAnim, { toValue: 0, tension: 70, friction: 10, useNativeDriver: false }),
     ]).start();
   }, []);
 
+  // ── Fetch timetable + schedule ALL today's notifications upfront ─────────
   useEffect(() => {
     if (profileLoading) return;
     if (!hasProfile) {
@@ -218,44 +230,33 @@ export default function TimetableScreen() {
       setLoading(false);
       return;
     }
+
     let mounted = true;
     (async () => {
       try {
         setLoading(true);
-        let json: TimetableJson | null = null;
-
-        // Fetch timetable from GitHub repository
         const dept = profile?.department?.toLowerCase();
         const GITHUB_RAW_URL =
           "https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web";
-        const timetableFile = `timetable_${dept}.json`;
 
-        const res = await fetch(`${GITHUB_RAW_URL}/${timetableFile}`);
-        if (!res.ok) {
-          throw new Error(
-            `Failed to fetch timetable for ${dept}: ${res.status}`,
-          );
-        }
-        json = await res.json();
+        const res = await fetch(`${GITHUB_RAW_URL}/timetable_${dept}.json`);
+        if (!res.ok) throw new Error(`Failed to fetch timetable for ${dept}: ${res.status}`);
 
+        const json: TimetableJson = await res.json();
         if (!mounted) return;
-        if (
-          json &&
-          json.timetable &&
-          profile?.group &&
-          json.timetable[profile.group]
-        ) {
+
+        if (json?.timetable && profile?.group && json.timetable[profile.group]) {
           const data = json.timetable[profile.group];
           setTimetableData(data);
           setCurrentNext(findCurrentAndNextClass(data.classes));
           setError(null);
 
-          // Schedule notifications for all classes in timetable
-          if (notificationsEnabled) {
-            console.log(
-              "[TimetableScreen] Scheduling notifications for timetable classes",
-            );
-            await refreshNotifications(data.classes);
+          // ── Schedule ALL remaining classes for today in one shot ──────────
+          // This is the only place scheduling happens.
+          // The OS holds all triggers — they fire even when screen is off.
+          const enabled = await areNotificationsEnabled();
+          if (enabled) {
+            await scheduleNextClassNotification(data.classes, 15);
           }
         } else {
           setError(`No timetable found for group: ${profile?.group}`);
@@ -266,33 +267,38 @@ export default function TimetableScreen() {
         if (mounted) setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [
-    profile,
-    profileLoading,
-    hasProfile,
-    notificationsEnabled,
-    refreshNotifications,
-  ]);
+    return () => { mounted = false; };
+  }, [profile, profileLoading, hasProfile]);
 
-  // Refresh notifications when screen comes into focus
+  // ── Poll every 60 s ONLY to update current/next UI — NO notification scheduling ──
+  // Notification scheduling is done once on load above.
+  // This loop just keeps the LIVE / NEXT badges accurate on screen.
+  useEffect(() => {
+    if (!timetableData) return;
+    const interval = setInterval(() => {
+      setCurrentNext(findCurrentAndNextClass(timetableData.classes));
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [timetableData]);
+
+  // ── Reschedule on focus (handles day change / app reopen) ─────────────────
   useFocusEffect(
     useCallback(() => {
-      if (timetableData && notificationsEnabled) {
-        console.log("[TimetableScreen] Refreshing notifications on focus");
-        refreshNotifications(timetableData.classes);
-      }
-    }, [timetableData, notificationsEnabled, refreshNotifications]),
+      if (!timetableData) return;
+      (async () => {
+        const enabled = await areNotificationsEnabled();
+        if (enabled) {
+          await scheduleNextClassNotification(timetableData.classes, 15);
+        }
+        setCurrentNext(findCurrentAndNextClass(timetableData.classes));
+      })();
+    }, [timetableData]),
   );
 
   function getClassForSlot(day: string, time: string): ClassSlot | null {
-    return (
-      timetableData?.classes.find(
-        (c) => c.dayOfClass === day && c.timeOfClass === time,
-      ) ?? null
-    );
+    return timetableData?.classes.find(
+      (c) => c.dayOfClass === day && c.timeOfClass === time,
+    ) ?? null;
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────
@@ -320,13 +326,7 @@ export default function TimetableScreen() {
         >
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-        <Text
-          style={{
-            fontSize: 14,
-            color: colors.textSecondary,
-            fontWeight: "500",
-          }}
-        >
+        <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: "500" }}>
           Loading timetable...
         </Text>
       </View>
@@ -364,24 +364,10 @@ export default function TimetableScreen() {
             color={colors.textSecondary}
           />
         </View>
-        <Text
-          style={{
-            fontSize: 20,
-            fontWeight: "800",
-            color: colors.textPrimary,
-            textAlign: "center",
-          }}
-        >
+        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.textPrimary, textAlign: "center" }}>
           {!hasProfile ? "No Profile Found" : "Something went wrong"}
         </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            color: colors.textSecondary,
-            textAlign: "center",
-            lineHeight: 20,
-          }}
-        >
+        <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 20 }}>
           {error}
         </Text>
         <TouchableOpacity
@@ -392,9 +378,7 @@ export default function TimetableScreen() {
             paddingHorizontal: 32,
             borderRadius: 14,
           }}
-          onPress={() =>
-            router.push(!hasProfile ? "/(app)/profile" : "/(app)/home")
-          }
+          onPress={() => router.push(!hasProfile ? "/(app)/profile" : "/(app)/home")}
         >
           <Text style={{ fontSize: 15, fontWeight: "700", color: "#fff" }}>
             {!hasProfile ? "Set Up Profile" : "Go to Home"}
@@ -406,12 +390,13 @@ export default function TimetableScreen() {
 
   const todayDay = getCurrentDay();
   const currentMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const nextUpTime = currentNext.next?.timeOfClass ?? null;
+  const nextUpDay = currentNext.next?.dayOfClass ?? null;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* Background orb */}
       <View
         style={{
           position: "absolute",
@@ -427,11 +412,7 @@ export default function TimetableScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 56,
-          paddingBottom: 48,
-        }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 56, paddingBottom: 48 }}
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* ── Top Nav ── */}
@@ -458,13 +439,7 @@ export default function TimetableScreen() {
                 borderColor: colors.border,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                  fontWeight: "600",
-                }}
-              >
+              <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: "600" }}>
                 Home
               </Text>
             </TouchableOpacity>
@@ -482,13 +457,7 @@ export default function TimetableScreen() {
                 gap: 6,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "600",
-                  color: colors.textSecondary,
-                }}
-              >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSecondary }}>
                 ✏️ Profile
               </Text>
             </TouchableOpacity>
@@ -545,22 +514,8 @@ export default function TimetableScreen() {
                   gap: 6,
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "600",
-                    color: colors.textSecondary,
-                  }}
-                >
-                  •
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    fontWeight: "600",
-                  }}
-                >
+                <Text style={{ fontSize: 12, fontWeight: "600", color: colors.textSecondary }}>•</Text>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, fontWeight: "600" }}>
                   {profile?.name}
                 </Text>
               </View>
@@ -574,13 +529,7 @@ export default function TimetableScreen() {
                   borderColor: colors.primary + "40",
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.primary,
-                    fontWeight: "800",
-                  }}
-                >
+                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "800" }}>
                   {profile?.group}
                 </Text>
               </View>
@@ -588,17 +537,10 @@ export default function TimetableScreen() {
           </View>
 
           {/* ── Live Banner ── */}
-          <LiveClassBanner
-            current={currentNext.current}
-            next={currentNext.next}
-          />
+          <LiveClassBanner current={currentNext.current} next={currentNext.next} />
 
           {/* ── Day Selector ── */}
-          <DaySelector
-            selectedDay={selectedDay}
-            todayDay={todayDay}
-            onSelect={setSelectedDay}
-          />
+          <DaySelector selectedDay={selectedDay} todayDay={todayDay} onSelect={setSelectedDay} />
 
           {/* ── Day Schedule ── */}
           <View
@@ -609,11 +551,9 @@ export default function TimetableScreen() {
               marginBottom: 32,
               borderWidth: 1,
               borderColor: colors.border,
-              boxShadow: "0px 4px 16px rgba(0,0,0,0.07)",
               elevation: 4,
             }}
           >
-            {/* Day header */}
             <View
               style={{
                 flexDirection: "row",
@@ -622,14 +562,7 @@ export default function TimetableScreen() {
                 marginBottom: 22,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 22,
-                  fontWeight: "800",
-                  color: colors.textPrimary,
-                  letterSpacing: -0.5,
-                }}
-              >
+              <Text style={{ fontSize: 22, fontWeight: "800", color: colors.textPrimary, letterSpacing: -0.5 }}>
                 {selectedDay}
               </Text>
               {selectedDay === todayDay && (
@@ -646,23 +579,8 @@ export default function TimetableScreen() {
                     gap: 5,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: colors.accent,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "700",
-                      color: colors.accent,
-                    }}
-                  >
-                    Today
-                  </Text>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent }} />
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.accent }}>Today</Text>
                 </View>
               )}
             </View>
@@ -674,12 +592,19 @@ export default function TimetableScreen() {
                 selectedDay === todayDay &&
                 currentMin >= slotStart &&
                 currentMin < slotStart + 50;
+              const isNextUp =
+                selectedDay === todayDay &&
+                selectedDay === nextUpDay &&
+                time === nextUpTime &&
+                !isActive;
+
               return (
                 <TimeSlotRow
                   key={time}
                   time={time}
                   cls={cls}
                   isActive={isActive}
+                  isNextUp={isNextUp}
                 />
               );
             })}

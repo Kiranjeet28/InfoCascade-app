@@ -18,10 +18,20 @@ import BgBlobs from "../../components/layout/bg-blobs";
 import { useProfile } from "../../context/profile-context";
 import { useThemeColors } from "../../context/theme-context";
 import { getEndTime, useLiveClass } from "../../hooks/Useliveclass";
-import { useNextClassNotifications } from "../../hooks/use-next-class-notifications";
-import { ClassSlot } from "../../types";
-import { fetchJson } from "../../utils/api";
-import { sendTest } from "../../services/fcm";
+import { ClassSlot, TimetableJson } from "../../types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  areNotificationsEnabled,
+  cancelAllClassNotifications,
+  scheduleNextClassNotification,
+  setNotificationSettings,
+} from "../../services/next-class-notification-service";
+
+// Storage key must match the one in next-class-notification-service.ts
+const SCHEDULED_IDS_KEY = "scheduled_notification_ids";
+
+const GITHUB_RAW_URL =
+  "https://raw.githubusercontent.com/Kiranjeet28/infocascade-data/main/web";
 
 // ── Extract readable info from a ClassSlot ─────────────────────────────────
 function slotInfo(cls: ClassSlot) {
@@ -111,7 +121,6 @@ function CurrentClassCard({
         borderColor: colors.accent + "40",
       }}
     >
-      {/* Badge row */}
       <View
         style={{
           flexDirection: "row",
@@ -176,7 +185,6 @@ function CurrentClassCard({
         </Text>
       </View>
 
-      {/* Subject */}
       <Text
         style={{
           fontSize: 20,
@@ -189,7 +197,6 @@ function CurrentClassCard({
         {info.subject}
       </Text>
 
-      {/* Room + teacher */}
       <View style={{ flexDirection: "row", gap: 16 }}>
         {info.room ? (
           <Text
@@ -244,7 +251,6 @@ function NextClassCard({
         gap: 16,
       }}
     >
-      {/* Time pill */}
       <View
         style={{
           backgroundColor: colors.primary + "18",
@@ -274,7 +280,6 @@ function NextClassCard({
         </Text>
       </View>
 
-      {/* Info */}
       <View style={{ flex: 1 }}>
         <Text
           style={{
@@ -326,31 +331,74 @@ export default function HomeScreen() {
     loading: profileLoading,
   } = useProfile();
   const { current, next, refresh: refreshLiveClass } = useLiveClass();
-  const {
-    isInitialized: notifInitialized,
-    isEnabled: notifEnabled,
-    setEnabled: setNotificationsEnabled,
-    scheduleNotification,
-    scheduledClass,
-  } = useNextClassNotifications();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const [backendInfo, setBackendInfo] = useState<any>(null);
-  const [backendLoading, setBackendLoading] = useState(true);
-  const [backendError, setBackendError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Notification state
+  const [notifEnabled, setNotifEnabled] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
 
-  // Debug logging
-  useEffect(() => {
-    console.log("[HomeScreen] Component mounted/updated:", {
-      profileLoading,
-      hasProfile,
-      profileName: profile?.name,
-    });
-  }, [profileLoading, hasProfile, profile]);
+  // All today's classes — fetched once from GitHub, used for scheduling
+  const [allClasses, setAllClasses] = useState<ClassSlot[]>([]);
 
+  // ── Fetch timetable from GitHub (same source as timetable.tsx) ─────────
+  const fetchAllClasses = useCallback(async (): Promise<ClassSlot[]> => {
+    try {
+      const dept = profile?.department?.toLowerCase();
+      if (!dept || !profile?.group) return [];
+
+      const res = await fetch(`${GITHUB_RAW_URL}/timetable_${dept}.json`);
+      if (!res.ok) return [];
+
+      const json: TimetableJson = await res.json();
+      if (json?.timetable && json.timetable[profile.group]) {
+        return json.timetable[profile.group].classes ?? [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }, [profile?.department, profile?.group]);
+
+  // ── Load notification state from AsyncStorage ──────────────────────────
+  const loadNotifState = useCallback(async () => {
+    const enabled = await areNotificationsEnabled();
+    setNotifEnabled(enabled);
+    try {
+      const raw = await AsyncStorage.getItem(SCHEDULED_IDS_KEY);
+      const ids: string[] = raw ? JSON.parse(raw) : [];
+      setScheduledCount(ids.length);
+    } catch {
+      setScheduledCount(0);
+    }
+  }, []);
+
+  // ── Initial load: fetch classes + notification state ───────────────────
+  useEffect(() => {
+    if (profileLoading || !hasProfile) return;
+    let cancelled = false;
+
+    (async () => {
+      const classes = await fetchAllClasses();
+      if (cancelled) return;
+
+      setAllClasses(classes);
+
+      // If notifications already enabled, reschedule for today
+      const enabled = await areNotificationsEnabled();
+      if (enabled && classes.length > 0) {
+        await scheduleNextClassNotification(classes, 15);
+      }
+
+      await loadNotifState();
+    })();
+
+    return () => { cancelled = true; };
+  }, [profileLoading, hasProfile, fetchAllClasses, loadNotifState]);
+
+  // ── Entrance animation ─────────────────────────────────────────────────
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -367,78 +415,84 @@ export default function HomeScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  // Refresh "Next Class" data when screen comes into focus
+  // ── Refresh on screen focus: reschedule + reload state ────────────────
   useFocusEffect(
     useCallback(() => {
       refreshLiveClass();
-    }, [refreshLiveClass]),
+      loadNotifState();
+
+      // Reschedule if enabled and we have classes
+      if (allClasses.length > 0) {
+        areNotificationsEnabled().then((enabled) => {
+          if (enabled) {
+            scheduleNextClassNotification(allClasses, 15).then(() =>
+              loadNotifState(),
+            );
+          }
+        });
+      }
+    }, [refreshLiveClass, loadNotifState, allClasses]),
   );
 
-  // Fetch backend root info for status/debugging
-  const fetchBackendInfo = useCallback(async () => {
-    try {
-      setBackendLoading(true);
-      const res = await fetchJson("/");
-      if (!res.ok) {
-        setBackendError(`Server returned ${res.status}`);
-        setBackendInfo(null);
-      } else {
-        const json = await res.json().catch(() => null);
-        setBackendInfo(json ?? { ok: true });
-        setBackendError(null);
+  // ── Toggle notifications on/off ────────────────────────────────────────
+  const handleNotifToggle = useCallback(async () => {
+    const newEnabled = !notifEnabled;
+    await setNotificationSettings({ enabled: newEnabled, minutesBefore: 15 });
+    setNotifEnabled(newEnabled);
+
+    if (newEnabled) {
+      // Fetch classes if we don't have them yet
+      let classes = allClasses;
+      if (classes.length === 0) {
+        classes = await fetchAllClasses();
+        setAllClasses(classes);
       }
-    } catch (e: any) {
-      setBackendError(String(e?.message ?? e));
-      setBackendInfo(null);
-    } finally {
-      setBackendLoading(false);
-    }
-  }, []);
 
-  // Schedule notifications when next class data updates
-  useEffect(() => {
-    if (notifInitialized && notifEnabled && next) {
-      // Get all classes for today to pass to notification scheduler
-      const classesToSchedule = [current, next].filter(Boolean) as ClassSlot[];
-      scheduleNotification(classesToSchedule);
-    }
-  }, [next, notifInitialized, notifEnabled, scheduleNotification, current]);
-
-  // Refresh notifications for current session
-  const refreshNotifications = useCallback(async () => {
-    console.log("[HomeScreen] Refreshing notifications...");
-    if (notifInitialized && notifEnabled && next) {
-      const classesToSchedule = [current, next].filter(Boolean) as ClassSlot[];
-      await scheduleNotification(classesToSchedule);
-    }
-  }, [notifInitialized, notifEnabled, next, scheduleNotification, current]);
-
-  // Sync scheduled count with hook state
-  useEffect(() => {
-    if (notifEnabled && scheduledClass) {
-      setScheduledCount(1);
+      if (classes.length > 0) {
+        await scheduleNextClassNotification(classes, 15);
+      } else {
+        Alert.alert(
+          "No Classes Found",
+          "Could not load your timetable. Please check your profile and try again.",
+        );
+        // Revert — no point enabling without classes
+        await setNotificationSettings({ enabled: false, minutesBefore: 15 });
+        setNotifEnabled(false);
+        return;
+      }
     } else {
+      // Disable: cancel all scheduled OS notifications
+      await cancelAllClassNotifications();
       setScheduledCount(0);
     }
-  }, [notifEnabled, scheduledClass]);
 
-  useEffect(() => {
-    fetchBackendInfo();
-  }, [fetchBackendInfo]);
+    await loadNotifState();
+  }, [notifEnabled, allClasses, fetchAllClasses, loadNotifState]);
 
-  // Pull-to-refresh handler
+  // ── Pull-to-refresh ────────────────────────────────────────────────────
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchBackendInfo(), refreshNotifications()]);
+      const [classes] = await Promise.all([
+        fetchAllClasses(),
+        refreshLiveClass(),
+      ]);
+      setAllClasses(classes);
+
+      const enabled = await areNotificationsEnabled();
+      if (enabled && classes.length > 0) {
+        await scheduleNextClassNotification(classes, 15);
+      }
+
+      await loadNotifState();
     } catch (e) {
       console.error("Refresh error:", e);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchBackendInfo, refreshNotifications]);
+  }, [fetchAllClasses, refreshLiveClass, loadNotifState]);
 
-  // If profile is missing after profile store finished loading, redirect to login
+  // ── Redirect to login if no profile ───────────────────────────────────
   useEffect(() => {
     if (!profileLoading && !hasProfile) {
       router.replace("/(auth)/login");
@@ -449,9 +503,7 @@ export default function HomeScreen() {
   const greeting =
     hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
-  // Show loading screen while profile is loading
   if (profileLoading) {
-    console.log("[HomeScreen] Rendering loading state");
     return (
       <View
         style={{
@@ -477,8 +529,6 @@ export default function HomeScreen() {
       </View>
     );
   }
-
-  console.log("[HomeScreen] Rendering main content, hasProfile=", hasProfile);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -506,7 +556,7 @@ export default function HomeScreen() {
           style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
         >
           <View style={{ minHeight: 100 }}>
-            {/* ── Header Section ── */}
+            {/* ── Header ── */}
             <View style={{ marginBottom: 32 }}>
               <Text
                 style={{
@@ -568,13 +618,7 @@ export default function HomeScreen() {
                     justifyContent: "center",
                     alignItems: "center",
                   }}
-                  onPress={() => {
-                    if (notifEnabled) {
-                      refreshNotifications();
-                    } else {
-                      setNotificationsEnabled(!notifEnabled);
-                    }
-                  }}
+                  onPress={handleNotifToggle}
                   activeOpacity={0.75}
                 >
                   <AppIcon
@@ -583,6 +627,7 @@ export default function HomeScreen() {
                     size={20}
                     color={notifEnabled ? colors.accent : colors.textSecondary}
                   />
+                  {/* Real scheduled count badge */}
                   {notifEnabled && scheduledCount > 0 && (
                     <View
                       style={{
@@ -612,34 +657,10 @@ export default function HomeScreen() {
                   )}
                 </TouchableOpacity>
               )}
-              {/* Test FCM Button */}
-              <TouchableOpacity
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: colors.surface,
-                  borderWidth: 1.5,
-                  borderColor: colors.border,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={() => {
-                  Alert.alert("Test FCM", "Sending test notification...");
-                  sendTest();
-                }}
-                activeOpacity={0.75}
-              >
-                <AppIcon
-                  family="MaterialCommunityIcons"
-                  name="send"
-                  size={20}
-                  color={colors.accent}
-                />
-              </TouchableOpacity>
-              {/* Spacer to prevent layout shift */}
+
               <View style={{ width: 4 }} />
-              {/* Profile Avatar */}
+
+              {/* Profile button */}
               <TouchableOpacity
                 style={{
                   flex: 1,
@@ -713,10 +734,10 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* ── Notification Banner (Android) ── */}
+            {/* ── Enable Notifications Banner (shown when disabled) ── */}
             {Platform.OS !== "web" && !notifEnabled && hasProfile && (
               <TouchableOpacity
-                onPress={() => setNotificationsEnabled(true)}
+                onPress={handleNotifToggle}
                 style={{
                   backgroundColor: colors.accent + "12",
                   borderRadius: 16,
@@ -747,18 +768,30 @@ export default function HomeScreen() {
                     Enable Class Notifications
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-                    Get notified when your classes start
+                    Get notified 15 min before every class
                   </Text>
                 </View>
                 <Text style={{ fontSize: 20, color: colors.accent }}>›</Text>
               </TouchableOpacity>
             )}
 
-            {/* ── Now & Next Section removed ── */}
+            {/* ── Live / Next class cards ── */}
+            {current && (
+              <CurrentClassCard
+                cls={current}
+                onPress={() => router.push("/(app)/timetable")}
+              />
+            )}
+            {next && (
+              <NextClassCard
+                cls={next}
+                onPress={() => router.push("/(app)/timetable")}
+              />
+            )}
 
             {/* ── Main Action Tiles ── */}
             <View style={{ marginBottom: 28, gap: 12 }}>
-              {/* Timetable Tile */}
+              {/* Timetable */}
               <TouchableOpacity
                 onPress={() => router.push("/(app)/timetable")}
                 activeOpacity={0.8}
@@ -771,13 +804,7 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
                   <View
                     style={{
                       width: 60,
@@ -788,35 +815,21 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon
-                      family="Ionicons"
-                      name="calendar"
-                      size={28}
-                      color="#6C63FF"
-                    />
+                    <AppIcon family="Ionicons" name="calendar" size={28} color="#6C63FF" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
                       Timetable
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       View your class schedule
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
-                    ›
-                  </Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
                 </View>
               </TouchableOpacity>
 
-              {/* Profile Tile */}
+              {/* Profile */}
               <TouchableOpacity
                 onPress={() => router.push("/(app)/profile")}
                 activeOpacity={0.8}
@@ -829,13 +842,7 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
                   <View
                     style={{
                       width: 60,
@@ -846,43 +853,26 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon
-                      family="MaterialCommunityIcons"
-                      name="account-circle"
-                      size={28}
-                      color="#00D9AA"
-                    />
+                    <AppIcon family="MaterialCommunityIcons" name="account-circle" size={28} color="#00D9AA" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
                       Profile
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Manage your information
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
-                    ›
-                  </Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
                 </View>
               </TouchableOpacity>
 
-              {/* AI Assistant Tile */}
+              {/* AI Assistant */}
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  Alert.alert(
-                    "🤖 Coming Soon",
-                    "AI Assistant feature will be available soon",
-                  );
-                }}
+                onPress={() =>
+                  Alert.alert("🤖 Coming Soon", "AI Assistant feature will be available soon")
+                }
                 style={{
                   backgroundColor: colors.surface,
                   borderRadius: 20,
@@ -892,13 +882,7 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
                   <View
                     style={{
                       width: 60,
@@ -909,43 +893,26 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon
-                      family="MaterialCommunityIcons"
-                      name="robot"
-                      size={28}
-                      color="#FF8C42"
-                    />
+                    <AppIcon family="MaterialCommunityIcons" name="robot" size={28} color="#FF8C42" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
                       AI Assistant
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Smart learning companion
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
-                    ›
-                  </Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
                 </View>
               </TouchableOpacity>
 
-              {/* Classroom Navigation Tile */}
+              {/* Classroom Navigation */}
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  Alert.alert(
-                    "📍 Coming Soon",
-                    "Classroom Navigation feature will be available soon",
-                  );
-                }}
+                onPress={() =>
+                  Alert.alert("📍 Coming Soon", "Classroom Navigation feature will be available soon")
+                }
                 style={{
                   backgroundColor: colors.surface,
                   borderRadius: 20,
@@ -955,13 +922,7 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
                   <View
                     style={{
                       width: 60,
@@ -972,97 +933,23 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon
-                      family="Ionicons"
-                      name="navigate"
-                      size={28}
-                      color="#A78BFA"
-                    />
+                    <AppIcon family="Ionicons" name="navigate" size={28} color="#A78BFA" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
                       Classroom Navigation
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Find your classroom easily
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
-                    ›
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Test Button Tile */}
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  Alert.alert("Test Button", "Test button pressed!");
-                }}
-                style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 20,
-                  padding: 20,
-                  borderWidth: 1.5,
-                  borderColor: "#FF444440",
-                  overflow: "hidden",
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 16,
-                      backgroundColor: "#FF444415",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <AppIcon
-                      family="Ionicons"
-                      name="flask"
-                      size={28}
-                      color="#FF4444"
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Test Button
-                    </Text>
-                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-                      For testing purposes
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
-                    ›
-                  </Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
                 </View>
               </TouchableOpacity>
             </View>
 
-            {/* ── Profile Card Section ── */}
-            {hasProfile && (
+            {/* ── Profile Card ── */}
+            {hasProfile && profile && (
               <>
                 <Text
                   style={{
@@ -1075,273 +962,117 @@ export default function HomeScreen() {
                 >
                   Profile Information
                 </Text>
-                {profile ? (
-                  <View
-                    style={{
-                      backgroundColor: colors.surface,
-                      borderRadius: 20,
-                      padding: 20,
-                      marginBottom: 20,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                    }}
-                  >
+                <View
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 20,
+                    padding: 20,
+                    marginBottom: 20,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
                     <View
                       style={{
-                        flexDirection: "row",
+                        width: 56,
+                        height: 56,
+                        borderRadius: 14,
+                        backgroundColor: "#6C63FF15",
+                        borderWidth: 2,
+                        borderColor: "#6C63FF40",
+                        justifyContent: "center",
                         alignItems: "center",
-                        marginBottom: 16,
+                        marginRight: 14,
                       }}
                     >
+                      <Text style={{ fontSize: 24, fontWeight: "800", color: "#6C63FF" }}>
+                        {profile.name ? profile.name[0].toUpperCase() : "?"}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 17, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}>
+                        {profile.name}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                        Student ID • {getDepartmentLabel()}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16 }} />
+
+                  <View style={{ marginBottom: 20 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
                       <View
                         style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 14,
-                          backgroundColor: "#6C63FF15",
-                          borderWidth: 2,
-                          borderColor: "#6C63FF40",
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          backgroundColor: "#6C63FF10",
                           justifyContent: "center",
                           alignItems: "center",
-                          marginRight: 14,
+                          marginRight: 12,
                         }}
                       >
-                        <Text
-                          style={{
-                            fontSize: 24,
-                            fontWeight: "800",
-                            color: "#6C63FF",
-                          }}
-                        >
-                          {profile.name ? profile.name[0].toUpperCase() : "?"}
-                        </Text>
+                        <AppIcon family="MaterialCommunityIcons" name="book-open" size={20} color="#6C63FF" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text
-                          style={{
-                            fontSize: 17,
-                            fontWeight: "700",
-                            color: colors.textPrimary,
-                            marginBottom: 2,
-                          }}
-                        >
-                          {profile.name}
+                        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: "600", marginBottom: 2 }}>
+                          Department
                         </Text>
-                        <Text
-                          style={{ fontSize: 12, color: colors.textSecondary }}
-                        >
-                          Student ID • {getDepartmentLabel()}
+                        <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                          {getDepartmentLabel()}
                         </Text>
                       </View>
                     </View>
 
-                    <View
-                      style={{
-                        height: 1,
-                        backgroundColor: colors.border,
-                        marginBottom: 16,
-                      }}
-                    />
-
-                    <View style={{ marginBottom: 20 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
                       <View
                         style={{
-                          flexDirection: "row",
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          backgroundColor: "#00D9AA10",
+                          justifyContent: "center",
                           alignItems: "center",
-                          marginBottom: 12,
+                          marginRight: 12,
                         }}
                       >
-                        <View
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 10,
-                            backgroundColor: "#6C63FF10",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 12,
-                          }}
-                        >
-                          <AppIcon
-                            family="MaterialCommunityIcons"
-                            name="book-open"
-                            size={20}
-                            color="#6C63FF"
-                          />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              color: colors.textMuted,
-                              fontWeight: "600",
-                              marginBottom: 2,
-                            }}
-                          >
-                            Department
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: "700",
-                              color: colors.textPrimary,
-                            }}
-                          >
-                            {getDepartmentLabel()}
-                          </Text>
-                        </View>
+                        <AppIcon family="MaterialCommunityIcons" name="account-group" size={20} color="#00D9AA" />
                       </View>
-
-                      <View
-                        style={{ flexDirection: "row", alignItems: "center" }}
-                      >
-                        <View
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 10,
-                            backgroundColor: "#00D9AA10",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginRight: 12,
-                          }}
-                        >
-                          <AppIcon
-                            family="MaterialCommunityIcons"
-                            name="users-group"
-                            size={20}
-                            color="#00D9AA"
-                          />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              color: colors.textMuted,
-                              fontWeight: "600",
-                              marginBottom: 2,
-                            }}
-                          >
-                            Group
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 15,
-                              fontWeight: "700",
-                              color: colors.textPrimary,
-                            }}
-                          >
-                            {profile.group}
-                          </Text>
-                        </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: "600", marginBottom: 2 }}>
+                          Group
+                        </Text>
+                        <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                          {profile.group}
+                        </Text>
                       </View>
                     </View>
-
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: "#6C63FF15",
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        paddingHorizontal: 16,
-                        borderWidth: 1,
-                        borderColor: "#6C63FF30",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                      }}
-                      onPress={() => router.push("/(app)/profile")}
-                    >
-                      <AppIcon
-                        family="MaterialCommunityIcons"
-                        name="pencil"
-                        size={16}
-                        color="#6C63FF"
-                      />
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "600",
-                          color: "#6C63FF",
-                        }}
-                      >
-                        Edit Profile
-                      </Text>
-                    </TouchableOpacity>
                   </View>
-                ) : (
-                  <View
+
+                  <TouchableOpacity
                     style={{
-                      backgroundColor: colors.surface,
-                      borderRadius: 20,
-                      padding: 24,
-                      marginBottom: 20,
+                      backgroundColor: "#6C63FF15",
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
                       borderWidth: 1,
-                      borderColor: colors.border,
+                      borderColor: "#6C63FF30",
+                      flexDirection: "row",
                       alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
                     }}
+                    onPress={() => router.push("/(app)/profile")}
                   >
-                    <View
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 16,
-                        backgroundColor: colors.surfaceElevated,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginBottom: 16,
-                      }}
-                    >
-                      <AppIcon
-                        family="Ionicons"
-                        name="information-circle"
-                        size={32}
-                        color={colors.textSecondary}
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: colors.textPrimary,
-                        marginBottom: 8,
-                      }}
-                    >
-                      Complete Your Profile
+                    <AppIcon family="MaterialCommunityIcons" name="pencil" size={16} color="#6C63FF" />
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: "#6C63FF" }}>
+                      Edit Profile
                     </Text>
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        color: colors.textSecondary,
-                        textAlign: "center",
-                        lineHeight: 19,
-                        marginBottom: 20,
-                      }}
-                    >
-                      Add your department and group information to get your
-                      personalized timetable.
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: "#6C63FF",
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        paddingHorizontal: 28,
-                      }}
-                      onPress={() => router.push("/(app)/profile")}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "700",
-                          color: "#fff",
-                        }}
-                      >
-                        Complete Now
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                  </TouchableOpacity>
+                </View>
               </>
             )}
           </View>
