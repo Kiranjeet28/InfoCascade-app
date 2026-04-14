@@ -15,6 +15,7 @@ import { ThemeProvider, useThemeColors } from "../context/theme-context";
 import { getJwtToken, getSession } from "../utils/auth-cache";
 import { hideCustomSplash } from "../utils/custom-splash";
 import { initFCM } from "../services/fcm";
+import { initializeNextClassNotifications } from "../services/next-class-notification-service";
 
 function RootStack() {
   const { isDark } = useThemeColors();
@@ -108,11 +109,18 @@ function RootStack() {
           }),
         ]);
 
-        // Initialize FCM
+        // Initialize FCM (handles foreground + background + device token)
         try {
           await initFCM();
         } catch (fcmErr) {
           console.warn("[App] FCM initialization warning:", fcmErr);
+        }
+
+        // Initialize next-class notifications (separate channels + scheduling)
+        try {
+          await initializeNextClassNotifications();
+        } catch (notifErr) {
+          console.warn("[App] NextClass notification init warning:", notifErr);
         }
       } catch (error) {
         console.error("[App] Error during parallel async checks:", error);

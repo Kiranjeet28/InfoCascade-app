@@ -1,20 +1,21 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { ClassSlot } from "../types";
 
-// Storage keys
 const SCHEDULED_IDS_KEY = "scheduled_notification_ids";
 const NOTIFICATION_SETTINGS_KEY = "next_class_notification_settings";
+const NEXT_CLASS_CHANNEL_ID = "next-class-alerts";
 
 interface NotificationSettings {
   enabled: boolean;
   minutesBefore: number;
 }
 
-// ── Notification handler — must be top-level, outside any component ────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 1 — Module-level notification handler
+// ─────────────────────────────────────────────────────────────────────────────
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
@@ -23,6 +24,57 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 2 — Create Android notification channel at module level
+// ─────────────────────────────────────────────────────────────────────────────
+async function ensureNextClassChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync(NEXT_CLASS_CHANNEL_ID, {
+      name: "Next Class Alerts",
+      description: "Notifies you before each class starts",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
+      vibrationPattern: [0, 250, 250, 250],
+      enableLights: true,
+      enableVibrate: true,
+      lightColor: "#6C63FF",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: false,
+    });
+  } catch (error) {
+    console.warn("[NextClassNotifications] Channel error:", error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 3 — Request permissions including POST_NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+async function requestNextClassPermissions(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+  if (!Device.isDevice) {
+    console.warn("[NextClassNotifications] Requires physical device");
+    return false;
+  }
+
+  try {
+    const existing = await Notifications.getPermissionsAsync();
+    let final = (existing as any)?.granted ?? existing;
+
+    if (final !== "granted") {
+      const requested = await Notifications.requestPermissionsAsync();
+      final = (requested as any)?.granted ?? requested;
+    }
+
+    const granted = final === "granted" || final === true;
+    console.log("[NextClassNotifications] Permissions:", granted ? "granted" : "DENIED");
+    return granted;
+  } catch (error) {
+    console.error("[NextClassNotifications] Permission error:", error);
+    return false;
+  }
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function timeToSeconds(t: string): number {
@@ -50,73 +102,20 @@ function getTodayName(): string {
   return days[new Date().getDay()];
 }
 
-// ── Permission + push token registration ──────────────────────────────────
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  if (Platform.OS === "web") return null;
-
-  // Android notification channel
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("next-class", {
-      name: "Next Class Notifications",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-      sound: "default",
-      enableVibrate: true,
-    });
-  }
-
-  if (!Device.isDevice) {
-    console.warn("[NextClassNotifications] Must use a physical device");
-    return null;
-  }
-
-  // Request permissions
-  const existingPermissions = await Notifications.getPermissionsAsync();
-  let finalGranted = (existingPermissions as any)?.granted ?? false;
-
-  if (!finalGranted) {
-    const requestedPermissions = await Notifications.requestPermissionsAsync();
-    finalGranted = (requestedPermissions as any)?.granted ?? false;
-  }
-
-  if (!finalGranted) {
-    console.warn("[NextClassNotifications] Permission not granted");
-    return null;
-  }
-
-  // Expo push token (optional — only needed for remote push later)
-  try {
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ??
-      Constants?.easConfig?.projectId;
-
-    if (projectId) {
-      const token = (
-        await Notifications.getExpoPushTokenAsync({ projectId })
-      ).data;
-      console.log("[NextClassNotifications] Push token:", token);
-      return token;
-    }
-  } catch (e) {
-    console.warn("[NextClassNotifications] Could not get push token:", e);
-  }
-
-  return null;
-}
-
-// ── Initialize — call once at app start ───────────────────────────────────
 export async function initializeNextClassNotifications(): Promise<void> {
   if (Platform.OS === "web") return;
   try {
-    await registerForPushNotificationsAsync();
-    console.log("[NextClassNotifications] Initialized");
+    await ensureNextClassChannel();
+    await requestNextClassPermissions();
+    console.log("[NextClassNotifications] ✓ Ready");
   } catch (error) {
     console.error("[NextClassNotifications] Init error:", error);
   }
 }
 
-// ── Cancel all previously scheduled class notifications ───────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Cancel all previously scheduled notifications
+// ─────────────────────────────────────────────────────────────────────────────
 export async function cancelAllClassNotifications(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(SCHEDULED_IDS_KEY);
@@ -135,19 +134,13 @@ export async function cancelAllClassNotifications(): Promise<void> {
   }
 }
 
-// ── Schedule a notification for EVERY remaining class today ───────────────
-/**
- * This is the key function.
- *
- * It schedules ONE local OS notification per remaining class today,
- * each with its own TIME_INTERVAL trigger. Because the triggers are
- * registered with the OS (not a JS timer), they fire even when:
- *   - the app is backgrounded
- *   - the screen is off / locked
- *   - the app is completely closed (Android only needs this once per day)
- *
- * The notification body shows: subject, time, room, teacher.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE — Schedule notifications with DATE trigger
+//
+// KEY FIX: Uses DATE trigger (exact timestamp) instead of TIME_INTERVAL.
+// DATE trigger fires at exact wall-clock time even if app is killed.
+// channelId is in TRIGGER (not content) — SDK 55 Android requirement.
+// ─────────────────────────────────────────────────────────────────────────────
 export async function scheduleNextClassNotification(
   classes: ClassSlot[],
   minutesBefore = 15,
@@ -155,6 +148,7 @@ export async function scheduleNextClassNotification(
   if (Platform.OS === "web") return false;
 
   try {
+    await ensureNextClassChannel();
     await cancelAllClassNotifications();
 
     if (!isWeekday()) {
@@ -164,22 +158,21 @@ export async function scheduleNextClassNotification(
 
     const validMinutes = Math.max(5, Math.min(30, minutesBefore));
     const todayName = getTodayName();
-
     const now = new Date();
-    const nowSeconds =
-      now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const nowMs = now.getTime();
 
-    // Get all of today's real classes whose notification time hasn't passed
+    // Filter today's real classes whose notification time is still in future
     const todayClasses = classes
-      .filter(
-        (c) =>
-          c.dayOfClass === todayName &&
-          !c.data.freeClass &&
-          timeToSeconds(c.timeOfClass) - validMinutes * 60 > nowSeconds,
-      )
+      .filter((c) => {
+        if (c.dayOfClass !== todayName || c.data.freeClass) return false;
+        const classSeconds = timeToSeconds(c.timeOfClass);
+        const notifMs =
+          new Date().setHours(0, 0, 0, 0) +
+          (classSeconds - validMinutes * 60) * 1000;
+        return notifMs > nowMs;
+      })
       .sort(
-        (a, b) =>
-          timeToSeconds(a.timeOfClass) - timeToSeconds(b.timeOfClass),
+        (a, b) => timeToSeconds(a.timeOfClass) - timeToSeconds(b.timeOfClass),
       );
 
     if (todayClasses.length === 0) {
@@ -188,19 +181,19 @@ export async function scheduleNextClassNotification(
     }
 
     const scheduledIds: string[] = [];
+    const midnightMs = new Date().setHours(0, 0, 0, 0);
 
     for (const cls of todayClasses) {
       const classSeconds = timeToSeconds(cls.timeOfClass);
-      const notifSeconds = classSeconds - validMinutes * 60;
-      // Must be integer >= 10 for SDK 55 TIME_INTERVAL trigger
-      const delaySeconds = Math.max(10, Math.round(notifSeconds - nowSeconds));
 
-      // Extract class details
+      // Exact Date object when notification should fire
+      const fireAtMs = midnightMs + (classSeconds - validMinutes * 60) * 1000;
+      const fireAt = new Date(fireAtMs);
+
+      // Class details
       const subject = cls.data?.subject ?? "Class";
       const room =
-        cls.data?.classRoom ??
-        cls.data?.entries?.[0]?.classRoom ??
-        "TBD";
+        cls.data?.classRoom ?? cls.data?.entries?.[0]?.classRoom ?? "TBD";
       const teacher =
         (cls.data as any)?.teacherName ??
         (cls.data?.entries?.[0] as any)?.teacherName ??
@@ -217,21 +210,17 @@ export async function scheduleNextClassNotification(
       const teacherSuffix = teacher ? ` · ${teacher}` : "";
       const typeSuffix = classType ? ` [${classType.toUpperCase()}]` : "";
 
-      // Notification content — class name + subject in title, room + teacher in body
-      const title = `📚 ${subject}${typeSuffix} in ${validMinutes} min`;
+      const title = `📚 ${subject}${typeSuffix} starts in ${validMinutes} min`;
       const body = `${cls.timeOfClass} – ${endTime}  📍 ${room}${teacherSuffix}`;
 
       console.log(
-        `[NextClassNotifications] Scheduling "${subject}" at ${cls.timeOfClass} → fires in ${delaySeconds}s`,
+        `[NextClassNotifications] Scheduling "${subject}" → fires at ${fireAt.toLocaleTimeString()}`,
       );
 
-      // OS-level scheduled notification — fires regardless of app state
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title,
           body,
-          // channelId targets the Android channel we created above
-          ...(Platform.OS === "android" ? { channelId: "next-class" } : {}),
           data: {
             subject,
             room,
@@ -240,21 +229,27 @@ export async function scheduleNextClassNotification(
             classType,
             teacher,
           },
+          // sound must NOT be set here — it belongs to the channel on Android
         },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: delaySeconds,
-          // Do NOT pass repeats — defaults to false in SDK 55
-        },
+        trigger: Platform.OS === "android"
+          ? {
+            // DATE trigger fires at exact wall-clock time — works when app is killed
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: fireAt,
+            channelId: NEXT_CLASS_CHANNEL_ID, // ← MUST be in trigger, not content, for SDK 55
+          }
+          : {
+            // iOS uses DATE trigger too
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: fireAt,
+          },
       });
 
       scheduledIds.push(notificationId);
     }
 
-    // Persist IDs so we can cancel them on logout or next reschedule
     await AsyncStorage.setItem(SCHEDULED_IDS_KEY, JSON.stringify(scheduledIds));
 
-    // Badge = number of upcoming classes
     try {
       await Notifications.setBadgeCountAsync(scheduledIds.length);
     } catch { }

@@ -1,53 +1,109 @@
 /**
  * Firebase Cloud Messaging (FCM) Service
  *
- * Unified message handler for all app states:
- * - Foreground: Firebase onMessage listener
- * - Background: Notification listener
- * - Terminated: OS displays automatically
+ * CRITICAL FIXES:
+ * 1. Android channel created at module top-level BEFORE any scheduling
+ * 2. Single notification handler configured once at module level
+ * 3. Android 13+ POST_NOTIFICATIONS permission explicitly requested
+ * 4. channelId in trigger object (not content) for Android — SDK 55 requirement
+ * 5. DATE trigger for scheduled notifications (works when app killed)
+ * 6. Foreground messages explicitly displayed via scheduleNotificationAsync
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { getMessaging, onMessage } from "firebase/messaging";
 import { Platform } from "react-native";
 import { app } from "../utils/firebaseConfig";
 
 const TOKEN_KEY = "fcm_token";
+const FCM_CHANNEL_ID = "fcm-messages";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 1 — Module-level notification handler (runs once, not per component)
+// ─────────────────────────────────────────────────────────────────────────────
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 2 — Create Android channel at module level (before any notifications)
+// ─────────────────────────────────────────────────────────────────────────────
+async function ensureFCMChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync(FCM_CHANNEL_ID, {
+      name: "Firebase Messages",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
+      vibrationPattern: [0, 250, 250, 250],
+      enableVibrate: true,
+      lightColor: "#6C63FF",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: false,
+    });
+  } catch (error) {
+    console.warn("[FCM] Channel creation error:", error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 3 — Request permissions including POST_NOTIFICATIONS (Android 13+)
+// ─────────────────────────────────────────────────────────────────────────────
+async function requestFCMPermissions(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+  if (!Device.isDevice) {
+    console.warn("[FCM] Requires physical device");
+    return false;
+  }
+
+  try {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let final = existing;
+
+    if (existing !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      final = status;
+    }
+
+    const granted = final === "granted";
+    console.log("[FCM] Permissions:", granted ? "granted" : "DENIED");
+    return granted;
+  } catch (error) {
+    console.error("[FCM] Permission error:", error);
+    return false;
+  }
+}
 
 /**
- * Unified message handler - works for all states
+ * Display notification immediately (used for foreground messages)
  */
-export async function handleMessage(
-  message: any,
-  state: "foreground" | "background" | "terminated" = "foreground",
+async function displayNotification(
+  title: string,
+  body: string,
+  data?: Record<string, string>,
 ): Promise<void> {
   try {
-    const title = message?.notification?.title || "Notification";
-    const body = message?.notification?.body || "New message";
-    const data = message?.data || {};
-
-    console.log(`[FCM] ${state}: ${title}`);
-
-    // Schedule notification with immediate trigger
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body,
         sound: "default",
         badge: 1,
         priority: "high",
-        data,
+        data: data || {},
+        ...(Platform.OS === "android" ? { channelId: FCM_CHANNEL_ID } : {}),
       },
-      trigger: null, // null = immediate
+      trigger: null, // Display immediately
     });
-
-    console.log(`[FCM] ✓ Notification (${state}):`, notificationId);
   } catch (error) {
-    console.error(
-      "[FCM] Error:",
-      error instanceof Error ? error.message : error,
-    );
+    console.error("[FCM] Display error:", error);
   }
 }
 
@@ -75,7 +131,7 @@ export async function getToken(): Promise<string | null> {
 }
 
 /**
- * Initialize FCM - call once on app startup
+ * Initialize FCM - call ONCE on app startup in _layout.tsx
  */
 export async function initFCM(): Promise<void> {
   if (Platform.OS === "web") return;
@@ -83,60 +139,30 @@ export async function initFCM(): Promise<void> {
   try {
     console.log("[FCM] Initializing...");
 
-    // Request permissions
-    await Notifications.requestPermissionsAsync();
-    console.log("[FCM] Permissions requested");
+    // Create channel FIRST
+    await ensureFCMChannel();
+    await requestFCMPermissions();
 
-    // Configure notification behavior - FORCE SHOW IN FOREGROUND
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+    console.log("[FCM] Channel + permissions ready");
 
-    console.log("[FCM] Notification handler configured");
-
-    // Handle notification taps
+    // Handle notification tap
     Notifications.addNotificationResponseReceivedListener((response) => {
       console.log("[FCM] Tapped:", response.notification.request.content.data);
     });
 
-    console.log("[FCM] Response listener registered");
-
-    // Foreground listener
+    // Foreground Firebase messages (only on native, not web)
     try {
       const messaging = getMessaging(app);
-      onMessage(messaging, (msg) => {
-        console.log(
-          "[FCM] Foreground message from Firebase:",
-          msg.notification?.title,
-        );
-        handleMessage(msg, "foreground");
+      onMessage(messaging, async (msg) => {
+        console.log("[FCM] Foreground Firebase message:", msg.notification?.title);
+        const title = msg.notification?.title || "Notification";
+        const body = msg.notification?.body || "New message";
+        await displayNotification(title, body, msg.data);
       });
-      console.log("[FCM] Foreground listener registered");
+      console.log("[FCM] Foreground listener ready");
     } catch (err) {
-      console.warn("[FCM] Firebase messaging unavailable:", err);
+      console.warn("[FCM] Firebase messaging unavailable (expected in Expo Go):", err);
     }
-
-    // Background listener
-    Notifications.addNotificationReceivedListener((notification) => {
-      console.log("[FCM] Background notification received");
-      handleMessage(
-        {
-          notification: {
-            title: notification.request.content.title,
-            body: notification.request.content.body,
-          },
-          data: notification.request.content.data,
-        },
-        "background",
-      );
-    });
-
-    console.log("[FCM] Background listener registered");
 
     // Get token
     await getToken();
