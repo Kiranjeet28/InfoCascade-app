@@ -41,7 +41,7 @@ async function ensureNextClassChannel(): Promise<void> {
       enableVibrate: true,
       lightColor: "#6C63FF",
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: false,
+      bypassDnd: true,
     });
   } catch (error) {
     console.warn("[NextClassNotifications] Channel error:", error);
@@ -181,17 +181,26 @@ export async function scheduleNextClassNotification(
     }
 
     const scheduledIds: string[] = [];
-    const midnightMs = new Date().setHours(0, 0, 0, 0);
 
     for (const cls of todayClasses) {
       const classSeconds = timeToSeconds(cls.timeOfClass);
 
+      // Create midnight of TODAY (not yesterday)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       // Exact Date object when notification should fire
-      const fireAtMs = midnightMs + (classSeconds - validMinutes * 60) * 1000;
+      const fireAtMs = today.getTime() + (classSeconds - validMinutes * 60) * 1000;
       const fireAt = new Date(fireAtMs);
 
       // Class details
       const subject = cls.data?.subject ?? "Class";
+
+      // Skip if time already passed (safety check)
+      if (fireAt.getTime() <= now.getTime()) {
+        console.log(`[NextClassNotifications] Skipping "${subject}" (time already passed)`);
+        continue;
+      }
       const room =
         cls.data?.classRoom ?? cls.data?.entries?.[0]?.classRoom ?? "TBD";
       const teacher =

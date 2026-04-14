@@ -44,9 +44,10 @@ async function ensureFCMChannel(): Promise<void> {
       sound: "default",
       vibrationPattern: [0, 250, 250, 250],
       enableVibrate: true,
+      enableLights: true,
       lightColor: "#6C63FF",
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      bypassDnd: false,
+      bypassDnd: true,
     });
   } catch (error) {
     console.warn("[FCM] Channel creation error:", error);
@@ -83,6 +84,7 @@ async function requestFCMPermissions(): Promise<boolean> {
 
 /**
  * Display notification immediately (used for foreground messages)
+ * Android SDK 55+: channelId MUST be in trigger, not content
  */
 async function displayNotification(
   title: string,
@@ -98,9 +100,14 @@ async function displayNotification(
         badge: 1,
         priority: "high",
         data: data || {},
-        ...(Platform.OS === "android" ? { channelId: FCM_CHANNEL_ID } : {}),
       },
-      trigger: null, // Display immediately
+      trigger: Platform.OS === "android"
+        ? {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: new Date(Date.now() + 100), // Fire in 100ms
+          channelId: FCM_CHANNEL_ID, // ← MUST be in trigger for Android SDK 55+
+        }
+        : null,
     });
   } catch (error) {
     console.error("[FCM] Display error:", error);
@@ -153,6 +160,8 @@ export async function initFCM(): Promise<void> {
     // Foreground Firebase messages (only on native, not web)
     try {
       const messaging = getMessaging(app);
+
+      // Foreground listener
       onMessage(messaging, async (msg) => {
         console.log("[FCM] Foreground Firebase message:", msg.notification?.title);
         const title = msg.notification?.title || "Notification";
@@ -178,15 +187,10 @@ export async function initFCM(): Promise<void> {
  */
 export async function sendTest(): Promise<void> {
   console.log("[FCM] Test button clicked");
-  await handleMessage(
-    {
-      notification: {
-        title: "📬 Test FCM",
-        body: "Test notification!",
-      },
-      data: { type: "test", time: new Date().toLocaleTimeString() },
-    },
-    "foreground",
+  await displayNotification(
+    "📬 Test FCM",
+    "Test notification!",
+    { type: "test", time: new Date().toLocaleTimeString() }
   );
 }
 

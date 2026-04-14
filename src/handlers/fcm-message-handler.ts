@@ -35,10 +35,30 @@ interface ProcessedNotification {
 
 const NOTIFICATION_HISTORY_KEY = "fcm_notification_history";
 const MAX_HISTORY_SIZE = 50;
+const FCM_CHANNEL_ID = "fcm-messages";
 
 /**
- * Display a system notification
+ * Ensure FCM channel exists on Android
  */
+async function ensureFCMChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  try {
+    await Notifications.setNotificationChannelAsync(FCM_CHANNEL_ID, {
+      name: "Firebase Messages",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: "default",
+      vibrationPattern: [0, 250, 250, 250],
+      enableVibrate: true,
+      enableLights: true,
+      lightColor: "#6C63FF",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+    });
+  } catch (error) {
+    console.warn("[FCM] Channel creation error:", error);
+  }
+}
+
 export async function displayNotification(
   title: string,
   body: string,
@@ -50,6 +70,9 @@ export async function displayNotification(
   }
 
   try {
+    // Ensure channel is created first
+    await ensureFCMChannel();
+
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -59,7 +82,13 @@ export async function displayNotification(
         priority: "high",
         data: data || {},
       },
-      trigger: null, // Trigger immediately
+      trigger: Platform.OS === "android"
+        ? {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: new Date(Date.now() + 100), // Fire in 100ms
+          channelId: FCM_CHANNEL_ID, // Use default FCM channel
+        }
+        : null,
     });
 
     console.log("[FCM] Notification displayed:", notificationId);
