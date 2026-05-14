@@ -1,20 +1,20 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  View,
-  Text,
   SafeAreaView,
   StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { ChatMessage } from "./ChatMessage";
-import { ChatInput } from "./ChatInput";
-import { TypingIndicator } from "./TypingIndicator";
-import { aiService } from "../../services/ai-service";
 import { useThemeColors } from "../../context/theme-context";
-import { useRouter } from "expo-router";
-import { TouchableOpacity } from "react-native";
+import { aiService } from "../../services/ai-service";
+import { ChatInput } from "./ChatInput";
+import { ChatMessage } from "./ChatMessage";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface Message {
   id: string;
@@ -65,7 +65,10 @@ export const ChatbotWindow: React.FC = () => {
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "😔 Sorry, I encountered an error. Please try again.",
+        text:
+          error instanceof Error
+            ? error.message
+            : "😔 Sorry, I encountered an error.",
         isUser: false,
         timestamp: new Date(),
       };

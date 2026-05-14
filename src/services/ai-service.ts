@@ -50,7 +50,7 @@ export const aiService = {
       );
 
       const data: ChatResponse = await response.json();
-
+      console.log("🔥 FULL BACKEND RESPONSE:", data);
       console.log("[AI Service] Response received:", {
         success: data.success,
         hasResponse: !!data.response,
