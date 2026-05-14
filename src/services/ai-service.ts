@@ -20,11 +20,21 @@ export const aiService = {
       }
 
       console.log("[AI Service] Token obtained, sending request...");
+      console.log(
+        "[AI Service] Token preview:",
+        token
+          ? `${token.substring(0, 20)}...${token.substring(token.length - 10)}`
+          : "null",
+      );
+      console.log("[AI Service] Token length:", token?.length);
 
       const apiBase = await resolveApiBaseAsync();
       const url = `${apiBase}/api/ai/chat`;
 
       console.log("[AI Service] Making request to:", url);
+      console.log("[AI Service] Request headers:", {
+        Authorization: `Bearer ${token ? "[token]" : "no-token"}`,
+      });
 
       const response = await fetchWithTimeout(
         url,
@@ -45,11 +55,13 @@ export const aiService = {
         success: data.success,
         hasResponse: !!data.response,
         code: data.code,
+        status: response.status,
       });
 
       if (!response.ok) {
         console.error("[AI Service] HTTP error:", {
           status: response.status,
+          statusText: response.statusText,
           message: data.message,
           code: data.code,
         });
