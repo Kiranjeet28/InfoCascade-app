@@ -395,7 +395,9 @@ export default function HomeScreen() {
       await loadNotifState();
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [profileLoading, hasProfile, fetchAllClasses, loadNotifState]);
 
   // ── Entrance animation ─────────────────────────────────────────────────
@@ -804,7 +806,13 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
                   <View
                     style={{
                       width: 60,
@@ -815,17 +823,31 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon family="Ionicons" name="calendar" size={28} color="#6C63FF" />
+                    <AppIcon
+                      family="Ionicons"
+                      name="calendar"
+                      size={28}
+                      color="#6C63FF"
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: colors.textPrimary,
+                        marginBottom: 4,
+                      }}
+                    >
                       Timetable
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       View your class schedule
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
+                    ›
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -842,7 +864,13 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
                   <View
                     style={{
                       width: 60,
@@ -853,26 +881,38 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon family="MaterialCommunityIcons" name="account-circle" size={28} color="#00D9AA" />
+                    <AppIcon
+                      family="MaterialCommunityIcons"
+                      name="account-circle"
+                      size={28}
+                      color="#00D9AA"
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: colors.textPrimary,
+                        marginBottom: 4,
+                      }}
+                    >
                       Profile
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Manage your information
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
+                    ›
+                  </Text>
                 </View>
               </TouchableOpacity>
 
               {/* AI Assistant */}
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() =>
-                  Alert.alert("🤖 Coming Soon", "AI Assistant feature will be available soon")
-                }
+                onPress={() => router.push("/chat")}
                 style={{
                   backgroundColor: colors.surface,
                   borderRadius: 20,
@@ -882,7 +922,13 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
                   <View
                     style={{
                       width: 60,
@@ -893,17 +939,31 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon family="MaterialCommunityIcons" name="robot" size={28} color="#FF8C42" />
+                    <AppIcon
+                      family="MaterialCommunityIcons"
+                      name="robot"
+                      size={28}
+                      color="#FF8C42"
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: colors.textPrimary,
+                        marginBottom: 4,
+                      }}
+                    >
                       AI Assistant
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Smart learning companion
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
+                    ›
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -911,7 +971,10 @@ export default function HomeScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() =>
-                  Alert.alert("📍 Coming Soon", "Classroom Navigation feature will be available soon")
+                  Alert.alert(
+                    "📍 Coming Soon",
+                    "Classroom Navigation feature will be available soon",
+                  )
                 }
                 style={{
                   backgroundColor: colors.surface,
@@ -922,7 +985,13 @@ export default function HomeScreen() {
                   overflow: "hidden",
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
                   <View
                     style={{
                       width: 60,
@@ -933,17 +1002,31 @@ export default function HomeScreen() {
                       alignItems: "center",
                     }}
                   >
-                    <AppIcon family="Ionicons" name="navigate" size={28} color="#A78BFA" />
+                    <AppIcon
+                      family="Ionicons"
+                      name="navigate"
+                      size={28}
+                      color="#A78BFA"
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: colors.textPrimary,
+                        marginBottom: 4,
+                      }}
+                    >
                       Classroom Navigation
                     </Text>
                     <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                       Find your classroom easily
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 24, color: colors.textMuted }}>›</Text>
+                  <Text style={{ fontSize: 24, color: colors.textMuted }}>
+                    ›
+                  </Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -972,7 +1055,13 @@ export default function HomeScreen() {
                     borderColor: colors.border,
                   }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 16,
+                    }}
+                  >
                     <View
                       style={{
                         width: 56,
@@ -986,24 +1075,51 @@ export default function HomeScreen() {
                         marginRight: 14,
                       }}
                     >
-                      <Text style={{ fontSize: 24, fontWeight: "800", color: "#6C63FF" }}>
+                      <Text
+                        style={{
+                          fontSize: 24,
+                          fontWeight: "800",
+                          color: "#6C63FF",
+                        }}
+                      >
                         {profile.name ? profile.name[0].toUpperCase() : "?"}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 17, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}>
+                      <Text
+                        style={{
+                          fontSize: 17,
+                          fontWeight: "700",
+                          color: colors.textPrimary,
+                          marginBottom: 2,
+                        }}
+                      >
                         {profile.name}
                       </Text>
-                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                      <Text
+                        style={{ fontSize: 12, color: colors.textSecondary }}
+                      >
                         Student ID • {getDepartmentLabel()}
                       </Text>
                     </View>
                   </View>
 
-                  <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 16 }} />
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: colors.border,
+                      marginBottom: 16,
+                    }}
+                  />
 
                   <View style={{ marginBottom: 20 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 12,
+                      }}
+                    >
                       <View
                         style={{
                           width: 40,
@@ -1015,19 +1131,39 @@ export default function HomeScreen() {
                           marginRight: 12,
                         }}
                       >
-                        <AppIcon family="MaterialCommunityIcons" name="book-open" size={20} color="#6C63FF" />
+                        <AppIcon
+                          family="MaterialCommunityIcons"
+                          name="book-open"
+                          size={20}
+                          color="#6C63FF"
+                        />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: "600", marginBottom: 2 }}>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: colors.textMuted,
+                            fontWeight: "600",
+                            marginBottom: 2,
+                          }}
+                        >
                           Department
                         </Text>
-                        <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontWeight: "700",
+                            color: colors.textPrimary,
+                          }}
+                        >
                           {getDepartmentLabel()}
                         </Text>
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
                       <View
                         style={{
                           width: 40,
@@ -1039,13 +1175,31 @@ export default function HomeScreen() {
                           marginRight: 12,
                         }}
                       >
-                        <AppIcon family="MaterialCommunityIcons" name="account-group" size={20} color="#00D9AA" />
+                        <AppIcon
+                          family="MaterialCommunityIcons"
+                          name="account-group"
+                          size={20}
+                          color="#00D9AA"
+                        />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: "600", marginBottom: 2 }}>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: colors.textMuted,
+                            fontWeight: "600",
+                            marginBottom: 2,
+                          }}
+                        >
                           Group
                         </Text>
-                        <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                        <Text
+                          style={{
+                            fontSize: 15,
+                            fontWeight: "700",
+                            color: colors.textPrimary,
+                          }}
+                        >
                           {profile.group}
                         </Text>
                       </View>
@@ -1067,8 +1221,19 @@ export default function HomeScreen() {
                     }}
                     onPress={() => router.push("/(app)/profile")}
                   >
-                    <AppIcon family="MaterialCommunityIcons" name="pencil" size={16} color="#6C63FF" />
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: "#6C63FF" }}>
+                    <AppIcon
+                      family="MaterialCommunityIcons"
+                      name="pencil"
+                      size={16}
+                      color="#6C63FF"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: "#6C63FF",
+                      }}
+                    >
                       Edit Profile
                     </Text>
                   </TouchableOpacity>
