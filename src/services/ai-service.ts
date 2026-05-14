@@ -46,7 +46,7 @@ export const aiService = {
           },
           body: JSON.stringify({ message }),
         },
-        12000,
+        45000,
       );
 
       const data: ChatResponse = await response.json();
